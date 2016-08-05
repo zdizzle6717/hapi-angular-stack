@@ -9,15 +9,13 @@ server.connection({ port: 8080 });
 
 server.route({
     method: 'GET',
-    path: '/',
+    path: '/api',
     handler: function (request, reply) {
-        reply('Hello, world!');
+        reply({ 'api': 'Hello world!'});
     }
 });
 
 server.start((err) => {
-    console.log('started');
-
     if (err) {
         throw err;
     }

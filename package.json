@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Zack's Hapi Stack",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zdizzle6717/hapi-angular-stack.git"
+  },
   "dependencies": {
     "angular": "^1.5.8",
     "angular-animate": "^1.5.8",
@@ -13,8 +17,8 @@
     "angularjs-datepicker": "~0.2.28-beta",
     "autoprefixer": "^6.3.6",
     "babel-core": "^6.13.0",
-    "babel-preset-es2016": "^6.11.1",
     "babel-polyfill": "^6.6.1",
+    "babel-preset-es2016": "^6.11.1",
     "body-parser": "^1.15.0",
     "es6-arrow-function": "^0.6.6",
     "es6-class": "^0.9.5",
@@ -26,9 +30,12 @@
     "foundation": "^4.2.1",
     "foundation-sites": "^6.2.3",
     "fs-extra": "^0.26.7",
+    "hapi": "^14.1.0",
+    "joi": "^9.0.4",
     "ng-file-upload": "^12.0.4",
     "ng-sanitize": "0.0.2",
-    "hapi": "^14.1.0"
+    "pg": "^6.0.3",
+    "pg-hstore": "^2.3.2"
   },
   "scripts": {
     "build": "node build.js && npm run style",
@@ -38,6 +45,7 @@
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-react": "^6.11.1",
     "babelify": "^7.3.0",
+    "sequelize-cli": "^1.0.3",
     "stringify": "^5.1.0"
   }
 }
