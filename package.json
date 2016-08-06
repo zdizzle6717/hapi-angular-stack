@@ -31,6 +31,7 @@
     "foundation-sites": "^6.2.3",
     "fs-extra": "^0.26.7",
     "hapi": "^14.1.0",
+    "hapi-swagger": "^6.2.2",
     "joi": "^9.0.4",
     "ng-file-upload": "^12.0.4",
     "ng-sanitize": "0.0.2",

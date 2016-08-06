@@ -1,23 +1,24 @@
 'use strict';
 
-require( 'babel-core/register' );
+require('babel-core/register');
 
 const Hapi = require('hapi');
+let models = require('./models');
 
+// Create Server
 const server = new Hapi.Server();
-server.connection({ port: 8080 });
-
-server.route({
-    method: 'GET',
-    path: '/api',
-    handler: function (request, reply) {
-        reply({ 'api': 'Hello world!'});
-    }
+server.connection({
+    port: 8080
 });
 
-server.start((err) => {
-    if (err) {
-        throw err;
-    }
-    console.log('Server running at:', server.info.uri);
+// Routes
+server.route(require('./routes'));
+
+models.sequelize.sync().then(function() {
+    server.start((err) => {
+        if (err) {
+            throw err;
+        }
+        console.log('Server running at:', server.info.uri);
+    });
 });
