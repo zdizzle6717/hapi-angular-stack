@@ -5,7 +5,9 @@ module.exports = function(sequelize, DataTypes) {
         title: DataTypes.STRING,
         year: DataTypes.STRING,
         director: DataTypes.STRING,
+        DirectorId: DataTypes.INTEGER,
         genre: DataTypes.STRING,
+        description: DataTypes.STRING,
         synopsis: DataTypes.STRING,
         rating: {
             type: DataTypes.INTEGER,

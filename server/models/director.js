@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-  let Director = sequelize.define("Director", {
+  let Director = sequelize.define('Director', {
     firstName: DataTypes.STRING,
     lastName: DataTypes.STRING
   }, {
