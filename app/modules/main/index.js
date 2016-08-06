@@ -24,5 +24,7 @@ mod.config(require('./config'));
 mod.controller('HomeController', require('./controllers/HomeController.js'));
 
 // Directives
+mod.directive('header', require('./directives/Header.js'));
+mod.directive('footer', require('./directives/Footer.js'));
 
 module.exports = moduleName;

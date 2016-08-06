@@ -5779,6 +5779,78 @@ table.hover tr:nth-of-type(even):hover {
 .clearfix::after {
   clear: both; }
 
+.push-top {
+  margin-top: 10px !important; }
+  .push-top-2x {
+    margin-top: 20px !important; }
+  .push-top-3x {
+    margin-top: 30px !important; }
+  .push-top-4x {
+    margin-top: 40px !important; }
+  .push-top-5x {
+    margin-top: 50px !important; }
+
+.push-right {
+  margin-right: 10px !important; }
+  .push-right-2x {
+    margin-right: 20px !important; }
+  .push-right-3x {
+    margin-right: 30px !important; }
+  .push-right-4x {
+    margin-right: 40px !important; }
+  .push-right-5x {
+    margin-right: 50px !important; }
+
+.push-bottom {
+  margin-bottom: 10px !important; }
+  .push-bottom-2x {
+    margin-bottom: 20px !important; }
+  .push-bottom-3x {
+    margin-bottom: 30px !important; }
+  .push-bottom-4x {
+    margin-bottom: 40px !important; }
+  .push-bottom-5x {
+    margin-bottom: 50px !important; }
+
+.push-left {
+  margin-left: 10px !important; }
+  .push-left-2x {
+    margin-left: 20px !important; }
+  .push-left-3x {
+    margin-left: 30px !important; }
+  .push-left-4x {
+    margin-left: 40px !important; }
+  .push-left-5x {
+    margin-left: 50px !important; }
+
+html, body {
+  font-family: 'PT Sans', sans-serif;
+  color: #363636; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'PT Sans'; }
+
+.content-container {
+  margin: 0 2rem; }
+
+.row {
+  max-width: 85rem; }
+
+.action-buttons .action {
+  padding: 0 .5rem; }
+
+.menu {
+  margin: 0;
+  background: #f8f8f9;
+  padding: 8px 0;
+  margin-bottom: 3rem;
+  font-size: 1.2rem;
+  line-height: 16rem;
+  color: #757575; }
+
+.menu-text.home-link {
+  text-transform: uppercase; }
+
 .view.ng-enter {
   animation: 250ms fade-in;
   z-index: 0; }

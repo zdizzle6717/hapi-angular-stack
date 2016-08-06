@@ -2,7 +2,7 @@
 
 HomeController.$inject = [];
 function HomeController () {
-    this.greeting = 'Hello World!';
+    this.pageTitle = 'Home';
 }
 
 module.exports = HomeController;

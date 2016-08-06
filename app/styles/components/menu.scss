@@ -1,0 +1,17 @@
+// Top
+
+.menu {
+    margin: 0;
+    background: #f8f8f9;
+    padding: 8px 0;
+    margin-bottom: 3rem;
+    font-size: 1.2rem;
+    line-height: 16rem;
+    color: #757575;
+}
+
+.menu-text {
+    &.home-link {
+        text-transform: uppercase;
+    }
+}

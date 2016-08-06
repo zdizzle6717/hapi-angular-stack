@@ -6,13 +6,17 @@
 
 
 // Variables
-// @import 'variables';
+@import 'variables';
+
+// Mixins
+@import 'mixins/margins';
 
 // Components
-// @import 'components/base';
+@import 'components/base';
+@import 'components/buttons';
+@import 'components/menu';
 
+@import 'components/global';
 
 // Animation
 @import 'animations/animate';
-
-// GLOBAL
