@@ -11,7 +11,13 @@ let directors = {
                 }
             })
             .then(function(director) {
-                res(director).code(200);
+                if (director) {
+                    res(director).code(200);
+                }
+                else {
+                    res().code(404);
+                }
+
             });
     },
     getAll: function(req, res) {
@@ -26,7 +32,7 @@ let directors = {
                 lastName: req.payload.lastName
             })
             .then(function(director) {
-                res(director);
+                res(director).code(200);
             });
     },
     update: function(req, res) {
@@ -41,8 +47,11 @@ let directors = {
                         firstName: req.payload.firstName,
                         lastName: req.payload.lastName
                     }).then(function(director) {
-                        res.send(director);
+                        res(director).code(200);
                     });
+                }
+                else {
+                    res().code(404);
                 }
             });
     },
@@ -53,7 +62,12 @@ let directors = {
                 }
             })
             .then(function(director) {
-                res(director);
+                if (director) {
+                    res(director).code(200);
+                }
+                else {
+                    res().code(404);
+                }
             });
     }
 };
@@ -68,7 +82,12 @@ let movies = {
                 }
             })
             .then(function(movie) {
-                res(movie).code(200);
+                if (movie) {
+                    res(movie).code(200);
+                }
+                else {
+                    res().code(404);
+                }
             });
     },
     getAll: function(req, res) {
@@ -88,7 +107,10 @@ let movies = {
                 rating: req.payload.rating
             })
             .then(function(movie) {
-                res(movie);
+                res(movie).code(200);
+            })
+            .catch(function() {
+                res().code(406);
             });
     },
     update: function(req, res) {
@@ -102,14 +124,18 @@ let movies = {
                     movie.updateAttributes({
                         title: req.payload.title,
                         year: req.payload.year,
-                        director: req.payload.director,
                         DirectorId: req.payload.DirectorId,
                         genre: req.payload.genre,
                         synopsis: req.payload.synopsis,
                         rating: req.payload.rating
                     }).then(function(movie) {
-                        res.send(movie);
+                        res(movie).code(200);
+                    }).catch(function() {
+                        res().code(406);
                     });
+                }
+                else {
+                    res().code(404);
                 }
             });
     },
@@ -120,7 +146,12 @@ let movies = {
                 }
             })
             .then(function(movie) {
-                res(movie);
+                if (movie) {
+                    res(movie).code(200);
+                }
+                else {
+                    res().code(404);
+                }
             });
     }
 };

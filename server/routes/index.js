@@ -1,6 +1,7 @@
 'use strict';
 
 let api = require('./api');
+let Joi = require('joi');
 let models = require('../models');
 
 module.exports = [
@@ -20,6 +21,14 @@ module.exports = [
     // Directors
     {
         config: {
+            tags: ['api'],
+            description: 'Get one director by id',
+            notes: 'Get one director by id',
+            validate: {
+                params: {
+                    id: Joi.number().required()
+                }
+            },
             cors: {
                 origin: ['*']
             }
@@ -30,6 +39,9 @@ module.exports = [
     },
     {
         config: {
+            tags: ['api'],
+            description: 'Get all directors',
+            notes: 'Get all directors',
             cors: {
                 origin: ['*']
             }
@@ -40,6 +52,15 @@ module.exports = [
     },
     {
         config: {
+            tags: ['api'],
+            description: 'Add a new director',
+            notes: 'Add a new director',
+            validate: {
+                payload: {
+                    firstName: Joi.string().required(),
+                    lastName: Joi.string().required()
+                }
+            },
             cors: {
                 origin: ['*']
             }
@@ -50,16 +71,18 @@ module.exports = [
     },
     {
         config: {
-            cors: {
-                origin: ['*']
-            }
-        },
-        method: 'DELETE',
-        path: '/api/directors/{id}',
-        handler: api.directors.delete
-    },
-    {
-        config: {
+            tags: ['api'],
+            description: 'Update a director by id',
+            notes: 'Update a director by id',
+            validate: {
+                params: {
+                    id: Joi.number().required()
+                },
+                payload: {
+                    firstName: Joi.string().required(),
+                    lastName: Joi.string().required()
+                }
+            },
             cors: {
                 origin: ['*']
             }
@@ -68,10 +91,37 @@ module.exports = [
         path: '/api/directors/{id}',
         handler: api.directors.update
     },
+    {
+        config: {
+            tags: ['api'],
+            description: 'Delete a director by id',
+            notes: 'Delete a director by id',
+            validate: {
+                params: {
+                    id: Joi.number().required()
+                }
+            },
+            cors: {
+                origin: ['*']
+            }
+        },
+        method: 'DELETE',
+        path: '/api/directors/{id}',
+        handler: api.directors.delete
+    },
+
 
     // Movies
     {
         config: {
+            tags: ['api'],
+            description: 'Get one movie by id',
+            notes: 'Get one movie by id',
+            validate: {
+                params: {
+                    id: Joi.number().required()
+                }
+            },
             cors: {
                 origin: ['*']
             }
@@ -82,6 +132,9 @@ module.exports = [
     },
     {
         config: {
+            tags: ['api'],
+            description: 'Get all movies',
+            notes: 'Get all movies',
             cors: {
                 origin: ['*']
             }
@@ -92,6 +145,16 @@ module.exports = [
     },
     {
         config: {
+            tags: ['api'],
+            description: 'Add a new movie ',
+            notes: 'Add a new movie',
+            validate: {
+                payload: {
+                    title: Joi.string().required(),
+                    year: Joi.string().required(),
+                    DirectorId: Joi.number().required()
+                }
+            },
             cors: {
                 origin: ['*']
             }
@@ -102,16 +165,19 @@ module.exports = [
     },
     {
         config: {
-            cors: {
-                origin: ['*']
-            }
-        },
-        method: 'DELETE',
-        path: '/api/movies/{id}',
-        handler: api.movies.delete
-    },
-    {
-        config: {
+            tags: ['api'],
+            description: 'Update a movie by id',
+            notes: 'Update a movie by id',
+            validate: {
+                params: {
+                    id: Joi.number().required()
+                },
+                payload: {
+                    title: Joi.string().required(),
+                    year: Joi.string().required(),
+                    DirectorId: Joi.number().required()
+                }
+            },
             cors: {
                 origin: ['*']
             }
@@ -119,6 +185,24 @@ module.exports = [
         method: 'PUT',
         path: '/api/movies/{id}',
         handler: api.movies.update
+    },
+    {
+        config: {
+            tags: ['api'],
+            description: 'Delete a movie by id',
+            notes: 'Delete a movie by id',
+            validate: {
+                params: {
+                    id: Joi.number().required()
+                }
+            },
+            cors: {
+                origin: ['*']
+            }
+        },
+        method: 'DELETE',
+        path: '/api/movies/{id}',
+        handler: api.movies.delete
     },
 
 ];

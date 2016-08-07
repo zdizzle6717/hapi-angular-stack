@@ -3,12 +3,37 @@
 require('babel-core/register');
 
 const Hapi = require('hapi');
+const Inert = require('inert');
+const Vision = require('vision');
+const HapiSwagger = require('hapi-swagger');
 let models = require('./models');
 
 // Create Server
 const server = new Hapi.Server();
 server.connection({
     port: 8080
+});
+
+const options = {
+    info: {
+        'title': 'Hapi Stack API Documentation',
+        'version': '0.0.1',
+    }
+};
+
+// Register Swagger Plugin ( Use for documentation and testing purpose )
+server.register([
+    Inert,
+    Vision, {
+        register: HapiSwagger,
+        options: options
+    }
+], function(err) {
+    if (err) {
+        server.log(['error'], 'hapi-swagger load error: ' + err);
+    } else {
+        server.log(['start'], 'hapi-swagger interface loaded');
+    }
 });
 
 // Routes

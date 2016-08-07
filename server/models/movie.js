@@ -4,7 +4,6 @@ module.exports = function(sequelize, DataTypes) {
     let Movie = sequelize.define("Movie", {
         title: DataTypes.STRING,
         year: DataTypes.STRING,
-        director: DataTypes.STRING,
         DirectorId: DataTypes.INTEGER,
         genre: DataTypes.STRING,
         description: DataTypes.STRING,
