@@ -19,12 +19,19 @@ mod.run(require('./run'));
 mod.config(require('./config'));
 
 // Constants
+mod.constant('API_ROUTES', require('./constants/ApiRoutes'))
 
 // Controllers
 mod.controller('HomeController', require('./controllers/HomeController.js'));
+mod.controller('MovieController', require('./controllers/MovieController.js'));
+mod.controller('DirectorController', require('./controllers/DirectorController.js'));
 
 // Directives
 mod.directive('header', require('./directives/Header.js'));
 mod.directive('footer', require('./directives/Footer.js'));
+
+// Services
+mod.service('MovieService', require('./services/MovieService'));
+mod.service('DirectorService', require('./services/DirectorService'))
 
 module.exports = moduleName;
