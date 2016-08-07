@@ -37,6 +37,12 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             url: '/director/edit/{id}',
             controller: 'DirectorController as Director',
             template: require('./views/editDirector.html')
+        })
+        .state({
+            name: 'allDirectors',
+            url: '/directors',
+            controller: 'DirectorController as Directors',
+            template: require('./views/allDirectors.html')
         });
 
     $urlRouterProvider.otherwise('/');

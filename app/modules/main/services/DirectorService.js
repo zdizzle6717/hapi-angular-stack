@@ -20,7 +20,7 @@ function DirectorService($http, API_ROUTES) {
 
     this.create = function(data) {
         return $http({
-            method: 'GET',
+            method: 'POST',
             url: API_ROUTES.directors.create,
             data: data
         });
@@ -28,7 +28,7 @@ function DirectorService($http, API_ROUTES) {
 
     this.update = function(id, data) {
         return $http({
-            method: 'GET',
+            method: 'PUT',
             url: API_ROUTES.directors.update + id,
             data: data
         });
@@ -36,7 +36,7 @@ function DirectorService($http, API_ROUTES) {
 
     this.delete = function(id) {
         return $http({
-            method: 'GET',
+            method: 'DELETE',
             url: API_ROUTES.directors.delete + id
         });
     };

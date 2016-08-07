@@ -63,7 +63,7 @@ let directors = {
             })
             .then(function(director) {
                 if (director) {
-                    res(director).code(200);
+                    res().code(200);
                 }
                 else {
                     res().code(404);
@@ -147,7 +147,7 @@ let movies = {
             })
             .then(function(movie) {
                 if (movie) {
-                    res(movie).code(200);
+                    res().code(200);
                 }
                 else {
                     res().code(404);

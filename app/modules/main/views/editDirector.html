@@ -2,6 +2,21 @@
     <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>
     <h3 class="push-bottom-2x">Dynamic Movie App: Create/Edit Director</h3>
     <div class="small-12">
-
+        <form name="directorForm">
+          <div class="row">
+            <div class="medium-6 columns">
+              <label>First Name
+                <input type="text" ng-model="Director.currentDirector.firstName" placeholder="" required>
+              </label>
+            </div>
+            <div class="medium-6 columns">
+              <label>Last Name
+                <input type="text" ng-model="Director.currentDirector.lastName" placeholder="" required>
+              </label>
+            </div>
+          </div>
+          <div class="button" type="button" ng-click="Director.addDirector(Director.currentDirector)" ng-disabled="directorForm.$invalid" ng-if="Director.newDirector === true">Add New Director</div>
+          <div class="button" type="button" ng-click="Director.updateDirector(Director.currentDirector.id, Director.currentDirector)" ng-disabled="directorForm.$invalid" ng-if="Director.directorUpdate === true">Update Director</div>
+        </form>
     </div>
 </div>
