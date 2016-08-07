@@ -14,6 +14,8 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: 'HomeController as Home',
             template: require('./views/home.html')
         })
+
+        // Movies
         .state({
             name: 'viewMovie',
             url: '/movie/{id}',
@@ -26,6 +28,14 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: 'MovieController as Movie',
             template: require('./views/editMovie.html')
         })
+        .state({
+            name: 'allMovies',
+            url: '/movies',
+            controller: 'MovieController as Movies',
+            template: require('./views/allMovies.html')
+        })
+
+        // Directors
         .state({
             name: 'viewDirector',
             url: '/director/{id}',

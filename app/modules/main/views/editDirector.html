@@ -1,22 +1,35 @@
 <div class="row">
     <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>
-    <h3 class="push-bottom-2x">Dynamic Movie App: Create/Edit Director</h3>
-    <div class="small-12">
-        <form name="directorForm">
-          <div class="row">
+    <h3 class="push-bottom-2x">Dynamic Movie App:
+        <strong class="animate" ng-if="Director.newDirector === true">Add New Director</strong>
+        <strong class="animate" ng-if="Director.directorUpdate === true">Edit Director (ID: {{Director.currentDirector.id}})</strong>
+    </h3>
+
+    <form name="directorForm" novalidate>
+        <div class="row">
             <div class="medium-6 columns">
-              <label>First Name
-                <input type="text" ng-model="Director.currentDirector.firstName" placeholder="" required>
-              </label>
+                <label>First Name
+                    <input type="text" ng-model="Director.currentDirector.firstName" placeholder="" required>
+                </label>
             </div>
             <div class="medium-6 columns">
-              <label>Last Name
-                <input type="text" ng-model="Director.currentDirector.lastName" placeholder="" required>
-              </label>
+                <label>Last Name
+                    <input type="text" ng-model="Director.currentDirector.lastName" placeholder="" required>
+                </label>
             </div>
-          </div>
-          <div class="button" type="button" ng-click="Director.addDirector(Director.currentDirector)" ng-disabled="directorForm.$invalid" ng-if="Director.newDirector === true">Add New Director</div>
-          <div class="button" type="button" ng-click="Director.updateDirector(Director.currentDirector.id, Director.currentDirector)" ng-disabled="directorForm.$invalid" ng-if="Director.directorUpdate === true">Update Director</div>
-        </form>
-    </div>
+        </div>
+        <div class="row">
+            <div class="medium-12 columns">
+                <label>Bio
+                    <textarea ng-model="Director.currentDirector.bio" placeholder="" rows="2" required></textarea>
+                </label>
+            </div>
+        </div>
+        <div class="row text-right">
+            <div class="medium-12 columns">
+                <div class="button animate" type="button" ng-click="Director.addDirector(Director.currentDirector)" ng-disabled="directorForm.$invalid" ng-if="Director.newDirector === true">Add New Director</div>
+                <div class="button animate" type="button" ng-click="Director.updateDirector(Director.currentDirector.id, Director.currentDirector)" ng-disabled="directorForm.$invalid" ng-if="Director.directorUpdate === true">Update Director</div>
+            </div>
+        </div>
+    </form>
 </div>

@@ -1,7 +1,9 @@
 <div class="row">
     <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>
-    <h3 class="push-bottom-2x">Dynamic Movie App: {{Director.currentDirector.firstName}} {{Director.currentDirector.lastName}}</h3>
-    <div class="small-12">
-        ID: {{Director.currentDirector.id}}
-    </div>
+    <h3 class="push-bottom-2x">Dynamic Movie App: <strong>{{Director.currentDirector.firstName}} {{Director.currentDirector.lastName}}</strong></h3>
+    <h5>ID: {{Director.currentDirector.id}}</h5>
+    <label><u>Bio</u></label>
+    <p class="text-justify">
+        {{Director.currentDirector.bio}}
+    </p>
 </div>

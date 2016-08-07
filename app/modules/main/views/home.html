@@ -3,14 +3,21 @@
     <h5 class="push-bottom-4x text-justify">This <strong>S</strong>ingle <strong>P</strong>age <strong>A</strong>pplication demonstrates the efficiency of working with a well architected, <strong>REST</strong>ful system.
     The site is hosted on an <strong>A</strong>mazon <strong>W</strong>eb <strong>S</strong>ervices EC2 server running <strong>nginx</strong> on an Ubuntu 14.0.4 OS. This particular stack utilizes <strong>hapi.js</strong> with a <strong>postgreSQL</strong> database
      for an effectively scaleable <strong>API</strong>.  The front-end is built with <strong>AngularJS</strong> 1.x granting the benefit of a quick frontend User Interface and a smooth User Experience. </h5>
-    <h3 class="push-bottom-2x">Dynamic Movie App: All Movies</h3>
+    <h3 class="push-bottom-2x">Dynamic Movie App</h3>
     <div class="row">
         <div class="small-12 medium-4 large-4 columns">
             <button type="button" class="button small-12 large-6" ng-click="Home.addNewMovie()"><i class="fa fa-plus"></i> Add New Movie</button>
         </div>
-        <div class="small-12 medium-4 large-4 columns medium-offset-4 large-offset-4">
-            <input type="search" placeholder="Enter search terms...">
+        <div class="small-12 medium-4 large-4 columns medium-offset-4 large-offset-4 text-right">
+            <button type="button" class="button small-12 large-6" ng-click="Home.addNewDirector()"><i class="fa fa-plus"></i> Add New Director</button>
         </div>
+    </div>
+    <div class="small-12">
+        <p>
+            This app demonstrates a basic relation of data, in this case: Movies to Directors.  The same type of relational data is present in all data centric applications,
+            and usually with much more complexity.  This is just one piece of a bigger picture, although building the puzzle requires first understanding the individual elements of it's design.
+            I hope this helps to convey the versatility, effeciency, and application of the technologies and the benefits of their use in a development and production environment.
+        </p>
     </div>
     <div class="small-12">
         <table class="stack hover text-center">
@@ -24,16 +31,16 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="movie in Home.movies">
+                <tr ng-repeat="movie in Home.allMovies">
                     <td>{{movie.title}}</td>
                     <td>{{movie.year}}</td>
-                    <td>{{movie.synopsis}}</td>
+                    <td>{{movie.synopsis | limitTo: 50}}...</td>
                     <td>{{movie.director}}</td>
                     <td class="text-center">
                         <div class="action-buttons">
                             <a class="action" ui-sref="viewMovie({ id: movie.id })"><i class="fa fa-search"></i></a>
                             <a class="action" ui-sref="editMovie({ id: movie.id })"><i class="fa fa-pencil-square-o"></i></a>
-                            <a class="action"><i class="fa fa-times"></i></a>
+                            <!-- <a class="action" ng-click="Home.deleteMovie(movie, $index)"><i class="fa fa-times"></i></a> -->
                         </div>
                     </td>
                 </tr>

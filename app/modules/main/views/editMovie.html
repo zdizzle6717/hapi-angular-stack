@@ -1,7 +1,88 @@
 <div class="row">
     <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>
-    <h3 class="push-bottom-2x">Dynamic Movie App: Create/Edit Movie</h3>
-    <div class="small-12">
+    <h3 class="push-bottom-2x">Dynamic Movie App:
+        <strong class="animate" ng-if="Movie.newMovie === true">Add New Movie</strong>
+        <strong class="animate" ng-if="Movie.movieUpdate === true">Edit Movie (ID: {{Movie.currentMovie.id}})</strong>
+    </h3>
 
-    </div>
+    <form name="movieForm" novalidate>
+        <div class="row">
+            <div class="medium-4 columns">
+                <label>Title
+                    <input type="text" ng-model="Movie.currentMovie.title" placeholder="" required>
+                </label>
+            </div>
+            <div class="medium-4 columns">
+                <label>Director ID
+                    <select ng-model="Movie.currentMovie.DirectorId" ng-options="director.id as director.fullName for director in Movie.allDirectors" ng-required="!Movie.toggled" ng-change="Movie.toggled = false"></select>
+                </label>
+            </div>
+            <div class="medium-1 columns text-center">
+                <strong>-OR-</strong>
+            </div>
+            <div class="medium-3 columns text-center">
+                <label class="hidden">Spacer</label>
+                <button class="button small-12" ng-click="Movie.toggleDirector()"><i class="fa fa-plus" ng-if="!Movie.toggled"></i><i class="fa fa-minus" ng-if="Movie.toggled"></i> Add New Director</button>
+            </div>
+        </div>
+        <fieldset class="small-12 columns" ng-if="Movie.toggled">
+            <legend>Director Info</legend>
+            <div class="row">
+                <div class="medium-6 columns">
+                    <label>First Name
+                        <input type="text" ng-model="Movie.currentDirector.firstName" placeholder="" required>
+                    </label>
+                </div>
+                <div class="medium-6 columns">
+                    <label>Last Name
+                        <input type="text" ng-model="Movie.currentDirector.lastName" placeholder="" required>
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="medium-12 columns">
+                    <label>Bio
+                        <textarea ng-model="Movie.currentDirector.bio" placeholder="" rows="2" required></textarea>
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+        <div class="row">
+            <div class="medium-4 columns">
+                <label>Year
+                    <input type="text" ng-model="Movie.currentMovie.year" placeholder="" required>
+                </label>
+            </div>
+            <div class="medium-4 columns">
+                <label>Genre
+                    <input type="text" ng-model="Movie.currentMovie.genre" placeholder="" required>
+                </label>
+            </div>
+            <div class="medium-4 columns">
+                <label>Rating
+                    <input type="number" ng-model="Movie.currentMovie.rating" placeholder="" min="1" max="5" value="3" required>
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="medium-12 columns">
+                <label>Synopsis
+                    <textarea ng-model="Movie.currentMovie.synopsis" placeholder="Enter a condensed plot summary..." rows="2" required></textarea>
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="medium-12 columns">
+                <label>Plot/Description
+                    <textarea ng-model="Movie.currentMovie.description" placeholder="Enter a full description of extended plot summary..." rows="4" required></textarea>
+                </label>
+            </div>
+        </div>
+        <div class="row text-right">
+            <div class="medium-12 columns">
+                <div class="button animate" type="button" ng-click="Movie.addMovie(Movie.currentMovie, Movie.currentDirector)" ng-disabled="movieForm.$invalid" ng-if="Movie.newMovie === true">Add New Movie</div>
+                <div class="button animate" type="button" ng-click="Movie.updateMovie(Movie.currentMovie.id, Movie.currentMovie, Movie.currentDirector)" ng-disabled="movieForm.$invalid" ng-if="Movie.movieUpdate === true">Update Movie</div>
+            </div>
+        </div>
+    </form>
 </div>

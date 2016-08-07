@@ -58,7 +58,8 @@ module.exports = [
             validate: {
                 payload: {
                     firstName: Joi.string().required(),
-                    lastName: Joi.string().required()
+                    lastName: Joi.string().required(),
+                    bio: Joi.string().required()
                 }
             },
             cors: {
@@ -80,7 +81,8 @@ module.exports = [
                 },
                 payload: {
                     firstName: Joi.string().required(),
-                    lastName: Joi.string().required()
+                    lastName: Joi.string().required(),
+                    bio: Joi.string().required()
                 }
             },
             cors: {
@@ -152,6 +154,10 @@ module.exports = [
                 payload: {
                     title: Joi.string().required(),
                     year: Joi.string().required(),
+                    genre: Joi.string(),
+                    rating: Joi.number(),
+                    synopsis: Joi.string(),
+                    description: Joi.string(),
                     DirectorId: Joi.number().required()
                 }
             },
@@ -175,6 +181,10 @@ module.exports = [
                 payload: {
                     title: Joi.string().required(),
                     year: Joi.string().required(),
+                    genre: Joi.string(),
+                    rating: Joi.number(),
+                    synopsis: Joi.string(),
+                    description: Joi.string(),
                     DirectorId: Joi.number().required()
                 }
             },

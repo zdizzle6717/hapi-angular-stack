@@ -14,6 +14,7 @@ function DirectorController (DirectorService, $stateParams, $state) {
 
     function init() {
         let currentState = $state.current.name;
+
         if (currentState === 'viewDirector') {
             DirectorService.get($stateParams.id)
             .then(function(response) {
@@ -44,7 +45,7 @@ function DirectorController (DirectorService, $stateParams, $state) {
     function addDirector(formData) {
         DirectorService.create(formData)
         .then(function(response) {
-            $state.go('editDirector', {id: response.data.id});
+            $state.go('allDirectors');
         });
     }
 
@@ -53,6 +54,7 @@ function DirectorController (DirectorService, $stateParams, $state) {
         DirectorService.update(id, data)
         .then(function(response) {
             controller.currentDirector = response.data;
+            $state.go('allDirectors');
         });
     }
 

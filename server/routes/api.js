@@ -29,7 +29,8 @@ let directors = {
     create: function(req, res) {
         models.Director.create({
                 firstName: req.payload.firstName,
-                lastName: req.payload.lastName
+                lastName: req.payload.lastName,
+                bio: req.payload.bio
             })
             .then(function(director) {
                 res(director).code(200);
@@ -45,7 +46,8 @@ let directors = {
                 if (director) {
                     director.updateAttributes({
                         firstName: req.payload.firstName,
-                        lastName: req.payload.lastName
+                        lastName: req.payload.lastName,
+                        bio: req.payload.bio
                     }).then(function(director) {
                         res(director).code(200);
                     });
@@ -103,6 +105,7 @@ let movies = {
                 director: req.payload.director,
                 DirectorId: req.payload.DirectorId,
                 genre: req.payload.genre,
+                description: req.payload.description,
                 synopsis: req.payload.synopsis,
                 rating: req.payload.rating
             })
@@ -127,6 +130,7 @@ let movies = {
                         DirectorId: req.payload.DirectorId,
                         genre: req.payload.genre,
                         synopsis: req.payload.synopsis,
+                        description: req.payload.description,
                         rating: req.payload.rating
                     }).then(function(movie) {
                         res(movie).code(200);

@@ -1,0 +1,40 @@
+<div class="row">
+    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>
+    <h3 class="push-bottom-2x">Dynamic Movie App: <strong>All Movies</strong></h3>
+    <div class="row">
+        <div class="small-12 medium-4 large-4 columns">
+            <button type="button" class="button small-12 large-6" ui-sref="editMovie"><i class="fa fa-plus"></i> Add New Movie</button>
+        </div>
+        <div class="small-12 medium-4 large-4 columns medium-offset-4 large-offset-4">
+            <input type="search" placeholder="Enter search terms...">
+        </div>
+    </div>
+    <div class="small-12">
+        <table class="stack hover text-center">
+            <thead>
+                <tr>
+                    <th class="text-center" width="200">Movie</th>
+                    <th class="text-center" width="150">Year</th>
+                    <th class="text-center">Synopsis</th>
+                    <th class="text-center" width="150">Directed By</th>
+                    <th class="text-center" width="150">View/Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="movie in Movies.allMovies">
+                    <td>{{movie.title}}</td>
+                    <td>{{movie.year}}</td>
+                    <td>{{movie.synopsis | limitTo: 50}}...</td>
+                    <td>{{movie.director}}</td>
+                    <td class="text-center">
+                        <div class="action-buttons">
+                            <a class="action" ui-sref="viewMovie({ id: movie.id })"><i class="fa fa-search"></i></a>
+                            <a class="action" ui-sref="editMovie({ id: movie.id })"><i class="fa fa-pencil-square-o"></i></a>
+                            <a class="action" ng-click="Movies.deleteMovie(movie, $index)"><i class="fa fa-times"></i></a>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
