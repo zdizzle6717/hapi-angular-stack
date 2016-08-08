@@ -1,15 +1,19 @@
 'use strict';
 
-MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$state', '$rootScope', '$timeout'];
-function MovieController (MovieService, DirectorService, $stateParams, $state, $rootScope, $timeout) {
+MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$state', '$rootScope', '$timeout', '$filter'];
+function MovieController (MovieService, DirectorService, $stateParams, $state, $rootScope, $timeout, $filter) {
     let controller = this;
 
     controller.allMovies = [];
     controller.toggled = false;
+    controller.searchParams = '';
+    controller.orderParams = '';
+
     controller.addMovie = addMovie;
     controller.updateMovie = updateMovie;
     controller.deleteMovie = deleteMovie;
     controller.toggleDirector = toggleDirector;
+    controller.updatMovieList = controller.updateMovieList;
 
     init();
 
@@ -64,6 +68,7 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
                             if (movie.DirectorId === controller.directors[i].id) {
                                 movie.director = controller.directors[i].firstName + ' ' + controller.directors[i].lastName;
                                 controller.allMovies.push(movie);
+                                controller.allMoviesFiltered = controller.allMovies;
                             }
                         }
                     });
@@ -156,6 +161,9 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         return newData;
     }
 
+    controller.updateMovieList = function (searchParams, orderParams) {
+      controller.allMoviesFiltered = $filter('orderBy')($filter('filter')(controller.allMovies, searchParams), orderParams);
+    };
 
 }
 

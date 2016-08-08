@@ -99,10 +99,13 @@ module.exports = routes;
 },{}],4:[function(require,module,exports){
 'use strict';
 
-DirectorController.$inject = ['DirectorService', '$stateParams', '$state', '$rootScope', '$timeout'];
-function DirectorController(DirectorService, $stateParams, $state, $rootScope, $timeout) {
+DirectorController.$inject = ['DirectorService', '$stateParams', '$state', '$rootScope', '$timeout', '$filter'];
+function DirectorController(DirectorService, $stateParams, $state, $rootScope, $timeout, $filter) {
     var controller = this;
 
+    controller.searchParams = '';
+
+    controller.updateDirectorList = updateDirectorList;
     controller.addDirector = addDirector;
     controller.updateDirector = updateDirector;
     controller.deleteDirector = deleteDirector;
@@ -131,6 +134,7 @@ function DirectorController(DirectorService, $stateParams, $state, $rootScope, $
         } else {
             DirectorService.getAll().then(function (response) {
                 controller.allDirectors = response.data;
+                controller.allDirectorsFiltered = controller.allDirectors;
             });
         }
     }
@@ -168,6 +172,10 @@ function DirectorController(DirectorService, $stateParams, $state, $rootScope, $
         delete newData.createdAt;
         delete newData.updatedAt;
         return newData;
+    }
+
+    function updateDirectorList(searchParams) {
+        controller.allDirectorsFiltered = $filter('filter')(controller.allDirectors, searchParams);
     }
 }
 
@@ -226,16 +234,20 @@ module.exports = HomeController;
 },{}],6:[function(require,module,exports){
 'use strict';
 
-MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$state', '$rootScope', '$timeout'];
-function MovieController(MovieService, DirectorService, $stateParams, $state, $rootScope, $timeout) {
+MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$state', '$rootScope', '$timeout', '$filter'];
+function MovieController(MovieService, DirectorService, $stateParams, $state, $rootScope, $timeout, $filter) {
     var controller = this;
 
     controller.allMovies = [];
     controller.toggled = false;
+    controller.searchParams = '';
+    controller.orderParams = '';
+
     controller.addMovie = addMovie;
     controller.updateMovie = updateMovie;
     controller.deleteMovie = deleteMovie;
     controller.toggleDirector = toggleDirector;
+    controller.updatMovieList = controller.updateMovieList;
 
     init();
 
@@ -279,6 +291,7 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
                             if (movie.DirectorId === controller.directors[i].id) {
                                 movie.director = controller.directors[i].firstName + ' ' + controller.directors[i].lastName;
                                 controller.allMovies.push(movie);
+                                controller.allMoviesFiltered = controller.allMovies;
                             }
                         }
                     });
@@ -358,6 +371,10 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
         delete newData.updatedAt;
         return newData;
     }
+
+    controller.updateMovieList = function (searchParams, orderParams) {
+        controller.allMoviesFiltered = $filter('orderBy')($filter('filter')(controller.allMovies, searchParams), orderParams);
+    };
 }
 
 module.exports = MovieController;
@@ -431,7 +448,7 @@ module.exports = "";
 module.exports = "<ul class=\"menu\">\n  <li class=\"menu-text home-link\">Hapi Stack Demo<span class=\"menu-toggle\" ng-click=\"toggleNav()\"><i class=\"fa fa-bars\"></i></span></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"home\">Home</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allMovies\">Movies</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allDirectors\">Directors</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a href=\"http://www.demo.zackanselm.com:8080/documentation\" target=\"_blank\">API Guide</a></li>\n</ul>\n";
 
 },{}],12:[function(require,module,exports){
-module.exports = "<div class=\"update-notification animate\" ng-if=\"show\">\n    <div ng-transclude></div>\n</div>\n";
+module.exports = "<div class=\"notification-backdrop animate\" ng-if=\"show\">\n    <div class=\"update-notification animate\">\n        <div ng-transclude></div>\n    </div>\n</div>\n";
 
 },{}],13:[function(require,module,exports){
 'use strict';
@@ -573,10 +590,10 @@ function MovieService($http, API_ROUTES) {
 module.exports = MovieService;
 
 },{}],17:[function(require,module,exports){
-module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>All Directors</strong></h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ui-sref=\"editDirector\"><i class=\"fa fa-plus\"></i> Add New Director</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4\">\n            <input type=\"search\" ng-model=\"searchParams\" placeholder=\"Enter search terms...\">\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">FirstName</th>\n                    <th class=\"text-center\" width=\"150\">LastName</th>\n                    <th class=\"text-center\">Bio</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"director in Directors.allDirectors | filter: searchParams\" class=\"animate\">\n                    <td>{{director.firstName}}</td>\n                    <td>{{director.lastName}}</td>\n                    <td>{{director.bio | limitTo: 50}}...</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewDirector({ id: director.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editDirector({ id: director.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <a class=\"action\" ng-click=\"Directors.deleteDirector(director, $index)\"><i class=\"fa fa-times\"></i></a>\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n</div>\n";
+module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>All Directors</strong></h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ui-sref=\"editDirector\"><i class=\"fa fa-plus\"></i> Add New Director</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4\">\n            <input type=\"search\" ng-model=\"Directors.searchParams\" placeholder=\"Enter search terms...\" ng-change=\"Directors.updateDirectorList(Directors.searchParams)\">\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">FirstName</th>\n                    <th class=\"text-center\" width=\"150\">LastName</th>\n                    <th class=\"text-center\">Bio</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"director in Directors.allDirectorsFiltered\" class=\"animate\">\n                    <td>{{director.firstName}}</td>\n                    <td>{{director.lastName}}</td>\n                    <td>{{director.bio | limitTo: 50}}...</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewDirector({ id: director.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editDirector({ id: director.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <a class=\"action\" ng-click=\"Directors.deleteDirector(director, $index)\"><i class=\"fa fa-times\"></i></a>\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n</div>\n";
 
 },{}],18:[function(require,module,exports){
-module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>All Movies</strong></h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ui-sref=\"editMovie\"><i class=\"fa fa-plus\"></i> Add New Movie</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4\">\n            <input type=\"search\" ng-model=\"searchParams\" placeholder=\"Enter search terms...\">\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">Title</th>\n                    <th class=\"text-center\" width=\"150\">Year</th>\n                    <th class=\"text-center\">Synopsis</th>\n                    <th class=\"text-center\" width=\"250\">Directed By</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"movie in Movies.allMovies | filter: searchParams | orderBy: orderParams\" class=\"animate\">\n                    <td>{{movie.title}}</td>\n                    <td>{{movie.year}}</td>\n                    <td>{{movie.synopsis | limitTo: 50}}...</td>\n                    <td>{{movie.director}}</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewMovie({ id: movie.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editMovie({ id: movie.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <a class=\"action\" ng-click=\"Movies.deleteMovie(movie, $index)\"><i class=\"fa fa-times\"></i></a>\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n    <div class=\"small-12 medium-6 large-3 medium-offset-6 large-offset-9 text-right\">\n        <label>Sort by:\n            <select ng-model=\"orderParams\">\n                <option value=\"title\">Title</option>\n                <option value=\"year\">Year</option>\n                <option value=\"director\">Director</option>\n            </select>\n        </label>\n    </div>\n</div>\n";
+module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>All Movies</strong></h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ui-sref=\"editMovie\"><i class=\"fa fa-plus\"></i> Add New Movie</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4\">\n            <input type=\"search\" ng-model=\"Movie.searchParams\" placeholder=\"Enter search terms...\" ng-change=\"Movies.updateMovieList(Movie.searchParams, Movie.orderParams)\">\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <p class=\"filterCount\"></p>\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">Title</th>\n                    <th class=\"text-center\" width=\"150\">Year</th>\n                    <th class=\"text-center\">Synopsis</th>\n                    <th class=\"text-center\" width=\"250\">Directed By</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"movie in Movies.allMoviesFiltered\" class=\"animate\">\n                    <td>{{movie.title}}</td>\n                    <td>{{movie.year}}</td>\n                    <td>{{movie.synopsis | limitTo: 50}}...</td>\n                    <td>{{movie.director}}</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewMovie({ id: movie.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editMovie({ id: movie.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <a class=\"action\" ng-click=\"Movies.deleteMovie(movie, $index)\"><i class=\"fa fa-times\"></i></a>\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n    <div class=\"small-12 medium-6 large-3 medium-offset-6 large-offset-9 text-right\">\n        <label>Sort by:\n            <select ng-model=\"Movie.orderParams\" ng-change=\"Movies.updateMovieList(Movie.searchParams, Movie.orderParams)\">\n                <option value=\"title\">Title</option>\n                <option value=\"year\">Year</option>\n                <option value=\"director\">Director</option>\n            </select>\n        </label>\n    </div>\n</div>\n";
 
 },{}],19:[function(require,module,exports){
 module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App:\n        <strong class=\"animate\" ng-if=\"Director.newDirector === true\">Add New Director</strong>\n        <strong class=\"animate\" ng-if=\"Director.directorUpdate === true\">Edit Director (ID: {{Director.currentDirector.id}})</strong>\n    </h3>\n\n    <form name=\"directorForm\" novalidate>\n        <div class=\"row\">\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">First Name\n                    <input type=\"text\" ng-model=\"Director.currentDirector.firstName\" placeholder=\"\" required>\n                </label>\n            </div>\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">Last Name\n                    <input type=\"text\" ng-model=\"Director.currentDirector.lastName\" placeholder=\"\" required>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-12 columns\">\n                <label class=\"required\">Bio\n                    <textarea ng-model=\"Director.currentDirector.bio\" placeholder=\"\" rows=\"2\" required></textarea>\n                </label>\n            </div>\n        </div>\n        <div class=\"row text-right\">\n            <div class=\"medium-12 columns\">\n                <div class=\"button animate\" type=\"button\" ng-click=\"Director.addDirector(Director.currentDirector)\" ng-disabled=\"directorForm.$invalid\" ng-if=\"Director.newDirector === true\">Add New Director</div>\n                <div class=\"button animate\" type=\"button\" ng-click=\"Director.updateDirector(Director.currentDirector.id, Director.currentDirector)\" ng-disabled=\"directorForm.$invalid\" ng-if=\"Director.directorUpdate === true\">Update Director</div>\n            </div>\n        </div>\n    </form>\n</div>\n<div update-notification><h4>This record has been successfully updated!</h4></div>\n";

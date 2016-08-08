@@ -19,22 +19,32 @@ input, textarea, select {
     }
 }
 
-.update-notification {
+.notification-backdrop {
     position: fixed;
+    background: rgba(0, 0, 0, 0.25);
+    top: 0;
+    left: 0;
     width: 100%;
-    bottom: 0;
-    padding: .5rem;
-    background: #3c8c3c;
-    color: white;
-    display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
-    display: -ms-flexbox;  /* TWEENER - IE 10 */
-    display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
-    display: flex;         /* NEW, Spec - Firefox, Chrome, Opera */
-    align-items: center;
-    justify-content: center;
-    -webkit-justify-content: center;
+    height: 100%;
 
-    h4 {
-        margin: 0;
+    .update-notification {
+        position: fixed;
+        width: 100%;
+        bottom: 0;
+        left: 0;
+        padding: .5rem;
+        background: #3c8c3c;
+        color: white;
+        display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+        display: -ms-flexbox;  /* TWEENER - IE 10 */
+        display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+        display: flex;         /* NEW, Spec - Firefox, Chrome, Opera */
+        align-items: center;
+        justify-content: center;
+        -webkit-justify-content: center;
+
+        h4 {
+            margin: 0;
+        }
     }
 }

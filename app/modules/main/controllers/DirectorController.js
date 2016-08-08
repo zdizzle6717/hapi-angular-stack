@@ -1,9 +1,12 @@
 'use strict';
 
-DirectorController.$inject = ['DirectorService', '$stateParams', '$state', '$rootScope', '$timeout'];
-function DirectorController (DirectorService, $stateParams, $state, $rootScope, $timeout) {
+DirectorController.$inject = ['DirectorService', '$stateParams', '$state', '$rootScope', '$timeout', '$filter'];
+function DirectorController (DirectorService, $stateParams, $state, $rootScope, $timeout, $filter) {
     let controller = this;
 
+    controller.searchParams = '';
+
+    controller.updateDirectorList = updateDirectorList;
     controller.addDirector = addDirector;
     controller.updateDirector = updateDirector;
     controller.deleteDirector = deleteDirector;
@@ -38,6 +41,7 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
             DirectorService.getAll()
             .then(function(response) {
                 controller.allDirectors = response.data;
+                controller.allDirectorsFiltered = controller.allDirectors;
             });
         }
     }
@@ -78,6 +82,10 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
         delete newData.createdAt;
         delete newData.updatedAt;
         return newData;
+    }
+
+    function updateDirectorList(searchParams) {
+        controller.allDirectorsFiltered = $filter('filter')(controller.allDirectors, searchParams);
     }
 
 }
