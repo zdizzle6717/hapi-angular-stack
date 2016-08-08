@@ -5891,6 +5891,27 @@ input.ng-touched.ng-invalid, textarea.ng-touched.ng-invalid, select.ng-touched.n
 input.ng-touched.ng-valid, textarea.ng-touched.ng-valid, select.ng-touched.ng-valid {
   border: 1px solid #71c592; }
 
+.update-notification {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  padding: .5rem;
+  background: #3c8c3c;
+  color: white;
+  display: -webkit-box;
+  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+  display: -ms-flexbox;
+  /* TWEENER - IE 10 */
+  display: -webkit-flex;
+  /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+  display: flex;
+  /* NEW, Spec - Firefox, Chrome, Opera */
+  align-items: center;
+  justify-content: center;
+  -webkit-justify-content: center; }
+  .update-notification h4 {
+    margin: 0; }
+
 .view.ng-enter {
   animation: 500ms fade-in;
   z-index: 0; }

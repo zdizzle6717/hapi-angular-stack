@@ -1,7 +1,7 @@
 'use strict';
 
-DirectorController.$inject = ['DirectorService', '$stateParams', '$state'];
-function DirectorController (DirectorService, $stateParams, $state) {
+DirectorController.$inject = ['DirectorService', '$stateParams', '$state', '$rootScope', '$timeout'];
+function DirectorController (DirectorService, $stateParams, $state, $rootScope, $timeout) {
     let controller = this;
 
     controller.addDirector = addDirector;
@@ -45,7 +45,10 @@ function DirectorController (DirectorService, $stateParams, $state) {
     function addDirector(formData) {
         DirectorService.create(formData)
         .then(function(response) {
-            $state.go('allDirectors');
+            $rootScope.$broadcast('show:notification');
+            $timeout(function() {
+                $state.go('allDirectors');
+            }, 2000);
         });
     }
 
@@ -54,7 +57,10 @@ function DirectorController (DirectorService, $stateParams, $state) {
         DirectorService.update(id, data)
         .then(function(response) {
             controller.currentDirector = response.data;
-            $state.go('allDirectors');
+            $rootScope.$broadcast('show:notification');
+            $timeout(function() {
+                $state.go('allDirectors');
+            }, 2000);
         });
     }
 

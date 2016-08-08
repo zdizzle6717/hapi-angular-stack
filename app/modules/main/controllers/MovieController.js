@@ -1,7 +1,7 @@
 'use strict';
 
-MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$state'];
-function MovieController (MovieService, DirectorService, $stateParams, $state) {
+MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$state', '$rootScope', '$timeout'];
+function MovieController (MovieService, DirectorService, $stateParams, $state, $rootScope, $timeout) {
     let controller = this;
 
     controller.allMovies = [];
@@ -82,14 +82,20 @@ function MovieController (MovieService, DirectorService, $stateParams, $state) {
                 movieData.DirectorId = controller.currentDirector.id;
                 MovieService.create(movieData)
                 .then(function(response) {
-                    $state.go('allMovies');
+                    $rootScope.$broadcast('show:notification');
+                    $timeout(function() {
+                        $state.go('allMovies');
+                    }, 2000);
                 });
             });
         }
         else {
             MovieService.create(movieData)
             .then(function(response) {
-                $state.go('allMovies');
+                $rootScope.$broadcast('show:notification');
+                $timeout(function() {
+                    $state.go('allMovies');
+                }, 2000);
             });
         }
     }
@@ -107,7 +113,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state) {
                 MovieService.update(id, movie)
                 .then(function(response) {
                     controller.currentMovie = response.data;
-                    $state.go('allMovies');
+                    $rootScope.$broadcast('show:notification');
+                    $timeout(function() {
+                        $state.go('allMovies');
+                    }, 2000);
                 });
             });
         }
@@ -115,7 +124,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state) {
             MovieService.update(id, movie)
             .then(function(response) {
                 controller.currentMovie = response.data;
-                $state.go('allMovies');
+                $rootScope.$broadcast('show:notification');
+                $timeout(function() {
+                    $state.go('allMovies');
+                }, 2000);
             });
         }
     }
