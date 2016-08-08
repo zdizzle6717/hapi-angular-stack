@@ -9,10 +9,53 @@
     line-height: 16rem;
     color: #757575;
     border-bottom: 1px solid #e5e5e5;
+
+    a {
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .active {
+        a {
+            transition: all 500ms;
+            color: #2199e8;
+            background: transparent;
+            text-decoration: underline;
+        }
+    }
 }
 
 .menu-text {
     &.home-link {
         text-transform: uppercase;
+    }
+}
+
+.menu-toggle {
+    float: right;
+    display: none;
+
+    &:hover {
+        cursor: pointer;
+        opacity: .9;
+    }
+}
+
+
+// Media Query
+@media screen and (max-width: 600px) {
+    .menu-toggle {
+        display: inline
+    }
+
+    .menu {
+        li {
+            display: block;
+
+            &.untoggled {
+                display: none;
+            }
+        }
     }
 }

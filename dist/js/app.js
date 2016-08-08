@@ -378,11 +378,24 @@ module.exports = footer;
 },{"./templates/footer.html":10}],8:[function(require,module,exports){
 'use strict';
 
-header.$inject = [];
-function header() {
+header.$inject = ['$rootScope'];
+function header($rootScope) {
     return {
         name: 'header',
-        template: require('./templates/header.html')
+        template: require('./templates/header.html'),
+        scope: true,
+        link: function link(scope) {
+            scope.toggled = false;
+            scope.toggleNav = toggleNav;
+
+            $rootScope.$on('$stateChangeSuccess', function () {
+                scope.toggled = false;
+            });
+
+            function toggleNav() {
+                scope.toggled = !scope.toggled;
+            }
+        }
     };
 }
 
@@ -415,7 +428,7 @@ module.exports = updateNotification;
 module.exports = "";
 
 },{}],11:[function(require,module,exports){
-module.exports = "<ul class=\"menu\">\n  <li class=\"menu-text home-link\">Hapi Stack Demo</li>\n  <li><a href=\"#\">Home</a></li>\n  <li><a ui-sref=\"allMovies\">Movies</a></li>\n  <li><a ui-sref=\"allDirectors\">Directors</a></li>\n  <li><a href=\"http://www.demo.zackanselm.com:8080/documentation\" target=\"_blank\">API Guide</a></li>\n</ul>\n";
+module.exports = "<ul class=\"menu\">\n  <li class=\"menu-text home-link\">Hapi Stack Demo<span class=\"menu-toggle\" ng-click=\"toggleNav()\"><i class=\"fa fa-bars\"></i></span></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"home\">Home</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allMovies\">Movies</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allDirectors\">Directors</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a href=\"http://www.demo.zackanselm.com:8080/documentation\" target=\"_blank\">API Guide</a></li>\n</ul>\n";
 
 },{}],12:[function(require,module,exports){
 module.exports = "<div class=\"update-notification animate\" ng-if=\"show\">\n    <div ng-transclude></div>\n</div>\n";

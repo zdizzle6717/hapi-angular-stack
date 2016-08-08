@@ -5831,13 +5831,14 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'PT Sans'; }
 
 .content-container {
-  margin: 0 2rem; }
+  margin: 0; }
 
 .view {
   height: 100%;
   width: 100%;
   position: absolute;
-  left: 0; }
+  left: 0;
+  padding: 0 2rem; }
 
 .row {
   max-width: 85rem; }
@@ -5865,6 +5866,9 @@ fieldset {
   justify-content: center;
   -webkit-justify-content: center; }
 
+@media screen and (max-width: 900px) {
+  .view {
+    padding: 0 1rem; } }
 .action-buttons .action {
   padding: 0 .5rem; }
 
@@ -5877,10 +5881,32 @@ fieldset {
   line-height: 16rem;
   color: #757575;
   border-bottom: 1px solid #e5e5e5; }
+  .menu a:hover {
+    text-decoration: underline; }
+  .menu .active a {
+    transition: all 500ms;
+    color: #2199e8;
+    background: transparent;
+    text-decoration: underline; }
 
 .menu-text.home-link {
   text-transform: uppercase; }
 
+.menu-toggle {
+  float: right;
+  display: none; }
+  .menu-toggle:hover {
+    cursor: pointer;
+    opacity: .9; }
+
+@media screen and (max-width: 600px) {
+  .menu-toggle {
+    display: inline; }
+
+  .menu li {
+    display: block; }
+    .menu li.untoggled {
+      display: none; } }
 .required::before {
   content: '*';
   color: #e43838;
