@@ -5881,6 +5881,16 @@ fieldset {
 .menu-text.home-link {
   text-transform: uppercase; }
 
+.required::before {
+  content: '*';
+  color: #e43838;
+  padding-right: 3px; }
+
+input.ng-touched.ng-invalid, textarea.ng-touched.ng-invalid, select.ng-touched.ng-invalid {
+  border: 1px solid #e43838; }
+input.ng-touched.ng-valid, textarea.ng-touched.ng-valid, select.ng-touched.ng-valid {
+  border: 1px solid #71c592; }
+
 .view.ng-enter {
   animation: 500ms fade-in;
   z-index: 0; }

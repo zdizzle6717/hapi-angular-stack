@@ -23,15 +23,15 @@
         <table class="stack hover text-center">
             <thead>
                 <tr>
-                    <th class="text-center" width="200">Movie</th>
+                    <th class="text-center" width="200">Title</th>
                     <th class="text-center" width="150">Year</th>
                     <th class="text-center">Synopsis</th>
-                    <th class="text-center" width="150">Directed By</th>
+                    <th class="text-center" width="250">Directed By</th>
                     <th class="text-center" width="150">View/Edit</th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="movie in Home.allMovies">
+                <tr ng-repeat="movie in Home.allMovies" class="animate">
                     <td>{{movie.title}}</td>
                     <td>{{movie.year}}</td>
                     <td>{{movie.synopsis | limitTo: 50}}...</td>

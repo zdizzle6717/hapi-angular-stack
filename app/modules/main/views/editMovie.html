@@ -8,12 +8,12 @@
     <form name="movieForm" novalidate>
         <div class="row">
             <div class="medium-4 columns">
-                <label>Title
+                <label class="required">Title
                     <input type="text" ng-model="Movie.currentMovie.title" placeholder="" required>
                 </label>
             </div>
             <div class="medium-4 columns">
-                <label>Director ID
+                <label class="required">Director ID
                     <select ng-model="Movie.currentMovie.DirectorId" ng-options="director.id as director.fullName for director in Movie.allDirectors" ng-required="!Movie.toggled" ng-change="Movie.toggled = false"></select>
                 </label>
             </div>
@@ -29,19 +29,19 @@
             <legend>Director Info</legend>
             <div class="row">
                 <div class="medium-6 columns">
-                    <label>First Name
+                    <label class="required">First Name
                         <input type="text" ng-model="Movie.currentDirector.firstName" placeholder="" required>
                     </label>
                 </div>
                 <div class="medium-6 columns">
-                    <label>Last Name
+                    <label class="required">Last Name
                         <input type="text" ng-model="Movie.currentDirector.lastName" placeholder="" required>
                     </label>
                 </div>
             </div>
             <div class="row">
                 <div class="medium-12 columns">
-                    <label>Bio
+                    <label class="required">Bio
                         <textarea ng-model="Movie.currentDirector.bio" placeholder="" rows="2" required></textarea>
                     </label>
                 </div>
@@ -49,31 +49,31 @@
         </fieldset>
         <div class="row">
             <div class="medium-4 columns">
-                <label>Year
+                <label class="required">Year
                     <input type="text" ng-model="Movie.currentMovie.year" placeholder="" required>
                 </label>
             </div>
             <div class="medium-4 columns">
-                <label>Genre
+                <label class="required">Genre
                     <input type="text" ng-model="Movie.currentMovie.genre" placeholder="" required>
                 </label>
             </div>
             <div class="medium-4 columns">
-                <label>Rating
+                <label class="required">Rating
                     <input type="number" ng-model="Movie.currentMovie.rating" placeholder="" min="1" max="5" value="3" required>
                 </label>
             </div>
         </div>
         <div class="row">
             <div class="medium-12 columns">
-                <label>Synopsis
+                <label class="required">Synopsis
                     <textarea ng-model="Movie.currentMovie.synopsis" placeholder="Enter a condensed plot summary..." rows="2" required></textarea>
                 </label>
             </div>
         </div>
         <div class="row">
             <div class="medium-12 columns">
-                <label>Plot/Description
+                <label class="required">Plot/Description
                     <textarea ng-model="Movie.currentMovie.description" placeholder="Enter a full description of extended plot summary..." rows="4" required></textarea>
                 </label>
             </div>

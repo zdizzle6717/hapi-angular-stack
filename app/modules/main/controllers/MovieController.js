@@ -4,6 +4,7 @@ MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$
 function MovieController (MovieService, DirectorService, $stateParams, $state) {
     let controller = this;
 
+    controller.allMovies = [];
     controller.toggled = false;
     controller.addMovie = addMovie;
     controller.updateMovie = updateMovie;
@@ -54,7 +55,19 @@ function MovieController (MovieService, DirectorService, $stateParams, $state) {
         else {
             MovieService.getAll()
             .then(function(response) {
-                controller.allMovies = response.data;
+                controller.movies = response.data;
+                DirectorService.getAll()
+                .then(function(response) {
+                    controller.directors = response.data;
+                    controller.movies.forEach(function(movie) {
+                        for (let i = 0, len = controller.directors.length; i < len; i++) {
+                            if (movie.DirectorId === controller.directors[i].id) {
+                                movie.director = controller.directors[i].firstName + ' ' + controller.directors[i].lastName;
+                                controller.allMovies.push(movie);
+                            }
+                        }
+                    });
+                });
             });
         }
     }

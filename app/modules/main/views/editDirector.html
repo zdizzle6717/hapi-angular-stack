@@ -8,19 +8,19 @@
     <form name="directorForm" novalidate>
         <div class="row">
             <div class="medium-6 columns">
-                <label>First Name
+                <label class="required">First Name
                     <input type="text" ng-model="Director.currentDirector.firstName" placeholder="" required>
                 </label>
             </div>
             <div class="medium-6 columns">
-                <label>Last Name
+                <label class="required">Last Name
                     <input type="text" ng-model="Director.currentDirector.lastName" placeholder="" required>
                 </label>
             </div>
         </div>
         <div class="row">
             <div class="medium-12 columns">
-                <label>Bio
+                <label class="required">Bio
                     <textarea ng-model="Director.currentDirector.bio" placeholder="" rows="2" required></textarea>
                 </label>
             </div>

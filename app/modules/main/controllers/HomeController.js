@@ -1,9 +1,10 @@
 'use strict';
 
-HomeController.$inject = ['MovieService', '$stateParams', '$state'];
-function HomeController (MovieService, $stateParams, $state) {
+HomeController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$state'];
+function HomeController (MovieService, DirectorService, $stateParams, $state) {
     let controller = this;
 
+    controller.allMovies = [];
     controller.addNewMovie = addNewMovie;
     controller.addNewDirector = addNewDirector;
     controller.deleteMovie = deleteMovie;
@@ -14,7 +15,19 @@ function HomeController (MovieService, $stateParams, $state) {
     function init() {
         MovieService.getAll()
         .then(function(response) {
-            controller.allMovies = response.data;
+            controller.movies = response.data;
+            DirectorService.getAll()
+            .then(function(response) {
+                controller.directors = response.data;
+                controller.movies.forEach(function(movie) {
+                    for (let i = 0, len = controller.directors.length; i < len; i++) {
+                        if (movie.DirectorId === controller.directors[i].id) {
+                            movie.director = controller.directors[i].firstName + ' ' + controller.directors[i].lastName;
+                            controller.allMovies.push(movie);
+                        }
+                    }
+                });
+            });
         });
     }
 
