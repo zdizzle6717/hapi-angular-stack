@@ -31,7 +31,7 @@
                         <div class="action-buttons">
                             <a class="action" ui-sref="viewMovie({ id: movie.id })"><i class="fa fa-search"></i></a>
                             <a class="action" ui-sref="editMovie({ id: movie.id })"><i class="fa fa-pencil-square-o"></i></a>
-                            <a class="action" ng-click="Movies.deleteMovie(movie, $index)"><i class="fa fa-times"></i></a>
+                            <a class="action" ng-click="Movies.showDeleteModal(movie.id, $index, movie.title)"><i class="fa fa-times"></i></a>
                         </div>
                     </td>
                 </tr>
@@ -47,4 +47,10 @@
             </select>
         </label>
     </div>
+</div>
+<div delete-record-modal delete="Movies.deleteMovie(id, index)">
+    <div class="small-12 text-right">
+        <i class="fa fa-times" ng-click="Movies.hideDeleteModal()"></i>
+    </div>
+    <h4>Delete this movie record?</h4>
 </div>

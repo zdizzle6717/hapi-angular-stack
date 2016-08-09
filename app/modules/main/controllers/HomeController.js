@@ -7,7 +7,6 @@ function HomeController (MovieService, DirectorService, $stateParams, $state) {
     controller.allMovies = [];
     controller.addNewMovie = addNewMovie;
     controller.addNewDirector = addNewDirector;
-    controller.deleteMovie = deleteMovie;
     init();
 
     /////////////////////////////
@@ -37,14 +36,6 @@ function HomeController (MovieService, DirectorService, $stateParams, $state) {
 
     function addNewDirector() {
         $state.go('editDirector');
-    }
-
-    function deleteMovie(movie, index) {
-        MovieService.delete(movie.id)
-        .then(function(response) {
-            controller.allMovies.splice(index, 1);
-            console.log('You deleted movie id ' + movie.id);
-        });
     }
 
 }

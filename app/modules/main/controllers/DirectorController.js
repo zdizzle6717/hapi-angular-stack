@@ -10,6 +10,8 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
     controller.addDirector = addDirector;
     controller.updateDirector = updateDirector;
     controller.deleteDirector = deleteDirector;
+    controller.showDeleteModal = showDeleteModal;
+    controller.hideDeleteModal = hideDeleteModal;
 
     init();
 
@@ -41,6 +43,9 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
             DirectorService.getAll()
             .then(function(response) {
                 controller.allDirectors = response.data;
+                controller.allDirectors.forEach(function(director) {
+                    director.fullName = director.firstName + ' ' + director.lastName;
+                });
                 controller.allDirectorsFiltered = controller.allDirectors;
             });
         }
@@ -52,7 +57,7 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
             $rootScope.$broadcast('show:notification');
             $timeout(function() {
                 $state.go('allDirectors');
-            }, 2000);
+            }, 1500);
         });
     }
 
@@ -64,15 +69,27 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
             $rootScope.$broadcast('show:notification');
             $timeout(function() {
                 $state.go('allDirectors');
-            }, 2000);
+            }, 1500);
         });
     }
 
-    function deleteDirector(director, index) {
-        DirectorService.delete(director.id)
+    function showDeleteModal(id, index, identifier) {
+        $rootScope.$broadcast('show:modal', {
+            id: id,
+            index: index,
+            identifier: identifier,
+            toggle: true
+        });
+    }
+
+    function hideDeleteModal() {
+        $rootScope.$broadcast('show:modal', { toggle: false });
+    }
+
+    function deleteDirector(id, index) {
+        DirectorService.delete(id)
         .then(function(response) {
             controller.allDirectors.splice(index, 1);
-            console.log('You deleted director id ' + director.id);
         });
     }
 

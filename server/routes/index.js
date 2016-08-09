@@ -153,7 +153,7 @@ module.exports = [
             validate: {
                 payload: {
                     title: Joi.string().required(),
-                    year: Joi.string().required(),
+                    year: Joi.number().required(),
                     genre: Joi.string(),
                     rating: Joi.number(),
                     synopsis: Joi.string(),
@@ -180,7 +180,7 @@ module.exports = [
                 },
                 payload: {
                     title: Joi.string().required(),
-                    year: Joi.string().required(),
+                    year: Joi.number().required(),
                     genre: Joi.string(),
                     rating: Joi.number(),
                     synopsis: Joi.string(),

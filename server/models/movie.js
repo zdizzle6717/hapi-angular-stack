@@ -3,7 +3,7 @@
 module.exports = function(sequelize, DataTypes) {
     let Movie = sequelize.define("Movie", {
         title: DataTypes.STRING,
-        year: DataTypes.STRING,
+        year: DataTypes.INTEGER,
         DirectorId: DataTypes.INTEGER,
         genre: DataTypes.STRING,
         description: DataTypes.TEXT,

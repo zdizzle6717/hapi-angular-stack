@@ -1,0 +1,14 @@
+<div class="notification-backdrop animate" ng-if="show">
+    <div class="delete-record-modal animate">
+        <div ng-transclude></div>
+        <h6 class="push-bottom-3x">{{identifier}} will be removed from the database.</h6>
+        <div class="row">
+            <div class="small-6 columns">
+                <button class="button alert" ng-click="closeModal()">Cancel</button>
+            </div>
+            <div class="small-6 columns">
+                <button class="button" ng-click="deleteRecord(id, index)">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>

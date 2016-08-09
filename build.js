@@ -7,7 +7,7 @@ var stringify = require("stringify");
 /* Build Main App*/
 browserify("app/app.js")
 .transform(stringify, {
-      appliesTo: { includeExtensions: ['.hjs', '.html', '.whatever'] }
+      appliesTo: { includeExtensions: ['.html'] }
     })
 .transform("babelify", {
         presets: ["es2015"]

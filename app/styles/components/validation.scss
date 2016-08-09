@@ -20,6 +20,12 @@ input, textarea, select {
 }
 
 .notification-backdrop {
+    display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+    display: -ms-flexbox;  /* TWEENER - IE 10 */
+    display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+    display: flex;         /* NEW, Spec - Firefox, Chrome, Opera */
+    justify-content: center;
+    align-items: center;
     position: fixed;
     background: rgba(0, 0, 0, 0.25);
     top: 0;
@@ -46,5 +52,13 @@ input, textarea, select {
         h4 {
             margin: 0;
         }
+    }
+
+    .delete-record-modal {
+        background: white;
+        width: auto;
+        padding: 1rem 1.5rem;
+        text-align: center;
+        box-shadow: 0 0 5px 2px rgba(128, 128, 128, 0.81);
     }
 }

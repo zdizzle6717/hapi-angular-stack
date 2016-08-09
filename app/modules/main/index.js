@@ -30,6 +30,7 @@ mod.controller('DirectorController', require('./controllers/DirectorController.j
 mod.directive('header', require('./directives/Header.js'));
 mod.directive('footer', require('./directives/Footer.js'));
 mod.directive('updateNotification', require('./directives/UpdateNotification.js'));
+mod.directive('deleteRecordModal', require('./directives/DeleteRecordModal.js'));
 
 // Services
 mod.service('MovieService', require('./services/MovieService'));

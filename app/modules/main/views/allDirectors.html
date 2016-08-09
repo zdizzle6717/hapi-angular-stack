@@ -28,11 +28,17 @@
                         <div class="action-buttons">
                             <a class="action" ui-sref="viewDirector({ id: director.id })"><i class="fa fa-search"></i></a>
                             <a class="action" ui-sref="editDirector({ id: director.id })"><i class="fa fa-pencil-square-o"></i></a>
-                            <a class="action" ng-click="Directors.deleteDirector(director, $index)"><i class="fa fa-times"></i></a>
+                            <a class="action" ng-click="Directors.showDeleteModal(director.id, $index, director.fullName)"><i class="fa fa-times"></i></a>
                         </div>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
+</div>
+<div delete-record-modal delete="Directors.deleteDirector(id, index)">
+    <div class="small-12 text-right">
+        <i class="fa fa-times" ng-click="Directors.hideDeleteModal()"></i>
+    </div>
+    <h4>Delete this director record?</h4>
 </div>

@@ -12,7 +12,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
     controller.addMovie = addMovie;
     controller.updateMovie = updateMovie;
     controller.deleteMovie = deleteMovie;
+    controller.hideDeleteModal = hideDeleteModal;
+    controller.showDeleteModal = showDeleteModal;
     controller.toggleDirector = toggleDirector;
+    controller.getStars = getStars;
     controller.updatMovieList = controller.updateMovieList;
 
     init();
@@ -137,11 +140,23 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         }
     }
 
-    function deleteMovie(movie, index) {
-        MovieService.delete(movie.id)
+    function showDeleteModal(id, index, identifier) {
+        $rootScope.$broadcast('show:modal', {
+            id: id,
+            index: index,
+            identifier: identifier,
+            toggle: true
+        });
+    }
+
+    function hideDeleteModal() {
+        $rootScope.$broadcast('show:modal', { toggle: false });
+    }
+
+    function deleteMovie(id, index) {
+        MovieService.delete(id)
         .then(function(response) {
             controller.allMovies.splice(index, 1);
-            console.log('You deleted movie id ' + movie.id);
         });
     }
 
@@ -152,6 +167,11 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         }
     }
 
+    function getStars(num) {
+        if (num) {
+            return new Array(num);
+        }
+    }
 
     function cleanData(obj) {
         let newData = angular.copy(obj);

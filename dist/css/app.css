@@ -5869,6 +5869,11 @@ fieldset {
 @media screen and (max-width: 900px) {
   .view {
     padding: 0 1rem; } }
+[ng-click],
+[data-ng-click],
+[x-ng-click] {
+  cursor: pointer; }
+
 .action-buttons .action {
   padding: 0 .5rem; }
 
@@ -5918,6 +5923,16 @@ input.ng-touched.ng-valid, textarea.ng-touched.ng-valid, select.ng-touched.ng-va
   border: 1px solid #71c592; }
 
 .notification-backdrop {
+  display: -webkit-box;
+  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+  display: -ms-flexbox;
+  /* TWEENER - IE 10 */
+  display: -webkit-flex;
+  /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+  display: flex;
+  /* NEW, Spec - Firefox, Chrome, Opera */
+  justify-content: center;
+  align-items: center;
   position: fixed;
   background: rgba(0, 0, 0, 0.25);
   top: 0;
@@ -5945,6 +5960,12 @@ input.ng-touched.ng-valid, textarea.ng-touched.ng-valid, select.ng-touched.ng-va
     -webkit-justify-content: center; }
     .notification-backdrop .update-notification h4 {
       margin: 0; }
+  .notification-backdrop .delete-record-modal {
+    background: white;
+    width: auto;
+    padding: 1rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 0 5px 2px rgba(128, 128, 128, 0.81); }
 
 .view.ng-enter {
   animation: 500ms fade-in;
