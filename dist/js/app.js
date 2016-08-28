@@ -335,7 +335,7 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
                 MovieService.create(movieData).then(function (response) {
                     showAlert({
                         type: 'success',
-                        message: response.name + ' was successfully updated.'
+                        message: 'New movie, ' + response.data.title + ' was successfully updated.'
                     });
                     $timeout(function () {
                         $state.go('allMovies');
@@ -346,7 +346,7 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
             MovieService.create(movieData).then(function (response) {
                 showAlert({
                     type: 'success',
-                    message: response.name + ' was successfully created.'
+                    message: 'New movie, ' + response.data.title + ' was successfully created.'
                 });
                 $timeout(function () {
                     $state.go('allMovies');
