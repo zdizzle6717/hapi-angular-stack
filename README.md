@@ -1,21 +1,21 @@
-# Zack's Demo Hapi Stack
-This is a demo stack with node.js, hapi.js, angularjs 1.x, and postgreSQL.
+# Zack's Hapi Stack Demo w/ AngularJs 1.x
+This is a basic demo stack with node.js, hapi.js, angularjs 1.x, and postgreSQL.  Similar demo with ReactJs coming soon!
 
 REQUIREMENTS:
 Node.js - https://nodejs.org/en/download/package-manager/
-Ruby - https://www.ruby-lang.org/en/documentation/installation/
 postgreSQL - https://www.npmjs.com/package/pg
 
 
-TO INSTALL: sudo npm install
-(May require installing a few node packages globally)
+TO INSTALL: (sudo) npm install
 
-TO COMPILE: npm run build
-(App is compiled into dist folder)
+TO COMPILE: (sudo) npm run build
+(App JS and CSS is compiled into dist folder)
 
 
-This app demonstrates building a functional from end UI/UX with Angular 1.x in a modular design pattern.  Using CommonJs allows for organizing the code with an easy to navigate structure.  
+This app demonstrates building a functional from end UI/UX with Angular 1.x in a modular design pattern.  Using CommonJs allows for organizing the code with an easy to navigate structure.  The included build tool is similar to using webpack.  It simply compiles several .js files into one cross-browser compatible .js file.  It then compiles .scss files into one compatible .css file.
 
-The builder (build.js) will start at the root index.js file of the /app folder, transpile the code from modern ES6 to cross-browser compatible ES5 javascript.  Running npm build also compiles SCSS files starting at the declared root file.  Scss will import all branches of the stylesheet and output a single CSS file in the /dist directory.
+The API is built with Hapi.js and uses sequelize.js as an ORM between the server and PostgreSQL database.  Hapi.js outperforms Express.js and is great for team building organization of concerns.  Hopefully this models a good starting point and architecture for any relational data-centric application.
+
+I will soon be building something similar with a ReactJs frontend as opposed to AngularJs.
 
 
