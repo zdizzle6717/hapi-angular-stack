@@ -9,7 +9,8 @@ let mod = angular.module(moduleName, [
     require('angular-ui-router'),
     require('angular-sanitize'),
     require('angular-utils-pagination'),
-    require('angular-scroll')
+    require('angular-scroll'),
+	require('ng-file-upload')
 ]);
 
 // Run
@@ -31,8 +32,10 @@ mod.directive('header', require('./directives/Header.js'));
 mod.directive('footer', require('./directives/Footer.js'));
 mod.directive('updateNotification', require('./directives/UpdateNotification.js'));
 mod.directive('deleteRecordModal', require('./directives/DeleteRecordModal.js'));
+mod.directive('fileUpload', require('./directives/FileUpload.js'));
 
 // Services
+mod.service('FileService', require('./services/FileService'));
 mod.service('MovieService', require('./services/MovieService'));
 mod.service('DirectorService', require('./services/DirectorService'))
 

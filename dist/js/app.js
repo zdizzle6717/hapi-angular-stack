@@ -15,7 +15,7 @@ app.constant('appTitle', appName);
 
 angular.bootstrap(document, [appName]);
 
-},{"./modules/main":15,"angular":36,"babel-polyfill":37}],2:[function(require,module,exports){
+},{"./modules/main":17,"angular":39,"babel-polyfill":40}],2:[function(require,module,exports){
 'use strict';
 
 config.$inject = ['$stateProvider', '$urlRouterProvider', '$httpProvider'];
@@ -73,7 +73,7 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
 
 module.exports = config;
 
-},{"./views/allDirectors.html":19,"./views/allMovies.html":20,"./views/editDirector.html":21,"./views/editMovie.html":22,"./views/home.html":23,"./views/viewDirector.html":24,"./views/viewMovie.html":25}],3:[function(require,module,exports){
+},{"./views/allDirectors.html":22,"./views/allMovies.html":23,"./views/editDirector.html":24,"./views/editMovie.html":25,"./views/home.html":26,"./views/viewDirector.html":27,"./views/viewMovie.html":28}],3:[function(require,module,exports){
 'use strict';
 
 var routes = {
@@ -91,6 +91,10 @@ var routes = {
         'create': 'http://www.demo.zackanselm.com:8080/api/directors',
         'update': 'http://www.demo.zackanselm.com:8080/api/directors/',
         'delete': 'http://www.demo.zackanselm.com:8080/api/directors/'
+    },
+
+    'files': {
+        'create': 'http://www.demo.zackanselm.com:8080/api/files/'
     }
 };
 
@@ -146,7 +150,10 @@ function DirectorController(DirectorService, $stateParams, $state, $rootScope, $
 
     function addDirector(formData) {
         DirectorService.create(formData).then(function (response) {
-            $rootScope.$broadcast('show:notification');
+            showAlert({
+                type: 'success',
+                message: 'Director ' + controller.currentDirector.firstName + ' ' + controller.currentDirector.lastName + ' was successfully created.'
+            });
             $timeout(function () {
                 $state.go('allDirectors');
             }, 1500);
@@ -157,7 +164,10 @@ function DirectorController(DirectorService, $stateParams, $state, $rootScope, $
         var data = cleanData(formData);
         DirectorService.update(id, data).then(function (response) {
             controller.currentDirector = response.data;
-            $rootScope.$broadcast('show:notification');
+            showAlert({
+                type: 'success',
+                message: 'Director ' + controller.currentDirector.firstName + ' ' + controller.currentDirector.lastName + ' was successfully updated.'
+            });
             $timeout(function () {
                 $state.go('allDirectors');
             }, 1500);
@@ -193,6 +203,10 @@ function DirectorController(DirectorService, $stateParams, $state, $rootScope, $
 
     function updateDirectorList(searchParams) {
         controller.allDirectorsFiltered = $filter('filter')(controller.allDirectors, searchParams);
+    }
+
+    function showAlert(config) {
+        $rootScope.$broadcast('show:notification', { type: config.type, message: config.message });
     }
 }
 
@@ -319,7 +333,10 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
             }).then(function () {
                 movieData.DirectorId = controller.currentDirector.id;
                 MovieService.create(movieData).then(function (response) {
-                    $rootScope.$broadcast('show:notification');
+                    showAlert({
+                        type: 'success',
+                        message: response.name + ' was successfully updated.'
+                    });
                     $timeout(function () {
                         $state.go('allMovies');
                     }, 2000);
@@ -327,7 +344,10 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
             });
         } else {
             MovieService.create(movieData).then(function (response) {
-                $rootScope.$broadcast('show:notification');
+                showAlert({
+                    type: 'success',
+                    message: response.name + ' was successfully created.'
+                });
                 $timeout(function () {
                     $state.go('allMovies');
                 }, 2000);
@@ -345,7 +365,10 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
                 movie.DirectorId = controller.currentDirector.id;
                 MovieService.update(id, movie).then(function (response) {
                     controller.currentMovie = response.data;
-                    $rootScope.$broadcast('show:notification');
+                    showAlert({
+                        type: 'success',
+                        message: controller.currentMovie.title + ' was successfully updated.'
+                    });
                     $timeout(function () {
                         $state.go('allMovies');
                     }, 2000);
@@ -354,7 +377,10 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
         } else {
             MovieService.update(id, movie).then(function (response) {
                 controller.currentMovie = response.data;
-                $rootScope.$broadcast('show:notification');
+                showAlert({
+                    type: 'success',
+                    message: controller.currentMovie.title + ' was successfully updated.'
+                });
                 $timeout(function () {
                     $state.go('allMovies');
                 }, 2000);
@@ -405,6 +431,10 @@ function MovieController(MovieService, DirectorService, $stateParams, $state, $r
     controller.updateMovieList = function (searchParams, orderParams) {
         controller.allMoviesFiltered = $filter('orderBy')($filter('filter')(controller.allMovies, searchParams), orderParams);
     };
+
+    function showAlert(config) {
+        $rootScope.$broadcast('show:notification', { type: config.type, message: config.message });
+    }
 }
 
 module.exports = MovieController;
@@ -455,7 +485,77 @@ function deleteRecordModal(DirectorService, MovieService) {
 
 module.exports = deleteRecordModal;
 
-},{"./templates/deleteRecordModal.html":11}],8:[function(require,module,exports){
+},{"./templates/deleteRecordModal.html":12}],8:[function(require,module,exports){
+'use strict';
+
+fileUpload.$inject = ['FileService', '$rootScope'];
+function fileUpload(FileService, $rootScope) {
+    return {
+        name: 'fileUpload',
+        scope: {
+            model: '=',
+            param: '='
+        },
+        replace: true,
+        template: require('./templates/fileUpload.html'),
+        link: function link(scope, elem, attrs) {
+            scope.addFile = addFile;
+            scope.config = {
+                pattern: 'image/*',
+                size: {
+                    max: '20MB'
+                },
+                ratio: attrs.ratio
+            };
+            scope.validationMessage = 'Max file size: ' + scope.config.size.max + ' | ' + 'File dimensions must have a ratio of: ' + scope.config.ratio;
+
+            var maxFileSize = parseInt(scope.config.size.max) * Math.pow(1024, 2);
+
+            ////////////////////
+
+            function addFile(file) {
+                if (file === null) {
+                    scope.restrictions = true;
+                    return;
+                } else if (file.size >= maxFileSize) {
+                    showAlert({
+                        type: 'error',
+                        message: 'File size must be less than ' + scope.config.size.max
+                    });
+                } else if (file.type !== 'image/jpg' && file.type !== 'image/jpeg' && file.type !== 'image/png') {
+                    showAlert({
+                        type: 'error',
+                        message: 'File type must be jpg, jpeg, or png'
+                    });
+                } else {
+                    FileService.saveFile(file, scope.param).then(function (response) {
+                        scope.model = response.filename;
+                        scope.restrictions = false;
+                        var text = response.status + ': ' + response.statusText;
+                        showAlert({
+                            type: 'success',
+                            message: text
+                        });
+                    }).catch(function (response) {
+                        var text = response.status + ': ' + response.statusText;
+                        showAlert({
+                            type: 'error',
+                            message: text
+                        });
+                    });
+                }
+            }
+
+            function showAlert(config) {
+                $rootScope.$broadcast('show:notification', { type: config.type, message: config.message });
+            }
+        }
+    };
+}
+
+module.exports = fileUpload;
+
+},{"./templates/fileUpload.html":13}],9:[function(require,module,exports){
 'use strict';
 
 footer.$inject = [];
@@ -468,7 +568,7 @@ function footer() {
 
 module.exports = footer;
 
-},{"./templates/footer.html":12}],9:[function(require,module,exports){
+},{"./templates/footer.html":14}],10:[function(require,module,exports){
 'use strict';
 
 header.$inject = ['$rootScope'];
@@ -494,20 +594,28 @@ function header($rootScope) {
 
 module.exports = header;
 
-},{"./templates/header.html":13}],10:[function(require,module,exports){
+},{"./templates/header.html":15}],11:[function(require,module,exports){
 'use strict';
 
-updateNotification.$inject = [];
-function updateNotification() {
+updateNotification.$inject = ['$timeout'];
+function updateNotification($timeout) {
     return {
         name: 'updateNotification',
         template: require('./templates/updateNotification.html'),
         scope: true,
-        transclude: true,
         link: function link(scope, elem, attrs, ctrl) {
             scope.show = false;
-            var listener = scope.$on('show:notification', function () {
+            var listener = scope.$on('show:notification', function (event, config) {
+                scope.message = config.message;
+                if (config.type === 'error') {
+                    scope.type = 'error';
+                } else if (config.type === 'success') {
+                    scope.type = 'success';
+                }
                 scope.show = true;
+                $timeout(function () {
+                    scope.show = false;
+                }, 2000);
             });
 
             scope.$on('$destroy', listener);
@@ -517,19 +625,22 @@ function updateNotification() {
 
 module.exports = updateNotification;
 
-},{"./templates/updateNotification.html":14}],11:[function(require,module,exports){
+},{"./templates/updateNotification.html":16}],12:[function(require,module,exports){
 module.exports = "<div class=\"notification-backdrop animate\" ng-if=\"show\">\n    <div class=\"delete-record-modal animate\">\n        <div ng-transclude></div>\n        <h6 class=\"push-bottom-3x\">{{identifier}} will be removed from the database.</h6>\n        <div class=\"row\">\n            <div class=\"small-6 columns\">\n                <button class=\"button alert\" ng-click=\"closeModal()\">Cancel</button>\n            </div>\n            <div class=\"small-6 columns\">\n                <button class=\"button\" ng-click=\"deleteRecord(id, index)\">Confirm</button>\n            </div>\n        </div>\n    </div>\n</div>\n";
 
-},{}],12:[function(require,module,exports){
-module.exports = "";
-
 },{}],13:[function(require,module,exports){
-module.exports = "<ul class=\"menu\">\n  <li class=\"menu-text home-link\">Hapi Stack Demo<span class=\"menu-toggle\" ng-click=\"toggleNav()\"><i class=\"fa fa-bars\"></i></span></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"home\">Home</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allMovies\">Movies</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allDirectors\">Directors</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a href=\"http://www.demo.zackanselm.com:8080/api/documentation\" target=\"_blank\">API Guide</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a href=\"https://github.com/zdizzle6717/hapi-angular-stack\" target=\"_blank\">Git</a></li>\n</ul>\n";
+module.exports = "<div clas=\"file-upload\">\n    <button class=\"button\"\n        type=\"file\"\n        ngf-select\n        ngf-change=\"addFile($file)\"\n        ng-model=\"file\"\n        name=\"file\"\n        ngf-accept=\"'image/*'\"\n        ngf-validate=\"config\"\n        ngf-resize=\"{width: 530, height: 800}\">Add file...\n    </button>\n    <p class=\"required\" ng-if=\"restrictions\">{{validationMessage}}</p>\n</div>\n";
 
 },{}],14:[function(require,module,exports){
-module.exports = "<div class=\"notification-backdrop animate\" ng-if=\"show\">\n    <div class=\"update-notification animate\">\n        <div ng-transclude></div>\n    </div>\n</div>\n";
+module.exports = "";
 
 },{}],15:[function(require,module,exports){
+module.exports = "<ul class=\"menu\">\n  <li class=\"menu-text home-link\">Hapi Stack Demo<span class=\"menu-toggle\" ng-click=\"toggleNav()\"><i class=\"fa fa-bars\"></i></span></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"home\">Home</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allMovies\">Movies</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a ui-sref=\"allDirectors\">Directors</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a href=\"http://www.demo.zackanselm.com:8080/api/documentation\" target=\"_blank\">API Guide</a></li>\n  <li ng-class=\"{'untoggled': toggled === false}\" ui-sref-active=\"active\" class=\"animate\"><a href=\"https://github.com/zdizzle6717/hapi-angular-stack\" target=\"_blank\">Git</a></li>\n</ul>\n";
+
+},{}],16:[function(require,module,exports){
+module.exports = "<div class=\"notification-backdrop animate\" ng-if=\"show\">\n    <div class=\"update-notification animate\" ng-class=\"{'error': type === 'error', 'success': type === 'success'}\">\n        {{message}}\n    </div>\n</div>\n";
+
+},{}],17:[function(require,module,exports){
 'use strict';
 
 var moduleName = 'main';
@@ -537,7 +648,7 @@ var angular = require('angular');
 
 var mod = angular.module(moduleName, [
 // Angular
-require('angular-animate'), require('angular-ui-router'), require('angular-sanitize'), require('angular-utils-pagination'), require('angular-scroll')]);
+require('angular-animate'), require('angular-ui-router'), require('angular-sanitize'), require('angular-utils-pagination'), require('angular-scroll'), require('ng-file-upload')]);
 
 // Run
 mod.run(require('./run'));
@@ -558,14 +669,16 @@ mod.directive('header', require('./directives/Header.js'));
 mod.directive('footer', require('./directives/Footer.js'));
 mod.directive('updateNotification', require('./directives/UpdateNotification.js'));
 mod.directive('deleteRecordModal', require('./directives/DeleteRecordModal.js'));
+mod.directive('fileUpload', require('./directives/FileUpload.js'));
 
 // Services
+mod.service('FileService', require('./services/FileService'));
 mod.service('MovieService', require('./services/MovieService'));
 mod.service('DirectorService', require('./services/DirectorService'));
 
 module.exports = moduleName;
 
-},{"./config":2,"./constants/ApiRoutes":3,"./controllers/DirectorController.js":4,"./controllers/HomeController.js":5,"./controllers/MovieController.js":6,"./directives/DeleteRecordModal.js":7,"./directives/Footer.js":8,"./directives/Header.js":9,"./directives/UpdateNotification.js":10,"./run":16,"./services/DirectorService":17,"./services/MovieService":18,"angular":36,"angular-animate":27,"angular-sanitize":29,"angular-scroll":31,"angular-ui-router":32,"angular-utils-pagination":34}],16:[function(require,module,exports){
+},{"./config":2,"./constants/ApiRoutes":3,"./controllers/DirectorController.js":4,"./controllers/HomeController.js":5,"./controllers/MovieController.js":6,"./directives/DeleteRecordModal.js":7,"./directives/FileUpload.js":8,"./directives/Footer.js":9,"./directives/Header.js":10,"./directives/UpdateNotification.js":11,"./run":18,"./services/DirectorService":19,"./services/FileService":20,"./services/MovieService":21,"angular":39,"angular-animate":30,"angular-sanitize":32,"angular-scroll":34,"angular-ui-router":35,"angular-utils-pagination":37,"ng-file-upload":337}],18:[function(require,module,exports){
 'use strict';
 
 run.$inject = ['$rootScope', '$anchorScroll', '$location'];
@@ -577,7 +690,7 @@ function run($rootScope, $anchorScroll, $location) {
 
 module.exports = run;
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 DirectorService.$inject = ['$http', 'API_ROUTES'];
@@ -623,7 +736,32 @@ function DirectorService($http, API_ROUTES) {
 
 module.exports = DirectorService;
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+'use strict';
+
+FileService.$inject = ['$http', 'API_ROUTES', 'Upload'];
+function FileService($http, API_ROUTES, Upload) {
+    var service = this;
+    var routes = API_ROUTES;
+    service.saveFile = saveFile;
+
+    function saveFile(file, param) {
+        var args = {
+            method: 'POST',
+            url: routes.files.create + param,
+            file: file
+        };
+
+        return Upload.upload(args).then(function (response) {
+            var file = response.data;
+            return file;
+        });
+    }
+}
+
+module.exports = FileService;
+
+},{}],21:[function(require,module,exports){
 'use strict';
 
 MovieService.$inject = ['$http', 'API_ROUTES'];
@@ -669,28 +807,28 @@ function MovieService($http, API_ROUTES) {
 
 module.exports = MovieService;
 
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>All Directors</strong></h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ui-sref=\"editDirector\"><i class=\"fa fa-plus\"></i> Add New Director</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4\">\n            <input type=\"search\" ng-model=\"Directors.searchParams\" placeholder=\"Enter search terms...\" ng-change=\"Directors.updateDirectorList(Directors.searchParams)\">\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">FirstName</th>\n                    <th class=\"text-center\" width=\"150\">LastName</th>\n                    <th class=\"text-center\">Bio</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"director in Directors.allDirectorsFiltered\" class=\"animate\">\n                    <td>{{director.firstName}}</td>\n                    <td>{{director.lastName}}</td>\n                    <td>{{director.bio | limitTo: 50}}...</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewDirector({ id: director.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editDirector({ id: director.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <a class=\"action\" ng-click=\"Directors.showDeleteModal(director.id, $index, director.fullName)\"><i class=\"fa fa-times\"></i></a>\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n</div>\n<div delete-record-modal delete=\"Directors.deleteDirector(id, index)\">\n    <div class=\"small-12 text-right\">\n        <i class=\"fa fa-times\" ng-click=\"Directors.hideDeleteModal()\"></i>\n    </div>\n    <h4>Delete this director record?</h4>\n</div>\n";
 
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>All Movies</strong></h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ui-sref=\"editMovie\"><i class=\"fa fa-plus\"></i> Add New Movie</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4\">\n            <input type=\"search\" ng-model=\"Movie.searchParams\" placeholder=\"Enter search terms...\" ng-change=\"Movies.updateMovieList(Movie.searchParams, Movie.orderParams)\">\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <p class=\"filterCount\"></p>\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">Title</th>\n                    <th class=\"text-center\" width=\"150\">Year</th>\n                    <th class=\"text-center\">Synopsis</th>\n                    <th class=\"text-center\" width=\"250\">Directed By</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"movie in Movies.allMoviesFiltered\" class=\"animate\">\n                    <td>{{movie.title}}</td>\n                    <td>{{movie.year}}</td>\n                    <td>{{movie.synopsis | limitTo: 50}}...</td>\n                    <td>{{movie.director}}</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewMovie({ id: movie.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editMovie({ id: movie.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <a class=\"action\" ng-click=\"Movies.showDeleteModal(movie.id, $index, movie.title)\"><i class=\"fa fa-times\"></i></a>\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n    <div class=\"small-12 medium-6 large-3 medium-offset-6 large-offset-9 text-right\">\n        <label>Sort by:\n            <select ng-model=\"Movie.orderParams\" ng-change=\"Movies.updateMovieList(Movie.searchParams, Movie.orderParams)\">\n                <option value=\"title\">Title</option>\n                <option value=\"year\">Year</option>\n                <option value=\"director\">Director</option>\n            </select>\n        </label>\n    </div>\n</div>\n<div delete-record-modal delete=\"Movies.deleteMovie(id, index)\">\n    <div class=\"small-12 text-right\">\n        <i class=\"fa fa-times\" ng-click=\"Movies.hideDeleteModal()\"></i>\n    </div>\n    <h4>Delete this movie record?</h4>\n</div>\n";
 
-},{}],21:[function(require,module,exports){
-module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App:\n        <strong class=\"animate\" ng-if=\"Director.newDirector === true\">Add New Director</strong>\n        <strong class=\"animate\" ng-if=\"Director.directorUpdate === true\">Edit Director (ID: {{Director.currentDirector.id}})</strong>\n    </h3>\n\n    <form name=\"directorForm\" novalidate>\n        <div class=\"row\">\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">First Name\n                    <input type=\"text\" ng-model=\"Director.currentDirector.firstName\" placeholder=\"\" required>\n                </label>\n            </div>\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">Last Name\n                    <input type=\"text\" ng-model=\"Director.currentDirector.lastName\" placeholder=\"\" required>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-12 columns\">\n                <label class=\"required\">Bio\n                    <textarea ng-model=\"Director.currentDirector.bio\" placeholder=\"\" rows=\"2\" required></textarea>\n                </label>\n            </div>\n        </div>\n        <div class=\"row text-right\">\n            <div class=\"medium-12 columns\">\n                <div class=\"button animate\" type=\"button\" ng-click=\"Director.addDirector(Director.currentDirector)\" ng-disabled=\"directorForm.$invalid\" ng-if=\"Director.newDirector === true\">Add New Director</div>\n                <div class=\"button animate\" type=\"button\" ng-click=\"Director.updateDirector(Director.currentDirector.id, Director.currentDirector)\" ng-disabled=\"directorForm.$invalid\" ng-if=\"Director.directorUpdate === true\">Update Director</div>\n            </div>\n        </div>\n    </form>\n</div>\n<div update-notification><h4>This record has been successfully updated!</h4></div>\n";
-
-},{}],22:[function(require,module,exports){
-module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App:\n        <strong class=\"animate\" ng-if=\"Movie.newMovie === true\">Add New Movie</strong>\n        <strong class=\"animate\" ng-if=\"Movie.movieUpdate === true\">Edit Movie (ID: {{Movie.currentMovie.id}})</strong>\n    </h3>\n\n    <form name=\"movieForm\" novalidate>\n        <div class=\"row\">\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Title\n                    <input type=\"text\" ng-model=\"Movie.currentMovie.title\" placeholder=\"\" required>\n                </label>\n            </div>\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Director ID\n                    <select ng-model=\"Movie.currentMovie.DirectorId\" ng-options=\"director.id as director.fullName for director in Movie.allDirectors\" ng-required=\"!Movie.toggled\" ng-change=\"Movie.toggled = false\"></select>\n                </label>\n            </div>\n            <div class=\"medium-1 columns text-center\">\n                <strong>-OR-</strong>\n            </div>\n            <div class=\"medium-3 columns text-center\">\n                <label class=\"hidden\">Spacer</label>\n                <button class=\"button small-12\" ng-click=\"Movie.toggleDirector()\"><i class=\"fa fa-plus\" ng-if=\"!Movie.toggled\"></i><i class=\"fa fa-minus\" ng-if=\"Movie.toggled\"></i> Add New Director</button>\n            </div>\n        </div>\n        <fieldset class=\"small-12 columns animate\" ng-if=\"Movie.toggled\">\n            <legend>Director Info</legend>\n            <div class=\"row\">\n                <div class=\"medium-6 columns\">\n                    <label class=\"required\">First Name\n                        <input type=\"text\" ng-model=\"Movie.currentDirector.firstName\" placeholder=\"\" required>\n                    </label>\n                </div>\n                <div class=\"medium-6 columns\">\n                    <label class=\"required\">Last Name\n                        <input type=\"text\" ng-model=\"Movie.currentDirector.lastName\" placeholder=\"\" required>\n                    </label>\n                </div>\n            </div>\n            <div class=\"row\">\n                <div class=\"medium-12 columns\">\n                    <label class=\"required\">Bio\n                        <textarea ng-model=\"Movie.currentDirector.bio\" placeholder=\"\" rows=\"2\" required></textarea>\n                    </label>\n                </div>\n            </div>\n        </fieldset>\n        <div class=\"row\">\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Year\n                    <input type=\"number\" ng-model=\"Movie.currentMovie.year\" placeholder=\"\" min=\"1800\" max=\"3000\" required>\n                </label>\n            </div>\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Genre\n                    <input type=\"text\" ng-model=\"Movie.currentMovie.genre\" placeholder=\"\" required>\n                </label>\n            </div>\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Rating\n                    <input type=\"number\" ng-model=\"Movie.currentMovie.rating\" placeholder=\"\" min=\"1\" max=\"5\" value=\"3\" required>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-12 columns\">\n                <label class=\"required\">Synopsis\n                    <textarea ng-model=\"Movie.currentMovie.synopsis\" placeholder=\"Enter a condensed plot summary...\" rows=\"2\" required></textarea>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-12 columns\">\n                <label class=\"required\">Plot/Description\n                    <textarea ng-model=\"Movie.currentMovie.description\" placeholder=\"Enter a full description of extended plot summary...\" rows=\"4\" required></textarea>\n                </label>\n            </div>\n        </div>\n        <div class=\"row text-right\">\n            <div class=\"medium-12 columns\">\n                <div class=\"button animate\" type=\"button\" ng-click=\"Movie.addMovie(Movie.currentMovie, Movie.currentDirector)\" ng-disabled=\"movieForm.$invalid\" ng-if=\"Movie.newMovie === true\">Add New Movie</div>\n                <div class=\"button animate\" type=\"button\" ng-click=\"Movie.updateMovie(Movie.currentMovie.id, Movie.currentMovie, Movie.currentDirector)\" ng-disabled=\"movieForm.$invalid\" ng-if=\"Movie.movieUpdate === true\">Update Movie</div>\n            </div>\n        </div>\n    </form>\n</div>\n<div update-notification ng-if=\"Movie.newMovie === true\"><h4>Successfully created a new movie entry!</h4></div>\n<div update-notification ng-if=\"Movie.movieUpdate === true\"><h4>Movie data was updated successfully!</h4></div>\n";
-
-},{}],23:[function(require,module,exports){
-module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h5 class=\"push-bottom-4x text-justify\">This <strong>S</strong>ingle <strong>P</strong>age <strong>A</strong>pplication demonstrates the efficiency of working with an AngularJS frontend and a <strong>REST</strong>ful API.\n    The site is hosted on an <strong>A</strong>mazon <strong>W</strong>eb <strong>S</strong>ervices EC2 server running <strong>nginx</strong> on an Ubuntu 14.0.4 OS. This particular stack utilizes <strong>hapi.js</strong> with a <strong>postgreSQL</strong> database\n     for an effectively scaleable <strong>API</strong>.  The front-end is built with <strong>AngularJS</strong> 1.x granting the benefit of a quick frontend User Interface and a smooth User Experience. In retrospect, I would like to\n research different options for an ORM to combine with HapiJS.  Looking forward, I can see a variety of benefits from Angular2 or ReactJS for a more scaleable frontend.</h5>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App</h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ng-click=\"Home.addNewMovie()\"><i class=\"fa fa-plus\"></i> Add New Movie</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4 text-right\">\n            <button type=\"button\" class=\"button small-12 large-6\" ng-click=\"Home.addNewDirector()\"><i class=\"fa fa-plus\"></i> Add New Director</button>\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <p>\n            This app demonstrates a basic relation of data, in this case: Movies to Directors.  The same type of relational data is present in all data centric applications,\n            and usually with much more complexity.  This is just one piece of a bigger picture, although building the puzzle requires first understanding the individual elements of it's design.\n            I hope this helps to convey the versatility, effeciency, and application of the technologies and the benefits of their use in a development and production environment.\n        </p>\n    </div>\n    <div class=\"small-12\">\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">Title</th>\n                    <th class=\"text-center\" width=\"150\">Year</th>\n                    <th class=\"text-center\">Synopsis</th>\n                    <th class=\"text-center\" width=\"250\">Directed By</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"movie in Home.allMovies\" class=\"animate\">\n                    <td>{{movie.title}}</td>\n                    <td>{{movie.year}}</td>\n                    <td>{{movie.synopsis | limitTo: 50}}...</td>\n                    <td>{{movie.director}}</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewMovie({ id: movie.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editMovie({ id: movie.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <!-- <a class=\"action\" ng-click=\"Home.deleteMovie(movie, $index)\"><i class=\"fa fa-times\"></i></a> -->\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n</div>\n";
-
 },{}],24:[function(require,module,exports){
-module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>{{Director.currentDirector.firstName}} {{Director.currentDirector.lastName}}</strong></h3>\n    <h5>ID: {{Director.currentDirector.id}}</h5>\n    <label><u>Bio</u></label>\n    <p class=\"text-justify\">\n        {{Director.currentDirector.bio}}\n    </p>\n</div>\n";
+module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App:\n        <strong class=\"animate\" ng-if=\"Director.newDirector === true\">Add New Director</strong>\n        <strong class=\"animate\" ng-if=\"Director.directorUpdate === true\">Edit Director (ID: {{Director.currentDirector.id}})</strong>\n    </h3>\n\n    <form name=\"directorForm\" novalidate>\n        <div class=\"row\">\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">First Name\n                    <input type=\"text\" ng-model=\"Director.currentDirector.firstName\" placeholder=\"\" required>\n                </label>\n            </div>\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">Last Name\n                    <input type=\"text\" ng-model=\"Director.currentDirector.lastName\" placeholder=\"\" required>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-12 columns\">\n                <label class=\"required\">Bio\n                    <textarea ng-model=\"Director.currentDirector.bio\" placeholder=\"\" rows=\"2\" required></textarea>\n                </label>\n            </div>\n        </div>\n        <div class=\"row text-right\">\n            <div class=\"medium-12 columns\">\n                <div class=\"button animate\" type=\"button\" ng-click=\"Director.addDirector(Director.currentDirector)\" ng-disabled=\"directorForm.$invalid\" ng-if=\"Director.newDirector === true\">Add New Director</div>\n                <div class=\"button animate\" type=\"button\" ng-click=\"Director.updateDirector(Director.currentDirector.id, Director.currentDirector)\" ng-disabled=\"directorForm.$invalid\" ng-if=\"Director.directorUpdate === true\">Update Director</div>\n            </div>\n        </div>\n    </form>\n</div>\n";
 
 },{}],25:[function(require,module,exports){
-module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>{{Movie.currentMovie.title}}</strong></h3>\n    <h5>ID: {{Movie.currentMovie.id}} | Director: {{Movie.currentDirector.fullName}} | {{Movie.currentMovie.year}} | {{Movie.currentMovie.genre}} |\n        <i class=\"fa fa-star\" ng-repeat=\"i in Movie.getStars(Movie.currentMovie.rating) track by $index\"></i><i class=\"fa fa-star-o\" ng-repeat=\"i in Movie.getStars(5 - Movie.currentMovie.rating) track by $index\"></i>\n    </h5>\n    <label><u>Storyline</u></label>\n    <p class=\"text-justify\">\n        {{Movie.currentMovie.description}}\n    </p>\n</div>\n";
+module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App:\n        <strong class=\"animate\" ng-if=\"Movie.newMovie === true\">Add New Movie</strong>\n        <strong class=\"animate\" ng-if=\"Movie.movieUpdate === true\">Edit Movie (ID: {{Movie.currentMovie.id}})</strong>\n    </h3>\n\n    <form name=\"movieForm\" novalidate>\n        <div class=\"row\">\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Title\n                    <input type=\"text\" ng-model=\"Movie.currentMovie.title\" placeholder=\"\" required>\n                </label>\n            </div>\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Director ID\n                    <select ng-model=\"Movie.currentMovie.DirectorId\" ng-options=\"director.id as director.fullName for director in Movie.allDirectors\" ng-required=\"!Movie.toggled\" ng-change=\"Movie.toggled = false\"></select>\n                </label>\n            </div>\n            <div class=\"medium-1 columns text-center\">\n                <strong>-OR-</strong>\n            </div>\n            <div class=\"medium-3 columns text-center\">\n                <label class=\"hidden\">Spacer</label>\n                <button class=\"button small-12\" ng-click=\"Movie.toggleDirector()\"><i class=\"fa fa-plus\" ng-if=\"!Movie.toggled\"></i><i class=\"fa fa-minus\" ng-if=\"Movie.toggled\"></i> Add New Director</button>\n            </div>\n        </div>\n        <fieldset class=\"small-12 columns animate\" ng-if=\"Movie.toggled\">\n            <legend>Director Info</legend>\n            <div class=\"row\">\n                <div class=\"medium-6 columns\">\n                    <label class=\"required\">First Name\n                        <input type=\"text\" ng-model=\"Movie.currentDirector.firstName\" placeholder=\"\" required>\n                    </label>\n                </div>\n                <div class=\"medium-6 columns\">\n                    <label class=\"required\">Last Name\n                        <input type=\"text\" ng-model=\"Movie.currentDirector.lastName\" placeholder=\"\" required>\n                    </label>\n                </div>\n            </div>\n            <div class=\"row\">\n                <div class=\"medium-12 columns\">\n                    <label class=\"required\">Bio\n                        <textarea ng-model=\"Movie.currentDirector.bio\" placeholder=\"\" rows=\"2\" required></textarea>\n                    </label>\n                </div>\n            </div>\n        </fieldset>\n        <div class=\"row\">\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Year\n                    <input type=\"number\" ng-model=\"Movie.currentMovie.year\" placeholder=\"\" min=\"1800\" max=\"3000\" required>\n                </label>\n            </div>\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Genre\n                    <input type=\"text\" ng-model=\"Movie.currentMovie.genre\" placeholder=\"\" required>\n                </label>\n            </div>\n            <div class=\"medium-4 columns\">\n                <label class=\"required\">Rating\n                    <input type=\"number\" ng-model=\"Movie.currentMovie.rating\" placeholder=\"\" min=\"1\" max=\"5\" value=\"3\" required>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">Movie Cover Upload\n                    <div file-upload ratio=\"334:500\" model=\"Movie.currentMovie.coverImg\" param=\"'movies'\"></div>\n                </label>\n            </div>\n            <div class=\"medium-6 columns\">\n                <label class=\"required\">Cover Image Name\n                    <input type=\"text\" ng-model=\"Movie.currentMovie.coverImg\" placeholder=\"\" disabled required>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-12 columns\">\n                <label class=\"required\">Synopsis\n                    <textarea ng-model=\"Movie.currentMovie.synopsis\" placeholder=\"Enter a condensed plot summary...\" rows=\"2\" required></textarea>\n                </label>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"medium-12 columns\">\n                <label class=\"required\">Plot/Description\n                    <textarea ng-model=\"Movie.currentMovie.description\" placeholder=\"Enter a full description of extended plot summary...\" rows=\"4\" required></textarea>\n                </label>\n            </div>\n        </div>\n        <div class=\"row text-right\">\n            <div class=\"medium-12 columns\">\n                <div class=\"button animate\" type=\"button\" ng-click=\"Movie.addMovie(Movie.currentMovie, Movie.currentDirector)\" ng-disabled=\"movieForm.$invalid\" ng-if=\"Movie.newMovie === true\">Add New Movie</div>\n                <div class=\"button animate\" type=\"button\" ng-click=\"Movie.updateMovie(Movie.currentMovie.id, Movie.currentMovie, Movie.currentDirector)\" ng-disabled=\"movieForm.$invalid\" ng-if=\"Movie.movieUpdate === true\">Update Movie</div>\n            </div>\n        </div>\n    </form>\n</div>\n";
 
 },{}],26:[function(require,module,exports){
+module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h5 class=\"push-bottom-4x text-justify\">This <strong>S</strong>ingle <strong>P</strong>age <strong>A</strong>pplication demonstrates the efficiency of working with an AngularJS frontend and a <strong>REST</strong>ful API.\n    The site is hosted on an <strong>A</strong>mazon <strong>W</strong>eb <strong>S</strong>ervices EC2 server running <strong>nginx</strong> on an Ubuntu 14.0.4 OS. This particular stack utilizes <strong>hapi.js</strong> with a <strong>postgreSQL</strong> database\n     for an effectively scaleable <strong>API</strong>.  The front-end is built with <strong>AngularJS</strong> 1.x granting the benefit of a quick frontend User Interface and a smooth User Experience. In retrospect, I would like to\n research different options for an ORM to combine with HapiJS.  Looking forward, I can see a variety of benefits from Angular2 or ReactJS for a more scaleable frontend.</h5>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App</h3>\n    <div class=\"row\">\n        <div class=\"small-12 medium-4 large-4 columns\">\n            <button type=\"button\" class=\"button small-12 large-6\" ng-click=\"Home.addNewMovie()\"><i class=\"fa fa-plus\"></i> Add New Movie</button>\n        </div>\n        <div class=\"small-12 medium-4 large-4 columns medium-offset-4 large-offset-4 text-right\">\n            <button type=\"button\" class=\"button small-12 large-6\" ng-click=\"Home.addNewDirector()\"><i class=\"fa fa-plus\"></i> Add New Director</button>\n        </div>\n    </div>\n    <div class=\"small-12\">\n        <p>\n            This app demonstrates a basic relation of data, in this case: Movies to Directors.  The same type of relational data is present in all data centric applications,\n            and usually with much more complexity.  This is just one piece of a bigger picture, although building the puzzle requires first understanding the individual elements of it's design.\n            I hope this helps to convey the versatility, effeciency, and application of the technologies and the benefits of their use in a development and production environment.\n        </p>\n    </div>\n    <div class=\"small-12\">\n        <table class=\"stack hover text-center\">\n            <thead>\n                <tr>\n                    <th class=\"text-center\" width=\"200\">Title</th>\n                    <th class=\"text-center\" width=\"150\">Year</th>\n                    <th class=\"text-center\">Synopsis</th>\n                    <th class=\"text-center\" width=\"250\">Directed By</th>\n                    <th class=\"text-center\" width=\"150\">View/Edit</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"movie in Home.allMovies\" class=\"animate\">\n                    <td>{{movie.title}}</td>\n                    <td>{{movie.year}}</td>\n                    <td>{{movie.synopsis | limitTo: 50}}...</td>\n                    <td>{{movie.director}}</td>\n                    <td class=\"text-center\">\n                        <div class=\"action-buttons\">\n                            <a class=\"action\" ui-sref=\"viewMovie({ id: movie.id })\"><i class=\"fa fa-search\"></i></a>\n                            <a class=\"action\" ui-sref=\"editMovie({ id: movie.id })\"><i class=\"fa fa-pencil-square-o\"></i></a>\n                            <!-- <a class=\"action\" ng-click=\"Home.deleteMovie(movie, $index)\"><i class=\"fa fa-times\"></i></a> -->\n                        </div>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n</div>\n";
+
+},{}],27:[function(require,module,exports){
+module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>{{Director.currentDirector.firstName}} {{Director.currentDirector.lastName}}</strong></h3>\n    <h5>ID: {{Director.currentDirector.id}}</h5>\n    <label><u>Bio</u></label>\n    <p class=\"text-justify\">\n        {{Director.currentDirector.bio}}\n    </p>\n</div>\n";
+
+},{}],28:[function(require,module,exports){
+module.exports = "<div class=\"row\">\n    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>\n    <h3 class=\"push-bottom-2x\">Dynamic Movie App: <strong>{{Movie.currentMovie.title}}</strong></h3>\n    <h5>ID: {{Movie.currentMovie.id}} | Director: {{Movie.currentDirector.fullName}} | {{Movie.currentMovie.year}} | {{Movie.currentMovie.genre}} |\n        <i class=\"fa fa-star\" ng-repeat=\"i in Movie.getStars(Movie.currentMovie.rating) track by $index\"></i><i class=\"fa fa-star-o\" ng-repeat=\"i in Movie.getStars(5 - Movie.currentMovie.rating) track by $index\"></i>\n    </h5>\n\t<div class=\"medium-3 columns\" ng-if=\"Movie.currentMovie.coverImg\">\n\t\t<img ng-src=\"/uploads/movies/{{Movie.currentMovie.coverImg}}\">\n\t</div>\n\t<div class=\"columns\" ng-class=\"{'medium-9': Movie.currentMovie.coverImg, 'medium-12': !Movie.currentMovie.coverImg}\">\n\t\t<label><u>Storyline</u></label>\n\t\t<p class=\"text-justify\">\n\t\t\t{{Movie.currentMovie.description}}\n\t\t</p>\n\t</div>\n</div>\n";
+
+},{}],29:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.8
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -4831,11 +4969,11 @@ angular.module('ngAnimate', [], function initAngularHelpers() {
 
 })(window, window.angular);
 
-},{}],27:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 require('./angular-animate');
 module.exports = 'ngAnimate';
 
-},{"./angular-animate":26}],28:[function(require,module,exports){
+},{"./angular-animate":29}],31:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.8
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -5575,11 +5713,11 @@ angular.module('ngSanitize').filter('linky', ['$sanitize', function($sanitize) {
 
 })(window, window.angular);
 
-},{}],29:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 require('./angular-sanitize');
 module.exports = 'ngSanitize';
 
-},{"./angular-sanitize":28}],30:[function(require,module,exports){
+},{"./angular-sanitize":31}],33:[function(require,module,exports){
 /**
   * x is a value between 0 and 1, indicating where in the animation you are.
   */
@@ -6208,13 +6346,13 @@ angular.module('duScroll.scrollspy', ['duScroll.spyAPI'])
   };
 }]);
 
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 require('angular');
 require('./angular-scroll');
 
 module.exports = 'duScroll';
 
-},{"./angular-scroll":30,"angular":36}],32:[function(require,module,exports){
+},{"./angular-scroll":33,"angular":39}],35:[function(require,module,exports){
 /**
  * State-based routing for AngularJS
  * @version v0.2.18
@@ -10754,7 +10892,7 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
-},{}],33:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /**
  * dirPagination - AngularJS module for paginating (almost) anything.
  *
@@ -11325,11 +11463,11 @@ angular.module('ui.router.state')
     }
 })();
 
-},{}],34:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 require('./dirPagination');
 module.exports = 'angularUtils.directives.dirPagination';
 
-},{"./dirPagination":33}],35:[function(require,module,exports){
+},{"./dirPagination":36}],38:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.8
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -43098,11 +43236,11 @@ $provide.value("$locale", {
 })(window);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":35}],37:[function(require,module,exports){
+},{"./angular":38}],40:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -43137,21 +43275,21 @@ define(String.prototype, "padRight", "".padEnd);
   [][key] && define(Array, key, Function.call.bind([][key]));
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"core-js/fn/regexp/escape":38,"core-js/shim":331,"regenerator-runtime/runtime":332}],38:[function(require,module,exports){
+},{"core-js/fn/regexp/escape":41,"core-js/shim":334,"regenerator-runtime/runtime":335}],41:[function(require,module,exports){
 require('../../modules/core.regexp.escape');
 module.exports = require('../../modules/_core').RegExp.escape;
-},{"../../modules/_core":59,"../../modules/core.regexp.escape":155}],39:[function(require,module,exports){
+},{"../../modules/_core":62,"../../modules/core.regexp.escape":158}],42:[function(require,module,exports){
 module.exports = function(it){
   if(typeof it != 'function')throw TypeError(it + ' is not a function!');
   return it;
 };
-},{}],40:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 var cof = require('./_cof');
 module.exports = function(it, msg){
   if(typeof it != 'number' && cof(it) != 'Number')throw TypeError(msg);
   return +it;
 };
-},{"./_cof":54}],41:[function(require,module,exports){
+},{"./_cof":57}],44:[function(require,module,exports){
 // 22.1.3.31 Array.prototype[@@unscopables]
 var UNSCOPABLES = require('./_wks')('unscopables')
   , ArrayProto  = Array.prototype;
@@ -43159,19 +43297,19 @@ if(ArrayProto[UNSCOPABLES] == undefined)require('./_hide')(ArrayProto, UNSCOPABL
 module.exports = function(key){
   ArrayProto[UNSCOPABLES][key] = true;
 };
-},{"./_hide":76,"./_wks":153}],42:[function(require,module,exports){
+},{"./_hide":79,"./_wks":156}],45:[function(require,module,exports){
 module.exports = function(it, Constructor, name, forbiddenField){
   if(!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)){
     throw TypeError(name + ': incorrect invocation!');
   } return it;
 };
-},{}],43:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 var isObject = require('./_is-object');
 module.exports = function(it){
   if(!isObject(it))throw TypeError(it + ' is not an object!');
   return it;
 };
-},{"./_is-object":85}],44:[function(require,module,exports){
+},{"./_is-object":88}],47:[function(require,module,exports){
 // 22.1.3.3 Array.prototype.copyWithin(target, start, end = this.length)
 'use strict';
 var toObject = require('./_to-object')
@@ -43198,7 +43336,7 @@ module.exports = [].copyWithin || function copyWithin(target/*= 0*/, start/*= 0,
     from += inc;
   } return O;
 };
-},{"./_to-index":141,"./_to-length":144,"./_to-object":145}],45:[function(require,module,exports){
+},{"./_to-index":144,"./_to-length":147,"./_to-object":148}],48:[function(require,module,exports){
 // 22.1.3.6 Array.prototype.fill(value, start = 0, end = this.length)
 'use strict';
 var toObject = require('./_to-object')
@@ -43214,7 +43352,7 @@ module.exports = function fill(value /*, start = 0, end = @length */){
   while(endPos > index)O[index++] = value;
   return O;
 };
-},{"./_to-index":141,"./_to-length":144,"./_to-object":145}],46:[function(require,module,exports){
+},{"./_to-index":144,"./_to-length":147,"./_to-object":148}],49:[function(require,module,exports){
 var forOf = require('./_for-of');
 
 module.exports = function(iter, ITERATOR){
@@ -43223,7 +43361,7 @@ module.exports = function(iter, ITERATOR){
   return result;
 };
 
-},{"./_for-of":73}],47:[function(require,module,exports){
+},{"./_for-of":76}],50:[function(require,module,exports){
 // false -> Array#indexOf
 // true  -> Array#includes
 var toIObject = require('./_to-iobject')
@@ -43245,7 +43383,7 @@ module.exports = function(IS_INCLUDES){
     } return !IS_INCLUDES && -1;
   };
 };
-},{"./_to-index":141,"./_to-iobject":143,"./_to-length":144}],48:[function(require,module,exports){
+},{"./_to-index":144,"./_to-iobject":146,"./_to-length":147}],51:[function(require,module,exports){
 // 0 -> Array#forEach
 // 1 -> Array#map
 // 2 -> Array#filter
@@ -43290,7 +43428,7 @@ module.exports = function(TYPE, $create){
     return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
   };
 };
-},{"./_array-species-create":51,"./_ctx":61,"./_iobject":81,"./_to-length":144,"./_to-object":145}],49:[function(require,module,exports){
+},{"./_array-species-create":54,"./_ctx":64,"./_iobject":84,"./_to-length":147,"./_to-object":148}],52:[function(require,module,exports){
 var aFunction = require('./_a-function')
   , toObject  = require('./_to-object')
   , IObject   = require('./_iobject')
@@ -43319,7 +43457,7 @@ module.exports = function(that, callbackfn, aLen, memo, isRight){
   }
   return memo;
 };
-},{"./_a-function":39,"./_iobject":81,"./_to-length":144,"./_to-object":145}],50:[function(require,module,exports){
+},{"./_a-function":42,"./_iobject":84,"./_to-length":147,"./_to-object":148}],53:[function(require,module,exports){
 var isObject = require('./_is-object')
   , isArray  = require('./_is-array')
   , SPECIES  = require('./_wks')('species');
@@ -43336,14 +43474,14 @@ module.exports = function(original){
     }
   } return C === undefined ? Array : C;
 };
-},{"./_is-array":83,"./_is-object":85,"./_wks":153}],51:[function(require,module,exports){
+},{"./_is-array":86,"./_is-object":88,"./_wks":156}],54:[function(require,module,exports){
 // 9.4.2.3 ArraySpeciesCreate(originalArray, length)
 var speciesConstructor = require('./_array-species-constructor');
 
 module.exports = function(original, length){
   return new (speciesConstructor(original))(length);
 };
-},{"./_array-species-constructor":50}],52:[function(require,module,exports){
+},{"./_array-species-constructor":53}],55:[function(require,module,exports){
 'use strict';
 var aFunction  = require('./_a-function')
   , isObject   = require('./_is-object')
@@ -43368,7 +43506,7 @@ module.exports = Function.bind || function bind(that /*, args... */){
   if(isObject(fn.prototype))bound.prototype = fn.prototype;
   return bound;
 };
-},{"./_a-function":39,"./_invoke":80,"./_is-object":85}],53:[function(require,module,exports){
+},{"./_a-function":42,"./_invoke":83,"./_is-object":88}],56:[function(require,module,exports){
 // getting tag from 19.1.3.6 Object.prototype.toString()
 var cof = require('./_cof')
   , TAG = require('./_wks')('toStringTag')
@@ -43392,13 +43530,13 @@ module.exports = function(it){
     // ES3 arguments fallback
     : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
 };
-},{"./_cof":54,"./_wks":153}],54:[function(require,module,exports){
+},{"./_cof":57,"./_wks":156}],57:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = function(it){
   return toString.call(it).slice(8, -1);
 };
-},{}],55:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 'use strict';
 var dP          = require('./_object-dp').f
   , create      = require('./_object-create')
@@ -43541,7 +43679,7 @@ module.exports = {
     setSpecies(NAME);
   }
 };
-},{"./_an-instance":42,"./_ctx":61,"./_defined":63,"./_descriptors":64,"./_for-of":73,"./_iter-define":89,"./_iter-step":91,"./_meta":98,"./_object-create":102,"./_object-dp":103,"./_redefine-all":122,"./_set-species":127}],56:[function(require,module,exports){
+},{"./_an-instance":45,"./_ctx":64,"./_defined":66,"./_descriptors":67,"./_for-of":76,"./_iter-define":92,"./_iter-step":94,"./_meta":101,"./_object-create":105,"./_object-dp":106,"./_redefine-all":125,"./_set-species":130}],59:[function(require,module,exports){
 // https://github.com/DavidBruant/Map-Set.prototype.toJSON
 var classof = require('./_classof')
   , from    = require('./_array-from-iterable');
@@ -43551,7 +43689,7 @@ module.exports = function(NAME){
     return from(this);
   };
 };
-},{"./_array-from-iterable":46,"./_classof":53}],57:[function(require,module,exports){
+},{"./_array-from-iterable":49,"./_classof":56}],60:[function(require,module,exports){
 'use strict';
 var redefineAll       = require('./_redefine-all')
   , getWeak           = require('./_meta').getWeak
@@ -43635,7 +43773,7 @@ module.exports = {
   },
   ufstore: uncaughtFrozenStore
 };
-},{"./_an-instance":42,"./_an-object":43,"./_array-methods":48,"./_for-of":73,"./_has":75,"./_is-object":85,"./_meta":98,"./_redefine-all":122}],58:[function(require,module,exports){
+},{"./_an-instance":45,"./_an-object":46,"./_array-methods":51,"./_for-of":76,"./_has":78,"./_is-object":88,"./_meta":101,"./_redefine-all":125}],61:[function(require,module,exports){
 'use strict';
 var global            = require('./_global')
   , $export           = require('./_export')
@@ -43721,10 +43859,10 @@ module.exports = function(NAME, wrapper, methods, common, IS_MAP, IS_WEAK){
 
   return C;
 };
-},{"./_an-instance":42,"./_export":68,"./_fails":70,"./_for-of":73,"./_global":74,"./_inherit-if-required":79,"./_is-object":85,"./_iter-detect":90,"./_meta":98,"./_redefine":123,"./_redefine-all":122,"./_set-to-string-tag":128}],59:[function(require,module,exports){
+},{"./_an-instance":45,"./_export":71,"./_fails":73,"./_for-of":76,"./_global":77,"./_inherit-if-required":82,"./_is-object":88,"./_iter-detect":93,"./_meta":101,"./_redefine":126,"./_redefine-all":125,"./_set-to-string-tag":131}],62:[function(require,module,exports){
 var core = module.exports = {version: '2.4.0'};
 if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-},{}],60:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 'use strict';
 var $defineProperty = require('./_object-dp')
   , createDesc      = require('./_property-desc');
@@ -43733,7 +43871,7 @@ module.exports = function(object, index, value){
   if(index in object)$defineProperty.f(object, index, createDesc(0, value));
   else object[index] = value;
 };
-},{"./_object-dp":103,"./_property-desc":121}],61:[function(require,module,exports){
+},{"./_object-dp":106,"./_property-desc":124}],64:[function(require,module,exports){
 // optional / simple context binding
 var aFunction = require('./_a-function');
 module.exports = function(fn, that, length){
@@ -43754,7 +43892,7 @@ module.exports = function(fn, that, length){
     return fn.apply(that, arguments);
   };
 };
-},{"./_a-function":39}],62:[function(require,module,exports){
+},{"./_a-function":42}],65:[function(require,module,exports){
 'use strict';
 var anObject    = require('./_an-object')
   , toPrimitive = require('./_to-primitive')
@@ -43764,18 +43902,18 @@ module.exports = function(hint){
   if(hint !== 'string' && hint !== NUMBER && hint !== 'default')throw TypeError('Incorrect hint');
   return toPrimitive(anObject(this), hint != NUMBER);
 };
-},{"./_an-object":43,"./_to-primitive":146}],63:[function(require,module,exports){
+},{"./_an-object":46,"./_to-primitive":149}],66:[function(require,module,exports){
 // 7.2.1 RequireObjectCoercible(argument)
 module.exports = function(it){
   if(it == undefined)throw TypeError("Can't call method on  " + it);
   return it;
 };
-},{}],64:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 // Thank's IE8 for his funny defineProperty
 module.exports = !require('./_fails')(function(){
   return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
 });
-},{"./_fails":70}],65:[function(require,module,exports){
+},{"./_fails":73}],68:[function(require,module,exports){
 var isObject = require('./_is-object')
   , document = require('./_global').document
   // in old IE typeof document.createElement is 'object'
@@ -43783,12 +43921,12 @@ var isObject = require('./_is-object')
 module.exports = function(it){
   return is ? document.createElement(it) : {};
 };
-},{"./_global":74,"./_is-object":85}],66:[function(require,module,exports){
+},{"./_global":77,"./_is-object":88}],69:[function(require,module,exports){
 // IE 8- don't enum bug keys
 module.exports = (
   'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
 ).split(',');
-},{}],67:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 // all enumerable object keys, includes symbols
 var getKeys = require('./_object-keys')
   , gOPS    = require('./_object-gops')
@@ -43804,7 +43942,7 @@ module.exports = function(it){
     while(symbols.length > i)if(isEnum.call(it, key = symbols[i++]))result.push(key);
   } return result;
 };
-},{"./_object-gops":109,"./_object-keys":112,"./_object-pie":113}],68:[function(require,module,exports){
+},{"./_object-gops":112,"./_object-keys":115,"./_object-pie":116}],71:[function(require,module,exports){
 var global    = require('./_global')
   , core      = require('./_core')
   , hide      = require('./_hide')
@@ -43848,7 +43986,7 @@ $export.W = 32;  // wrap
 $export.U = 64;  // safe
 $export.R = 128; // real proto method for `library` 
 module.exports = $export;
-},{"./_core":59,"./_ctx":61,"./_global":74,"./_hide":76,"./_redefine":123}],69:[function(require,module,exports){
+},{"./_core":62,"./_ctx":64,"./_global":77,"./_hide":79,"./_redefine":126}],72:[function(require,module,exports){
 var MATCH = require('./_wks')('match');
 module.exports = function(KEY){
   var re = /./;
@@ -43861,7 +43999,7 @@ module.exports = function(KEY){
     } catch(f){ /* empty */ }
   } return true;
 };
-},{"./_wks":153}],70:[function(require,module,exports){
+},{"./_wks":156}],73:[function(require,module,exports){
 module.exports = function(exec){
   try {
     return !!exec();
@@ -43869,7 +44007,7 @@ module.exports = function(exec){
     return true;
   }
 };
-},{}],71:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 'use strict';
 var hide     = require('./_hide')
   , redefine = require('./_redefine')
@@ -43898,7 +44036,7 @@ module.exports = function(KEY, length, exec){
     );
   }
 };
-},{"./_defined":63,"./_fails":70,"./_hide":76,"./_redefine":123,"./_wks":153}],72:[function(require,module,exports){
+},{"./_defined":66,"./_fails":73,"./_hide":79,"./_redefine":126,"./_wks":156}],75:[function(require,module,exports){
 'use strict';
 // 21.2.5.3 get RegExp.prototype.flags
 var anObject = require('./_an-object');
@@ -43912,7 +44050,7 @@ module.exports = function(){
   if(that.sticky)     result += 'y';
   return result;
 };
-},{"./_an-object":43}],73:[function(require,module,exports){
+},{"./_an-object":46}],76:[function(require,module,exports){
 var ctx         = require('./_ctx')
   , call        = require('./_iter-call')
   , isArrayIter = require('./_is-array-iter')
@@ -43938,17 +44076,17 @@ var exports = module.exports = function(iterable, entries, fn, that, ITERATOR){
 };
 exports.BREAK  = BREAK;
 exports.RETURN = RETURN;
-},{"./_an-object":43,"./_ctx":61,"./_is-array-iter":82,"./_iter-call":87,"./_to-length":144,"./core.get-iterator-method":154}],74:[function(require,module,exports){
+},{"./_an-object":46,"./_ctx":64,"./_is-array-iter":85,"./_iter-call":90,"./_to-length":147,"./core.get-iterator-method":157}],77:[function(require,module,exports){
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global = module.exports = typeof window != 'undefined' && window.Math == Math
   ? window : typeof self != 'undefined' && self.Math == Math ? self : Function('return this')();
 if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
-},{}],75:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 var hasOwnProperty = {}.hasOwnProperty;
 module.exports = function(it, key){
   return hasOwnProperty.call(it, key);
 };
-},{}],76:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 var dP         = require('./_object-dp')
   , createDesc = require('./_property-desc');
 module.exports = require('./_descriptors') ? function(object, key, value){
@@ -43957,13 +44095,13 @@ module.exports = require('./_descriptors') ? function(object, key, value){
   object[key] = value;
   return object;
 };
-},{"./_descriptors":64,"./_object-dp":103,"./_property-desc":121}],77:[function(require,module,exports){
+},{"./_descriptors":67,"./_object-dp":106,"./_property-desc":124}],80:[function(require,module,exports){
 module.exports = require('./_global').document && document.documentElement;
-},{"./_global":74}],78:[function(require,module,exports){
+},{"./_global":77}],81:[function(require,module,exports){
 module.exports = !require('./_descriptors') && !require('./_fails')(function(){
   return Object.defineProperty(require('./_dom-create')('div'), 'a', {get: function(){ return 7; }}).a != 7;
 });
-},{"./_descriptors":64,"./_dom-create":65,"./_fails":70}],79:[function(require,module,exports){
+},{"./_descriptors":67,"./_dom-create":68,"./_fails":73}],82:[function(require,module,exports){
 var isObject       = require('./_is-object')
   , setPrototypeOf = require('./_set-proto').set;
 module.exports = function(that, target, C){
@@ -43972,7 +44110,7 @@ module.exports = function(that, target, C){
     setPrototypeOf(that, P);
   } return that;
 };
-},{"./_is-object":85,"./_set-proto":126}],80:[function(require,module,exports){
+},{"./_is-object":88,"./_set-proto":129}],83:[function(require,module,exports){
 // fast apply, http://jsperf.lnkit.com/fast-apply/5
 module.exports = function(fn, args, that){
   var un = that === undefined;
@@ -43989,13 +44127,13 @@ module.exports = function(fn, args, that){
                       : fn.call(that, args[0], args[1], args[2], args[3]);
   } return              fn.apply(that, args);
 };
-},{}],81:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var cof = require('./_cof');
 module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
-},{"./_cof":54}],82:[function(require,module,exports){
+},{"./_cof":57}],85:[function(require,module,exports){
 // check on default Array iterator
 var Iterators  = require('./_iterators')
   , ITERATOR   = require('./_wks')('iterator')
@@ -44004,24 +44142,24 @@ var Iterators  = require('./_iterators')
 module.exports = function(it){
   return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
 };
-},{"./_iterators":92,"./_wks":153}],83:[function(require,module,exports){
+},{"./_iterators":95,"./_wks":156}],86:[function(require,module,exports){
 // 7.2.2 IsArray(argument)
 var cof = require('./_cof');
 module.exports = Array.isArray || function isArray(arg){
   return cof(arg) == 'Array';
 };
-},{"./_cof":54}],84:[function(require,module,exports){
+},{"./_cof":57}],87:[function(require,module,exports){
 // 20.1.2.3 Number.isInteger(number)
 var isObject = require('./_is-object')
   , floor    = Math.floor;
 module.exports = function isInteger(it){
   return !isObject(it) && isFinite(it) && floor(it) === it;
 };
-},{"./_is-object":85}],85:[function(require,module,exports){
+},{"./_is-object":88}],88:[function(require,module,exports){
 module.exports = function(it){
   return typeof it === 'object' ? it !== null : typeof it === 'function';
 };
-},{}],86:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 // 7.2.8 IsRegExp(argument)
 var isObject = require('./_is-object')
   , cof      = require('./_cof')
@@ -44030,7 +44168,7 @@ module.exports = function(it){
   var isRegExp;
   return isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : cof(it) == 'RegExp');
 };
-},{"./_cof":54,"./_is-object":85,"./_wks":153}],87:[function(require,module,exports){
+},{"./_cof":57,"./_is-object":88,"./_wks":156}],90:[function(require,module,exports){
 // call something on iterator step with safe closing on error
 var anObject = require('./_an-object');
 module.exports = function(iterator, fn, value, entries){
@@ -44043,7 +44181,7 @@ module.exports = function(iterator, fn, value, entries){
     throw e;
   }
 };
-},{"./_an-object":43}],88:[function(require,module,exports){
+},{"./_an-object":46}],91:[function(require,module,exports){
 'use strict';
 var create         = require('./_object-create')
   , descriptor     = require('./_property-desc')
@@ -44057,7 +44195,7 @@ module.exports = function(Constructor, NAME, next){
   Constructor.prototype = create(IteratorPrototype, {next: descriptor(1, next)});
   setToStringTag(Constructor, NAME + ' Iterator');
 };
-},{"./_hide":76,"./_object-create":102,"./_property-desc":121,"./_set-to-string-tag":128,"./_wks":153}],89:[function(require,module,exports){
+},{"./_hide":79,"./_object-create":105,"./_property-desc":124,"./_set-to-string-tag":131,"./_wks":156}],92:[function(require,module,exports){
 'use strict';
 var LIBRARY        = require('./_library')
   , $export        = require('./_export')
@@ -44128,7 +44266,7 @@ module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED
   }
   return methods;
 };
-},{"./_export":68,"./_has":75,"./_hide":76,"./_iter-create":88,"./_iterators":92,"./_library":94,"./_object-gpo":110,"./_redefine":123,"./_set-to-string-tag":128,"./_wks":153}],90:[function(require,module,exports){
+},{"./_export":71,"./_has":78,"./_hide":79,"./_iter-create":91,"./_iterators":95,"./_library":97,"./_object-gpo":113,"./_redefine":126,"./_set-to-string-tag":131,"./_wks":156}],93:[function(require,module,exports){
 var ITERATOR     = require('./_wks')('iterator')
   , SAFE_CLOSING = false;
 
@@ -44150,13 +44288,13 @@ module.exports = function(exec, skipClosing){
   } catch(e){ /* empty */ }
   return safe;
 };
-},{"./_wks":153}],91:[function(require,module,exports){
+},{"./_wks":156}],94:[function(require,module,exports){
 module.exports = function(done, value){
   return {value: value, done: !!done};
 };
-},{}],92:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 module.exports = {};
-},{}],93:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 var getKeys   = require('./_object-keys')
   , toIObject = require('./_to-iobject');
 module.exports = function(object, el){
@@ -44167,9 +44305,9 @@ module.exports = function(object, el){
     , key;
   while(length > index)if(O[key = keys[index++]] === el)return key;
 };
-},{"./_object-keys":112,"./_to-iobject":143}],94:[function(require,module,exports){
+},{"./_object-keys":115,"./_to-iobject":146}],97:[function(require,module,exports){
 module.exports = false;
-},{}],95:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 // 20.2.2.14 Math.expm1(x)
 var $expm1 = Math.expm1;
 module.exports = (!$expm1
@@ -44180,17 +44318,17 @@ module.exports = (!$expm1
 ) ? function expm1(x){
   return (x = +x) == 0 ? x : x > -1e-6 && x < 1e-6 ? x + x * x / 2 : Math.exp(x) - 1;
 } : $expm1;
-},{}],96:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 // 20.2.2.20 Math.log1p(x)
 module.exports = Math.log1p || function log1p(x){
   return (x = +x) > -1e-8 && x < 1e-8 ? x - x * x / 2 : Math.log(1 + x);
 };
-},{}],97:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 // 20.2.2.28 Math.sign(x)
 module.exports = Math.sign || function sign(x){
   return (x = +x) == 0 || x != x ? x : x < 0 ? -1 : 1;
 };
-},{}],98:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 var META     = require('./_uid')('meta')
   , isObject = require('./_is-object')
   , has      = require('./_has')
@@ -44244,7 +44382,7 @@ var meta = module.exports = {
   getWeak:  getWeak,
   onFreeze: onFreeze
 };
-},{"./_fails":70,"./_has":75,"./_is-object":85,"./_object-dp":103,"./_uid":150}],99:[function(require,module,exports){
+},{"./_fails":73,"./_has":78,"./_is-object":88,"./_object-dp":106,"./_uid":153}],102:[function(require,module,exports){
 var Map     = require('./es6.map')
   , $export = require('./_export')
   , shared  = require('./_shared')('metadata')
@@ -44296,7 +44434,7 @@ module.exports = {
   key: toMetaKey,
   exp: exp
 };
-},{"./_export":68,"./_shared":130,"./es6.map":185,"./es6.weak-map":291}],100:[function(require,module,exports){
+},{"./_export":71,"./_shared":133,"./es6.map":188,"./es6.weak-map":294}],103:[function(require,module,exports){
 var global    = require('./_global')
   , macrotask = require('./_task').set
   , Observer  = global.MutationObserver || global.WebKitMutationObserver
@@ -44365,7 +44503,7 @@ module.exports = function(){
     } last = task;
   };
 };
-},{"./_cof":54,"./_global":74,"./_task":140}],101:[function(require,module,exports){
+},{"./_cof":57,"./_global":77,"./_task":143}],104:[function(require,module,exports){
 'use strict';
 // 19.1.2.1 Object.assign(target, source, ...)
 var getKeys  = require('./_object-keys')
@@ -44399,7 +44537,7 @@ module.exports = !$assign || require('./_fails')(function(){
     while(length > j)if(isEnum.call(S, key = keys[j++]))T[key] = S[key];
   } return T;
 } : $assign;
-},{"./_fails":70,"./_iobject":81,"./_object-gops":109,"./_object-keys":112,"./_object-pie":113,"./_to-object":145}],102:[function(require,module,exports){
+},{"./_fails":73,"./_iobject":84,"./_object-gops":112,"./_object-keys":115,"./_object-pie":116,"./_to-object":148}],105:[function(require,module,exports){
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 var anObject    = require('./_an-object')
   , dPs         = require('./_object-dps')
@@ -44442,7 +44580,7 @@ module.exports = Object.create || function create(O, Properties){
   return Properties === undefined ? result : dPs(result, Properties);
 };
 
-},{"./_an-object":43,"./_dom-create":65,"./_enum-bug-keys":66,"./_html":77,"./_object-dps":104,"./_shared-key":129}],103:[function(require,module,exports){
+},{"./_an-object":46,"./_dom-create":68,"./_enum-bug-keys":69,"./_html":80,"./_object-dps":107,"./_shared-key":132}],106:[function(require,module,exports){
 var anObject       = require('./_an-object')
   , IE8_DOM_DEFINE = require('./_ie8-dom-define')
   , toPrimitive    = require('./_to-primitive')
@@ -44459,7 +44597,7 @@ exports.f = require('./_descriptors') ? Object.defineProperty : function defineP
   if('value' in Attributes)O[P] = Attributes.value;
   return O;
 };
-},{"./_an-object":43,"./_descriptors":64,"./_ie8-dom-define":78,"./_to-primitive":146}],104:[function(require,module,exports){
+},{"./_an-object":46,"./_descriptors":67,"./_ie8-dom-define":81,"./_to-primitive":149}],107:[function(require,module,exports){
 var dP       = require('./_object-dp')
   , anObject = require('./_an-object')
   , getKeys  = require('./_object-keys');
@@ -44473,7 +44611,7 @@ module.exports = require('./_descriptors') ? Object.defineProperties : function 
   while(length > i)dP.f(O, P = keys[i++], Properties[P]);
   return O;
 };
-},{"./_an-object":43,"./_descriptors":64,"./_object-dp":103,"./_object-keys":112}],105:[function(require,module,exports){
+},{"./_an-object":46,"./_descriptors":67,"./_object-dp":106,"./_object-keys":115}],108:[function(require,module,exports){
 // Forced replacement prototype accessors methods
 module.exports = require('./_library')|| !require('./_fails')(function(){
   var K = Math.random();
@@ -44481,7 +44619,7 @@ module.exports = require('./_library')|| !require('./_fails')(function(){
   __defineSetter__.call(null, K, function(){ /* empty */});
   delete require('./_global')[K];
 });
-},{"./_fails":70,"./_global":74,"./_library":94}],106:[function(require,module,exports){
+},{"./_fails":73,"./_global":77,"./_library":97}],109:[function(require,module,exports){
 var pIE            = require('./_object-pie')
   , createDesc     = require('./_property-desc')
   , toIObject      = require('./_to-iobject')
@@ -44498,7 +44636,7 @@ exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor
   } catch(e){ /* empty */ }
   if(has(O, P))return createDesc(!pIE.f.call(O, P), O[P]);
 };
-},{"./_descriptors":64,"./_has":75,"./_ie8-dom-define":78,"./_object-pie":113,"./_property-desc":121,"./_to-iobject":143,"./_to-primitive":146}],107:[function(require,module,exports){
+},{"./_descriptors":67,"./_has":78,"./_ie8-dom-define":81,"./_object-pie":116,"./_property-desc":124,"./_to-iobject":146,"./_to-primitive":149}],110:[function(require,module,exports){
 // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
 var toIObject = require('./_to-iobject')
   , gOPN      = require('./_object-gopn').f
@@ -44519,7 +44657,7 @@ module.exports.f = function getOwnPropertyNames(it){
   return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIObject(it));
 };
 
-},{"./_object-gopn":108,"./_to-iobject":143}],108:[function(require,module,exports){
+},{"./_object-gopn":111,"./_to-iobject":146}],111:[function(require,module,exports){
 // 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
 var $keys      = require('./_object-keys-internal')
   , hiddenKeys = require('./_enum-bug-keys').concat('length', 'prototype');
@@ -44527,9 +44665,9 @@ var $keys      = require('./_object-keys-internal')
 exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O){
   return $keys(O, hiddenKeys);
 };
-},{"./_enum-bug-keys":66,"./_object-keys-internal":111}],109:[function(require,module,exports){
+},{"./_enum-bug-keys":69,"./_object-keys-internal":114}],112:[function(require,module,exports){
 exports.f = Object.getOwnPropertySymbols;
-},{}],110:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
 var has         = require('./_has')
   , toObject    = require('./_to-object')
@@ -44543,7 +44681,7 @@ module.exports = Object.getPrototypeOf || function(O){
     return O.constructor.prototype;
   } return O instanceof Object ? ObjectProto : null;
 };
-},{"./_has":75,"./_shared-key":129,"./_to-object":145}],111:[function(require,module,exports){
+},{"./_has":78,"./_shared-key":132,"./_to-object":148}],114:[function(require,module,exports){
 var has          = require('./_has')
   , toIObject    = require('./_to-iobject')
   , arrayIndexOf = require('./_array-includes')(false)
@@ -44561,7 +44699,7 @@ module.exports = function(object, names){
   }
   return result;
 };
-},{"./_array-includes":47,"./_has":75,"./_shared-key":129,"./_to-iobject":143}],112:[function(require,module,exports){
+},{"./_array-includes":50,"./_has":78,"./_shared-key":132,"./_to-iobject":146}],115:[function(require,module,exports){
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
 var $keys       = require('./_object-keys-internal')
   , enumBugKeys = require('./_enum-bug-keys');
@@ -44569,9 +44707,9 @@ var $keys       = require('./_object-keys-internal')
 module.exports = Object.keys || function keys(O){
   return $keys(O, enumBugKeys);
 };
-},{"./_enum-bug-keys":66,"./_object-keys-internal":111}],113:[function(require,module,exports){
+},{"./_enum-bug-keys":69,"./_object-keys-internal":114}],116:[function(require,module,exports){
 exports.f = {}.propertyIsEnumerable;
-},{}],114:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 // most Object methods by ES6 should accept primitives
 var $export = require('./_export')
   , core    = require('./_core')
@@ -44582,7 +44720,7 @@ module.exports = function(KEY, exec){
   exp[KEY] = exec(fn);
   $export($export.S + $export.F * fails(function(){ fn(1); }), 'Object', exp);
 };
-},{"./_core":59,"./_export":68,"./_fails":70}],115:[function(require,module,exports){
+},{"./_core":62,"./_export":71,"./_fails":73}],118:[function(require,module,exports){
 var getKeys   = require('./_object-keys')
   , toIObject = require('./_to-iobject')
   , isEnum    = require('./_object-pie').f;
@@ -44599,7 +44737,7 @@ module.exports = function(isEntries){
     } return result;
   };
 };
-},{"./_object-keys":112,"./_object-pie":113,"./_to-iobject":143}],116:[function(require,module,exports){
+},{"./_object-keys":115,"./_object-pie":116,"./_to-iobject":146}],119:[function(require,module,exports){
 // all object keys, includes non-enumerable and symbols
 var gOPN     = require('./_object-gopn')
   , gOPS     = require('./_object-gops')
@@ -44610,7 +44748,7 @@ module.exports = Reflect && Reflect.ownKeys || function ownKeys(it){
     , getSymbols = gOPS.f;
   return getSymbols ? keys.concat(getSymbols(it)) : keys;
 };
-},{"./_an-object":43,"./_global":74,"./_object-gopn":108,"./_object-gops":109}],117:[function(require,module,exports){
+},{"./_an-object":46,"./_global":77,"./_object-gopn":111,"./_object-gops":112}],120:[function(require,module,exports){
 var $parseFloat = require('./_global').parseFloat
   , $trim       = require('./_string-trim').trim;
 
@@ -44619,7 +44757,7 @@ module.exports = 1 / $parseFloat(require('./_string-ws') + '-0') !== -Infinity ?
     , result = $parseFloat(string);
   return result === 0 && string.charAt(0) == '-' ? -0 : result;
 } : $parseFloat;
-},{"./_global":74,"./_string-trim":138,"./_string-ws":139}],118:[function(require,module,exports){
+},{"./_global":77,"./_string-trim":141,"./_string-ws":142}],121:[function(require,module,exports){
 var $parseInt = require('./_global').parseInt
   , $trim     = require('./_string-trim').trim
   , ws        = require('./_string-ws')
@@ -44629,7 +44767,7 @@ module.exports = $parseInt(ws + '08') !== 8 || $parseInt(ws + '0x16') !== 22 ? f
   var string = $trim(String(str), 3);
   return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
 } : $parseInt;
-},{"./_global":74,"./_string-trim":138,"./_string-ws":139}],119:[function(require,module,exports){
+},{"./_global":77,"./_string-trim":141,"./_string-ws":142}],122:[function(require,module,exports){
 'use strict';
 var path      = require('./_path')
   , invoke    = require('./_invoke')
@@ -44653,9 +44791,9 @@ module.exports = function(/* ...pargs */){
     return invoke(fn, args, that);
   };
 };
-},{"./_a-function":39,"./_invoke":80,"./_path":120}],120:[function(require,module,exports){
+},{"./_a-function":42,"./_invoke":83,"./_path":123}],123:[function(require,module,exports){
 module.exports = require('./_global');
-},{"./_global":74}],121:[function(require,module,exports){
+},{"./_global":77}],124:[function(require,module,exports){
 module.exports = function(bitmap, value){
   return {
     enumerable  : !(bitmap & 1),
@@ -44664,13 +44802,13 @@ module.exports = function(bitmap, value){
     value       : value
   };
 };
-},{}],122:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 var redefine = require('./_redefine');
 module.exports = function(target, src, safe){
   for(var key in src)redefine(target, key, src[key], safe);
   return target;
 };
-},{"./_redefine":123}],123:[function(require,module,exports){
+},{"./_redefine":126}],126:[function(require,module,exports){
 var global    = require('./_global')
   , hide      = require('./_hide')
   , has       = require('./_has')
@@ -44703,7 +44841,7 @@ require('./_core').inspectSource = function(it){
 })(Function.prototype, TO_STRING, function toString(){
   return typeof this == 'function' && this[SRC] || $toString.call(this);
 });
-},{"./_core":59,"./_global":74,"./_has":75,"./_hide":76,"./_uid":150}],124:[function(require,module,exports){
+},{"./_core":62,"./_global":77,"./_has":78,"./_hide":79,"./_uid":153}],127:[function(require,module,exports){
 module.exports = function(regExp, replace){
   var replacer = replace === Object(replace) ? function(part){
     return replace[part];
@@ -44712,12 +44850,12 @@ module.exports = function(regExp, replace){
     return String(it).replace(regExp, replacer);
   };
 };
-},{}],125:[function(require,module,exports){
+},{}],128:[function(require,module,exports){
 // 7.2.9 SameValue(x, y)
 module.exports = Object.is || function is(x, y){
   return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
 };
-},{}],126:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 // Works with __proto__ only. Old v8 can't work with null proto objects.
 /* eslint-disable no-proto */
 var isObject = require('./_is-object')
@@ -44743,7 +44881,7 @@ module.exports = {
     }({}, false) : undefined),
   check: check
 };
-},{"./_an-object":43,"./_ctx":61,"./_is-object":85,"./_object-gopd":106}],127:[function(require,module,exports){
+},{"./_an-object":46,"./_ctx":64,"./_is-object":88,"./_object-gopd":109}],130:[function(require,module,exports){
 'use strict';
 var global      = require('./_global')
   , dP          = require('./_object-dp')
@@ -44757,7 +44895,7 @@ module.exports = function(KEY){
     get: function(){ return this; }
   });
 };
-},{"./_descriptors":64,"./_global":74,"./_object-dp":103,"./_wks":153}],128:[function(require,module,exports){
+},{"./_descriptors":67,"./_global":77,"./_object-dp":106,"./_wks":156}],131:[function(require,module,exports){
 var def = require('./_object-dp').f
   , has = require('./_has')
   , TAG = require('./_wks')('toStringTag');
@@ -44765,20 +44903,20 @@ var def = require('./_object-dp').f
 module.exports = function(it, tag, stat){
   if(it && !has(it = stat ? it : it.prototype, TAG))def(it, TAG, {configurable: true, value: tag});
 };
-},{"./_has":75,"./_object-dp":103,"./_wks":153}],129:[function(require,module,exports){
+},{"./_has":78,"./_object-dp":106,"./_wks":156}],132:[function(require,module,exports){
 var shared = require('./_shared')('keys')
   , uid    = require('./_uid');
 module.exports = function(key){
   return shared[key] || (shared[key] = uid(key));
 };
-},{"./_shared":130,"./_uid":150}],130:[function(require,module,exports){
+},{"./_shared":133,"./_uid":153}],133:[function(require,module,exports){
 var global = require('./_global')
   , SHARED = '__core-js_shared__'
   , store  = global[SHARED] || (global[SHARED] = {});
 module.exports = function(key){
   return store[key] || (store[key] = {});
 };
-},{"./_global":74}],131:[function(require,module,exports){
+},{"./_global":77}],134:[function(require,module,exports){
 // 7.3.20 SpeciesConstructor(O, defaultConstructor)
 var anObject  = require('./_an-object')
   , aFunction = require('./_a-function')
@@ -44787,7 +44925,7 @@ module.exports = function(O, D){
   var C = anObject(O).constructor, S;
   return C === undefined || (S = anObject(C)[SPECIES]) == undefined ? D : aFunction(S);
 };
-},{"./_a-function":39,"./_an-object":43,"./_wks":153}],132:[function(require,module,exports){
+},{"./_a-function":42,"./_an-object":46,"./_wks":156}],135:[function(require,module,exports){
 var fails = require('./_fails');
 
 module.exports = function(method, arg){
@@ -44795,7 +44933,7 @@ module.exports = function(method, arg){
     arg ? method.call(null, function(){}, 1) : method.call(null);
   });
 };
-},{"./_fails":70}],133:[function(require,module,exports){
+},{"./_fails":73}],136:[function(require,module,exports){
 var toInteger = require('./_to-integer')
   , defined   = require('./_defined');
 // true  -> String#at
@@ -44813,7 +44951,7 @@ module.exports = function(TO_STRING){
       : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
   };
 };
-},{"./_defined":63,"./_to-integer":142}],134:[function(require,module,exports){
+},{"./_defined":66,"./_to-integer":145}],137:[function(require,module,exports){
 // helper for String#{startsWith, endsWith, includes}
 var isRegExp = require('./_is-regexp')
   , defined  = require('./_defined');
@@ -44822,7 +44960,7 @@ module.exports = function(that, searchString, NAME){
   if(isRegExp(searchString))throw TypeError('String#' + NAME + " doesn't accept regex!");
   return String(defined(that));
 };
-},{"./_defined":63,"./_is-regexp":86}],135:[function(require,module,exports){
+},{"./_defined":66,"./_is-regexp":89}],138:[function(require,module,exports){
 var $export = require('./_export')
   , fails   = require('./_fails')
   , defined = require('./_defined')
@@ -44842,7 +44980,7 @@ module.exports = function(NAME, exec){
     return test !== test.toLowerCase() || test.split('"').length > 3;
   }), 'String', O);
 };
-},{"./_defined":63,"./_export":68,"./_fails":70}],136:[function(require,module,exports){
+},{"./_defined":66,"./_export":71,"./_fails":73}],139:[function(require,module,exports){
 // https://github.com/tc39/proposal-string-pad-start-end
 var toLength = require('./_to-length')
   , repeat   = require('./_string-repeat')
@@ -44860,7 +44998,7 @@ module.exports = function(that, maxLength, fillString, left){
   return left ? stringFiller + S : S + stringFiller;
 };
 
-},{"./_defined":63,"./_string-repeat":137,"./_to-length":144}],137:[function(require,module,exports){
+},{"./_defined":66,"./_string-repeat":140,"./_to-length":147}],140:[function(require,module,exports){
 'use strict';
 var toInteger = require('./_to-integer')
   , defined   = require('./_defined');
@@ -44873,7 +45011,7 @@ module.exports = function repeat(count){
   for(;n > 0; (n >>>= 1) && (str += str))if(n & 1)res += str;
   return res;
 };
-},{"./_defined":63,"./_to-integer":142}],138:[function(require,module,exports){
+},{"./_defined":66,"./_to-integer":145}],141:[function(require,module,exports){
 var $export = require('./_export')
   , defined = require('./_defined')
   , fails   = require('./_fails')
@@ -44904,10 +45042,10 @@ var trim = exporter.trim = function(string, TYPE){
 };
 
 module.exports = exporter;
-},{"./_defined":63,"./_export":68,"./_fails":70,"./_string-ws":139}],139:[function(require,module,exports){
+},{"./_defined":66,"./_export":71,"./_fails":73,"./_string-ws":142}],142:[function(require,module,exports){
 module.exports = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
   '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-},{}],140:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 var ctx                = require('./_ctx')
   , invoke             = require('./_invoke')
   , html               = require('./_html')
@@ -44983,7 +45121,7 @@ module.exports = {
   set:   setTask,
   clear: clearTask
 };
-},{"./_cof":54,"./_ctx":61,"./_dom-create":65,"./_global":74,"./_html":77,"./_invoke":80}],141:[function(require,module,exports){
+},{"./_cof":57,"./_ctx":64,"./_dom-create":68,"./_global":77,"./_html":80,"./_invoke":83}],144:[function(require,module,exports){
 var toInteger = require('./_to-integer')
   , max       = Math.max
   , min       = Math.min;
@@ -44991,34 +45129,34 @@ module.exports = function(index, length){
   index = toInteger(index);
   return index < 0 ? max(index + length, 0) : min(index, length);
 };
-},{"./_to-integer":142}],142:[function(require,module,exports){
+},{"./_to-integer":145}],145:[function(require,module,exports){
 // 7.1.4 ToInteger
 var ceil  = Math.ceil
   , floor = Math.floor;
 module.exports = function(it){
   return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
-},{}],143:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 // to indexed object, toObject with fallback for non-array-like ES3 strings
 var IObject = require('./_iobject')
   , defined = require('./_defined');
 module.exports = function(it){
   return IObject(defined(it));
 };
-},{"./_defined":63,"./_iobject":81}],144:[function(require,module,exports){
+},{"./_defined":66,"./_iobject":84}],147:[function(require,module,exports){
 // 7.1.15 ToLength
 var toInteger = require('./_to-integer')
   , min       = Math.min;
 module.exports = function(it){
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
-},{"./_to-integer":142}],145:[function(require,module,exports){
+},{"./_to-integer":145}],148:[function(require,module,exports){
 // 7.1.13 ToObject(argument)
 var defined = require('./_defined');
 module.exports = function(it){
   return Object(defined(it));
 };
-},{"./_defined":63}],146:[function(require,module,exports){
+},{"./_defined":66}],149:[function(require,module,exports){
 // 7.1.1 ToPrimitive(input [, PreferredType])
 var isObject = require('./_is-object');
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
@@ -45031,7 +45169,7 @@ module.exports = function(it, S){
   if(!S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it)))return val;
   throw TypeError("Can't convert object to primitive value");
 };
-},{"./_is-object":85}],147:[function(require,module,exports){
+},{"./_is-object":88}],150:[function(require,module,exports){
 'use strict';
 if(require('./_descriptors')){
   var LIBRARY             = require('./_library')
@@ -45511,7 +45649,7 @@ if(require('./_descriptors')){
     if(!LIBRARY && !CORRECT_ITER_NAME)hide(TypedArrayPrototype, ITERATOR, $iterator);
   };
 } else module.exports = function(){ /* empty */ };
-},{"./_an-instance":42,"./_array-copy-within":44,"./_array-fill":45,"./_array-includes":47,"./_array-methods":48,"./_classof":53,"./_ctx":61,"./_descriptors":64,"./_export":68,"./_fails":70,"./_global":74,"./_has":75,"./_hide":76,"./_is-array-iter":82,"./_is-object":85,"./_iter-detect":90,"./_iterators":92,"./_library":94,"./_object-create":102,"./_object-dp":103,"./_object-gopd":106,"./_object-gopn":108,"./_object-gpo":110,"./_property-desc":121,"./_redefine-all":122,"./_same-value":125,"./_set-species":127,"./_species-constructor":131,"./_to-index":141,"./_to-integer":142,"./_to-length":144,"./_to-object":145,"./_to-primitive":146,"./_typed":149,"./_typed-buffer":148,"./_uid":150,"./_wks":153,"./core.get-iterator-method":154,"./es6.array.iterator":166}],148:[function(require,module,exports){
+},{"./_an-instance":45,"./_array-copy-within":47,"./_array-fill":48,"./_array-includes":50,"./_array-methods":51,"./_classof":56,"./_ctx":64,"./_descriptors":67,"./_export":71,"./_fails":73,"./_global":77,"./_has":78,"./_hide":79,"./_is-array-iter":85,"./_is-object":88,"./_iter-detect":93,"./_iterators":95,"./_library":97,"./_object-create":105,"./_object-dp":106,"./_object-gopd":109,"./_object-gopn":111,"./_object-gpo":113,"./_property-desc":124,"./_redefine-all":125,"./_same-value":128,"./_set-species":130,"./_species-constructor":134,"./_to-index":144,"./_to-integer":145,"./_to-length":147,"./_to-object":148,"./_to-primitive":149,"./_typed":152,"./_typed-buffer":151,"./_uid":153,"./_wks":156,"./core.get-iterator-method":157,"./es6.array.iterator":169}],151:[function(require,module,exports){
 'use strict';
 var global         = require('./_global')
   , DESCRIPTORS    = require('./_descriptors')
@@ -45785,7 +45923,7 @@ setToStringTag($DataView, DATA_VIEW);
 hide($DataView[PROTOTYPE], $typed.VIEW, true);
 exports[ARRAY_BUFFER] = $ArrayBuffer;
 exports[DATA_VIEW] = $DataView;
-},{"./_an-instance":42,"./_array-fill":45,"./_descriptors":64,"./_fails":70,"./_global":74,"./_hide":76,"./_library":94,"./_object-dp":103,"./_object-gopn":108,"./_redefine-all":122,"./_set-to-string-tag":128,"./_to-integer":142,"./_to-length":144,"./_typed":149}],149:[function(require,module,exports){
+},{"./_an-instance":45,"./_array-fill":48,"./_descriptors":67,"./_fails":73,"./_global":77,"./_hide":79,"./_library":97,"./_object-dp":106,"./_object-gopn":111,"./_redefine-all":125,"./_set-to-string-tag":131,"./_to-integer":145,"./_to-length":147,"./_typed":152}],152:[function(require,module,exports){
 var global = require('./_global')
   , hide   = require('./_hide')
   , uid    = require('./_uid')
@@ -45812,13 +45950,13 @@ module.exports = {
   TYPED:  TYPED,
   VIEW:   VIEW
 };
-},{"./_global":74,"./_hide":76,"./_uid":150}],150:[function(require,module,exports){
+},{"./_global":77,"./_hide":79,"./_uid":153}],153:[function(require,module,exports){
 var id = 0
   , px = Math.random();
 module.exports = function(key){
   return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
 };
-},{}],151:[function(require,module,exports){
+},{}],154:[function(require,module,exports){
 var global         = require('./_global')
   , core           = require('./_core')
   , LIBRARY        = require('./_library')
@@ -45828,9 +45966,9 @@ module.exports = function(name){
   var $Symbol = core.Symbol || (core.Symbol = LIBRARY ? {} : global.Symbol || {});
   if(name.charAt(0) != '_' && !(name in $Symbol))defineProperty($Symbol, name, {value: wksExt.f(name)});
 };
-},{"./_core":59,"./_global":74,"./_library":94,"./_object-dp":103,"./_wks-ext":152}],152:[function(require,module,exports){
+},{"./_core":62,"./_global":77,"./_library":97,"./_object-dp":106,"./_wks-ext":155}],155:[function(require,module,exports){
 exports.f = require('./_wks');
-},{"./_wks":153}],153:[function(require,module,exports){
+},{"./_wks":156}],156:[function(require,module,exports){
 var store      = require('./_shared')('wks')
   , uid        = require('./_uid')
   , Symbol     = require('./_global').Symbol
@@ -45842,7 +45980,7 @@ var $exports = module.exports = function(name){
 };
 
 $exports.store = store;
-},{"./_global":74,"./_shared":130,"./_uid":150}],154:[function(require,module,exports){
+},{"./_global":77,"./_shared":133,"./_uid":153}],157:[function(require,module,exports){
 var classof   = require('./_classof')
   , ITERATOR  = require('./_wks')('iterator')
   , Iterators = require('./_iterators');
@@ -45851,21 +45989,21 @@ module.exports = require('./_core').getIteratorMethod = function(it){
     || it['@@iterator']
     || Iterators[classof(it)];
 };
-},{"./_classof":53,"./_core":59,"./_iterators":92,"./_wks":153}],155:[function(require,module,exports){
+},{"./_classof":56,"./_core":62,"./_iterators":95,"./_wks":156}],158:[function(require,module,exports){
 // https://github.com/benjamingr/RexExp.escape
 var $export = require('./_export')
   , $re     = require('./_replacer')(/[\\^$*+?.()|[\]{}]/g, '\\$&');
 
 $export($export.S, 'RegExp', {escape: function escape(it){ return $re(it); }});
 
-},{"./_export":68,"./_replacer":124}],156:[function(require,module,exports){
+},{"./_export":71,"./_replacer":127}],159:[function(require,module,exports){
 // 22.1.3.3 Array.prototype.copyWithin(target, start, end = this.length)
 var $export = require('./_export');
 
 $export($export.P, 'Array', {copyWithin: require('./_array-copy-within')});
 
 require('./_add-to-unscopables')('copyWithin');
-},{"./_add-to-unscopables":41,"./_array-copy-within":44,"./_export":68}],157:[function(require,module,exports){
+},{"./_add-to-unscopables":44,"./_array-copy-within":47,"./_export":71}],160:[function(require,module,exports){
 'use strict';
 var $export = require('./_export')
   , $every  = require('./_array-methods')(4);
@@ -45876,14 +46014,14 @@ $export($export.P + $export.F * !require('./_strict-method')([].every, true), 'A
     return $every(this, callbackfn, arguments[1]);
   }
 });
-},{"./_array-methods":48,"./_export":68,"./_strict-method":132}],158:[function(require,module,exports){
+},{"./_array-methods":51,"./_export":71,"./_strict-method":135}],161:[function(require,module,exports){
 // 22.1.3.6 Array.prototype.fill(value, start = 0, end = this.length)
 var $export = require('./_export');
 
 $export($export.P, 'Array', {fill: require('./_array-fill')});
 
 require('./_add-to-unscopables')('fill');
-},{"./_add-to-unscopables":41,"./_array-fill":45,"./_export":68}],159:[function(require,module,exports){
+},{"./_add-to-unscopables":44,"./_array-fill":48,"./_export":71}],162:[function(require,module,exports){
 'use strict';
 var $export = require('./_export')
   , $filter = require('./_array-methods')(2);
@@ -45894,7 +46032,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].filter, true), '
     return $filter(this, callbackfn, arguments[1]);
   }
 });
-},{"./_array-methods":48,"./_export":68,"./_strict-method":132}],160:[function(require,module,exports){
+},{"./_array-methods":51,"./_export":71,"./_strict-method":135}],163:[function(require,module,exports){
 'use strict';
 // 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
 var $export = require('./_export')
@@ -45909,7 +46047,7 @@ $export($export.P + $export.F * forced, 'Array', {
   }
 });
 require('./_add-to-unscopables')(KEY);
-},{"./_add-to-unscopables":41,"./_array-methods":48,"./_export":68}],161:[function(require,module,exports){
+},{"./_add-to-unscopables":44,"./_array-methods":51,"./_export":71}],164:[function(require,module,exports){
 'use strict';
 // 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
 var $export = require('./_export')
@@ -45924,7 +46062,7 @@ $export($export.P + $export.F * forced, 'Array', {
   }
 });
 require('./_add-to-unscopables')(KEY);
-},{"./_add-to-unscopables":41,"./_array-methods":48,"./_export":68}],162:[function(require,module,exports){
+},{"./_add-to-unscopables":44,"./_array-methods":51,"./_export":71}],165:[function(require,module,exports){
 'use strict';
 var $export  = require('./_export')
   , $forEach = require('./_array-methods')(0)
@@ -45936,7 +46074,7 @@ $export($export.P + $export.F * !STRICT, 'Array', {
     return $forEach(this, callbackfn, arguments[1]);
   }
 });
-},{"./_array-methods":48,"./_export":68,"./_strict-method":132}],163:[function(require,module,exports){
+},{"./_array-methods":51,"./_export":71,"./_strict-method":135}],166:[function(require,module,exports){
 'use strict';
 var ctx            = require('./_ctx')
   , $export        = require('./_export')
@@ -45975,7 +46113,7 @@ $export($export.S + $export.F * !require('./_iter-detect')(function(iter){ Array
   }
 });
 
-},{"./_create-property":60,"./_ctx":61,"./_export":68,"./_is-array-iter":82,"./_iter-call":87,"./_iter-detect":90,"./_to-length":144,"./_to-object":145,"./core.get-iterator-method":154}],164:[function(require,module,exports){
+},{"./_create-property":63,"./_ctx":64,"./_export":71,"./_is-array-iter":85,"./_iter-call":90,"./_iter-detect":93,"./_to-length":147,"./_to-object":148,"./core.get-iterator-method":157}],167:[function(require,module,exports){
 'use strict';
 var $export       = require('./_export')
   , $indexOf      = require('./_array-includes')(false)
@@ -45991,12 +46129,12 @@ $export($export.P + $export.F * (NEGATIVE_ZERO || !require('./_strict-method')($
       : $indexOf(this, searchElement, arguments[1]);
   }
 });
-},{"./_array-includes":47,"./_export":68,"./_strict-method":132}],165:[function(require,module,exports){
+},{"./_array-includes":50,"./_export":71,"./_strict-method":135}],168:[function(require,module,exports){
 // 22.1.2.2 / 15.4.3.2 Array.isArray(arg)
 var $export = require('./_export');
 
 $export($export.S, 'Array', {isArray: require('./_is-array')});
-},{"./_export":68,"./_is-array":83}],166:[function(require,module,exports){
+},{"./_export":71,"./_is-array":86}],169:[function(require,module,exports){
 'use strict';
 var addToUnscopables = require('./_add-to-unscopables')
   , step             = require('./_iter-step')
@@ -46031,7 +46169,7 @@ Iterators.Arguments = Iterators.Array;
 addToUnscopables('keys');
 addToUnscopables('values');
 addToUnscopables('entries');
-},{"./_add-to-unscopables":41,"./_iter-define":89,"./_iter-step":91,"./_iterators":92,"./_to-iobject":143}],167:[function(require,module,exports){
+},{"./_add-to-unscopables":44,"./_iter-define":92,"./_iter-step":94,"./_iterators":95,"./_to-iobject":146}],170:[function(require,module,exports){
 'use strict';
 // 22.1.3.13 Array.prototype.join(separator)
 var $export   = require('./_export')
@@ -46044,7 +46182,7 @@ $export($export.P + $export.F * (require('./_iobject') != Object || !require('./
     return arrayJoin.call(toIObject(this), separator === undefined ? ',' : separator);
   }
 });
-},{"./_export":68,"./_iobject":81,"./_strict-method":132,"./_to-iobject":143}],168:[function(require,module,exports){
+},{"./_export":71,"./_iobject":84,"./_strict-method":135,"./_to-iobject":146}],171:[function(require,module,exports){
 'use strict';
 var $export       = require('./_export')
   , toIObject     = require('./_to-iobject')
@@ -46067,7 +46205,7 @@ $export($export.P + $export.F * (NEGATIVE_ZERO || !require('./_strict-method')($
     return -1;
   }
 });
-},{"./_export":68,"./_strict-method":132,"./_to-integer":142,"./_to-iobject":143,"./_to-length":144}],169:[function(require,module,exports){
+},{"./_export":71,"./_strict-method":135,"./_to-integer":145,"./_to-iobject":146,"./_to-length":147}],172:[function(require,module,exports){
 'use strict';
 var $export = require('./_export')
   , $map    = require('./_array-methods')(1);
@@ -46078,7 +46216,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].map, true), 'Arr
     return $map(this, callbackfn, arguments[1]);
   }
 });
-},{"./_array-methods":48,"./_export":68,"./_strict-method":132}],170:[function(require,module,exports){
+},{"./_array-methods":51,"./_export":71,"./_strict-method":135}],173:[function(require,module,exports){
 'use strict';
 var $export        = require('./_export')
   , createProperty = require('./_create-property');
@@ -46098,7 +46236,7 @@ $export($export.S + $export.F * require('./_fails')(function(){
     return result;
   }
 });
-},{"./_create-property":60,"./_export":68,"./_fails":70}],171:[function(require,module,exports){
+},{"./_create-property":63,"./_export":71,"./_fails":73}],174:[function(require,module,exports){
 'use strict';
 var $export = require('./_export')
   , $reduce = require('./_array-reduce');
@@ -46109,7 +46247,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].reduceRight, tru
     return $reduce(this, callbackfn, arguments.length, arguments[1], true);
   }
 });
-},{"./_array-reduce":49,"./_export":68,"./_strict-method":132}],172:[function(require,module,exports){
+},{"./_array-reduce":52,"./_export":71,"./_strict-method":135}],175:[function(require,module,exports){
 'use strict';
 var $export = require('./_export')
   , $reduce = require('./_array-reduce');
@@ -46120,7 +46258,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].reduce, true), '
     return $reduce(this, callbackfn, arguments.length, arguments[1], false);
   }
 });
-},{"./_array-reduce":49,"./_export":68,"./_strict-method":132}],173:[function(require,module,exports){
+},{"./_array-reduce":52,"./_export":71,"./_strict-method":135}],176:[function(require,module,exports){
 'use strict';
 var $export    = require('./_export')
   , html       = require('./_html')
@@ -46149,7 +46287,7 @@ $export($export.P + $export.F * require('./_fails')(function(){
     return cloned;
   }
 });
-},{"./_cof":54,"./_export":68,"./_fails":70,"./_html":77,"./_to-index":141,"./_to-length":144}],174:[function(require,module,exports){
+},{"./_cof":57,"./_export":71,"./_fails":73,"./_html":80,"./_to-index":144,"./_to-length":147}],177:[function(require,module,exports){
 'use strict';
 var $export = require('./_export')
   , $some   = require('./_array-methods')(3);
@@ -46160,7 +46298,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].some, true), 'Ar
     return $some(this, callbackfn, arguments[1]);
   }
 });
-},{"./_array-methods":48,"./_export":68,"./_strict-method":132}],175:[function(require,module,exports){
+},{"./_array-methods":51,"./_export":71,"./_strict-method":135}],178:[function(require,module,exports){
 'use strict';
 var $export   = require('./_export')
   , aFunction = require('./_a-function')
@@ -46184,14 +46322,14 @@ $export($export.P + $export.F * (fails(function(){
       : $sort.call(toObject(this), aFunction(comparefn));
   }
 });
-},{"./_a-function":39,"./_export":68,"./_fails":70,"./_strict-method":132,"./_to-object":145}],176:[function(require,module,exports){
+},{"./_a-function":42,"./_export":71,"./_fails":73,"./_strict-method":135,"./_to-object":148}],179:[function(require,module,exports){
 require('./_set-species')('Array');
-},{"./_set-species":127}],177:[function(require,module,exports){
+},{"./_set-species":130}],180:[function(require,module,exports){
 // 20.3.3.1 / 15.9.4.4 Date.now()
 var $export = require('./_export');
 
 $export($export.S, 'Date', {now: function(){ return new Date().getTime(); }});
-},{"./_export":68}],178:[function(require,module,exports){
+},{"./_export":71}],181:[function(require,module,exports){
 'use strict';
 // 20.3.4.36 / 15.9.5.43 Date.prototype.toISOString()
 var $export = require('./_export')
@@ -46220,7 +46358,7 @@ $export($export.P + $export.F * (fails(function(){
       ':' + lz(d.getUTCSeconds()) + '.' + (m > 99 ? m : '0' + lz(m)) + 'Z';
   }
 });
-},{"./_export":68,"./_fails":70}],179:[function(require,module,exports){
+},{"./_export":71,"./_fails":73}],182:[function(require,module,exports){
 'use strict';
 var $export     = require('./_export')
   , toObject    = require('./_to-object')
@@ -46235,12 +46373,12 @@ $export($export.P + $export.F * require('./_fails')(function(){
     return typeof pv == 'number' && !isFinite(pv) ? null : O.toISOString();
   }
 });
-},{"./_export":68,"./_fails":70,"./_to-object":145,"./_to-primitive":146}],180:[function(require,module,exports){
+},{"./_export":71,"./_fails":73,"./_to-object":148,"./_to-primitive":149}],183:[function(require,module,exports){
 var TO_PRIMITIVE = require('./_wks')('toPrimitive')
   , proto        = Date.prototype;
 
 if(!(TO_PRIMITIVE in proto))require('./_hide')(proto, TO_PRIMITIVE, require('./_date-to-primitive'));
-},{"./_date-to-primitive":62,"./_hide":76,"./_wks":153}],181:[function(require,module,exports){
+},{"./_date-to-primitive":65,"./_hide":79,"./_wks":156}],184:[function(require,module,exports){
 var DateProto    = Date.prototype
   , INVALID_DATE = 'Invalid Date'
   , TO_STRING    = 'toString'
@@ -46252,12 +46390,12 @@ if(new Date(NaN) + '' != INVALID_DATE){
     return value === value ? $toString.call(this) : INVALID_DATE;
   });
 }
-},{"./_redefine":123}],182:[function(require,module,exports){
+},{"./_redefine":126}],185:[function(require,module,exports){
 // 19.2.3.2 / 15.3.4.5 Function.prototype.bind(thisArg, args...)
 var $export = require('./_export');
 
 $export($export.P, 'Function', {bind: require('./_bind')});
-},{"./_bind":52,"./_export":68}],183:[function(require,module,exports){
+},{"./_bind":55,"./_export":71}],186:[function(require,module,exports){
 'use strict';
 var isObject       = require('./_is-object')
   , getPrototypeOf = require('./_object-gpo')
@@ -46271,7 +46409,7 @@ if(!(HAS_INSTANCE in FunctionProto))require('./_object-dp').f(FunctionProto, HAS
   while(O = getPrototypeOf(O))if(this.prototype === O)return true;
   return false;
 }});
-},{"./_is-object":85,"./_object-dp":103,"./_object-gpo":110,"./_wks":153}],184:[function(require,module,exports){
+},{"./_is-object":88,"./_object-dp":106,"./_object-gpo":113,"./_wks":156}],187:[function(require,module,exports){
 var dP         = require('./_object-dp').f
   , createDesc = require('./_property-desc')
   , has        = require('./_has')
@@ -46297,7 +46435,7 @@ NAME in FProto || require('./_descriptors') && dP(FProto, NAME, {
     }
   }
 });
-},{"./_descriptors":64,"./_has":75,"./_object-dp":103,"./_property-desc":121}],185:[function(require,module,exports){
+},{"./_descriptors":67,"./_has":78,"./_object-dp":106,"./_property-desc":124}],188:[function(require,module,exports){
 'use strict';
 var strong = require('./_collection-strong');
 
@@ -46315,7 +46453,7 @@ module.exports = require('./_collection')('Map', function(get){
     return strong.def(this, key === 0 ? 0 : key, value);
   }
 }, strong, true);
-},{"./_collection":58,"./_collection-strong":55}],186:[function(require,module,exports){
+},{"./_collection":61,"./_collection-strong":58}],189:[function(require,module,exports){
 // 20.2.2.3 Math.acosh(x)
 var $export = require('./_export')
   , log1p   = require('./_math-log1p')
@@ -46334,7 +46472,7 @@ $export($export.S + $export.F * !($acosh
       : log1p(x - 1 + sqrt(x - 1) * sqrt(x + 1));
   }
 });
-},{"./_export":68,"./_math-log1p":96}],187:[function(require,module,exports){
+},{"./_export":71,"./_math-log1p":99}],190:[function(require,module,exports){
 // 20.2.2.5 Math.asinh(x)
 var $export = require('./_export')
   , $asinh  = Math.asinh;
@@ -46345,7 +46483,7 @@ function asinh(x){
 
 // Tor Browser bug: Math.asinh(0) -> -0 
 $export($export.S + $export.F * !($asinh && 1 / $asinh(0) > 0), 'Math', {asinh: asinh});
-},{"./_export":68}],188:[function(require,module,exports){
+},{"./_export":71}],191:[function(require,module,exports){
 // 20.2.2.7 Math.atanh(x)
 var $export = require('./_export')
   , $atanh  = Math.atanh;
@@ -46356,7 +46494,7 @@ $export($export.S + $export.F * !($atanh && 1 / $atanh(-0) < 0), 'Math', {
     return (x = +x) == 0 ? x : Math.log((1 + x) / (1 - x)) / 2;
   }
 });
-},{"./_export":68}],189:[function(require,module,exports){
+},{"./_export":71}],192:[function(require,module,exports){
 // 20.2.2.9 Math.cbrt(x)
 var $export = require('./_export')
   , sign    = require('./_math-sign');
@@ -46366,7 +46504,7 @@ $export($export.S, 'Math', {
     return sign(x = +x) * Math.pow(Math.abs(x), 1 / 3);
   }
 });
-},{"./_export":68,"./_math-sign":97}],190:[function(require,module,exports){
+},{"./_export":71,"./_math-sign":100}],193:[function(require,module,exports){
 // 20.2.2.11 Math.clz32(x)
 var $export = require('./_export');
 
@@ -46375,7 +46513,7 @@ $export($export.S, 'Math', {
     return (x >>>= 0) ? 31 - Math.floor(Math.log(x + 0.5) * Math.LOG2E) : 32;
   }
 });
-},{"./_export":68}],191:[function(require,module,exports){
+},{"./_export":71}],194:[function(require,module,exports){
 // 20.2.2.12 Math.cosh(x)
 var $export = require('./_export')
   , exp     = Math.exp;
@@ -46385,13 +46523,13 @@ $export($export.S, 'Math', {
     return (exp(x = +x) + exp(-x)) / 2;
   }
 });
-},{"./_export":68}],192:[function(require,module,exports){
+},{"./_export":71}],195:[function(require,module,exports){
 // 20.2.2.14 Math.expm1(x)
 var $export = require('./_export')
   , $expm1  = require('./_math-expm1');
 
 $export($export.S + $export.F * ($expm1 != Math.expm1), 'Math', {expm1: $expm1});
-},{"./_export":68,"./_math-expm1":95}],193:[function(require,module,exports){
+},{"./_export":71,"./_math-expm1":98}],196:[function(require,module,exports){
 // 20.2.2.16 Math.fround(x)
 var $export   = require('./_export')
   , sign      = require('./_math-sign')
@@ -46418,7 +46556,7 @@ $export($export.S, 'Math', {
     return $sign * result;
   }
 });
-},{"./_export":68,"./_math-sign":97}],194:[function(require,module,exports){
+},{"./_export":71,"./_math-sign":100}],197:[function(require,module,exports){
 // 20.2.2.17 Math.hypot([value1[, value2[, … ]]])
 var $export = require('./_export')
   , abs     = Math.abs;
@@ -46444,7 +46582,7 @@ $export($export.S, 'Math', {
     return larg === Infinity ? Infinity : larg * Math.sqrt(sum);
   }
 });
-},{"./_export":68}],195:[function(require,module,exports){
+},{"./_export":71}],198:[function(require,module,exports){
 // 20.2.2.18 Math.imul(x, y)
 var $export = require('./_export')
   , $imul   = Math.imul;
@@ -46462,7 +46600,7 @@ $export($export.S + $export.F * require('./_fails')(function(){
     return 0 | xl * yl + ((UINT16 & xn >>> 16) * yl + xl * (UINT16 & yn >>> 16) << 16 >>> 0);
   }
 });
-},{"./_export":68,"./_fails":70}],196:[function(require,module,exports){
+},{"./_export":71,"./_fails":73}],199:[function(require,module,exports){
 // 20.2.2.21 Math.log10(x)
 var $export = require('./_export');
 
@@ -46471,12 +46609,12 @@ $export($export.S, 'Math', {
     return Math.log(x) / Math.LN10;
   }
 });
-},{"./_export":68}],197:[function(require,module,exports){
+},{"./_export":71}],200:[function(require,module,exports){
 // 20.2.2.20 Math.log1p(x)
 var $export = require('./_export');
 
 $export($export.S, 'Math', {log1p: require('./_math-log1p')});
-},{"./_export":68,"./_math-log1p":96}],198:[function(require,module,exports){
+},{"./_export":71,"./_math-log1p":99}],201:[function(require,module,exports){
 // 20.2.2.22 Math.log2(x)
 var $export = require('./_export');
 
@@ -46485,12 +46623,12 @@ $export($export.S, 'Math', {
     return Math.log(x) / Math.LN2;
   }
 });
-},{"./_export":68}],199:[function(require,module,exports){
+},{"./_export":71}],202:[function(require,module,exports){
 // 20.2.2.28 Math.sign(x)
 var $export = require('./_export');
 
 $export($export.S, 'Math', {sign: require('./_math-sign')});
-},{"./_export":68,"./_math-sign":97}],200:[function(require,module,exports){
+},{"./_export":71,"./_math-sign":100}],203:[function(require,module,exports){
 // 20.2.2.30 Math.sinh(x)
 var $export = require('./_export')
   , expm1   = require('./_math-expm1')
@@ -46506,7 +46644,7 @@ $export($export.S + $export.F * require('./_fails')(function(){
       : (exp(x - 1) - exp(-x - 1)) * (Math.E / 2);
   }
 });
-},{"./_export":68,"./_fails":70,"./_math-expm1":95}],201:[function(require,module,exports){
+},{"./_export":71,"./_fails":73,"./_math-expm1":98}],204:[function(require,module,exports){
 // 20.2.2.33 Math.tanh(x)
 var $export = require('./_export')
   , expm1   = require('./_math-expm1')
@@ -46519,7 +46657,7 @@ $export($export.S, 'Math', {
     return a == Infinity ? 1 : b == Infinity ? -1 : (a - b) / (exp(x) + exp(-x));
   }
 });
-},{"./_export":68,"./_math-expm1":95}],202:[function(require,module,exports){
+},{"./_export":71,"./_math-expm1":98}],205:[function(require,module,exports){
 // 20.2.2.34 Math.trunc(x)
 var $export = require('./_export');
 
@@ -46528,7 +46666,7 @@ $export($export.S, 'Math', {
     return (it > 0 ? Math.floor : Math.ceil)(it);
   }
 });
-},{"./_export":68}],203:[function(require,module,exports){
+},{"./_export":71}],206:[function(require,module,exports){
 'use strict';
 var global            = require('./_global')
   , has               = require('./_has')
@@ -46598,12 +46736,12 @@ if(!$Number(' 0o1') || !$Number('0b1') || $Number('+0x1')){
   proto.constructor = $Number;
   require('./_redefine')(global, NUMBER, $Number);
 }
-},{"./_cof":54,"./_descriptors":64,"./_fails":70,"./_global":74,"./_has":75,"./_inherit-if-required":79,"./_object-create":102,"./_object-dp":103,"./_object-gopd":106,"./_object-gopn":108,"./_redefine":123,"./_string-trim":138,"./_to-primitive":146}],204:[function(require,module,exports){
+},{"./_cof":57,"./_descriptors":67,"./_fails":73,"./_global":77,"./_has":78,"./_inherit-if-required":82,"./_object-create":105,"./_object-dp":106,"./_object-gopd":109,"./_object-gopn":111,"./_redefine":126,"./_string-trim":141,"./_to-primitive":149}],207:[function(require,module,exports){
 // 20.1.2.1 Number.EPSILON
 var $export = require('./_export');
 
 $export($export.S, 'Number', {EPSILON: Math.pow(2, -52)});
-},{"./_export":68}],205:[function(require,module,exports){
+},{"./_export":71}],208:[function(require,module,exports){
 // 20.1.2.2 Number.isFinite(number)
 var $export   = require('./_export')
   , _isFinite = require('./_global').isFinite;
@@ -46613,12 +46751,12 @@ $export($export.S, 'Number', {
     return typeof it == 'number' && _isFinite(it);
   }
 });
-},{"./_export":68,"./_global":74}],206:[function(require,module,exports){
+},{"./_export":71,"./_global":77}],209:[function(require,module,exports){
 // 20.1.2.3 Number.isInteger(number)
 var $export = require('./_export');
 
 $export($export.S, 'Number', {isInteger: require('./_is-integer')});
-},{"./_export":68,"./_is-integer":84}],207:[function(require,module,exports){
+},{"./_export":71,"./_is-integer":87}],210:[function(require,module,exports){
 // 20.1.2.4 Number.isNaN(number)
 var $export = require('./_export');
 
@@ -46627,7 +46765,7 @@ $export($export.S, 'Number', {
     return number != number;
   }
 });
-},{"./_export":68}],208:[function(require,module,exports){
+},{"./_export":71}],211:[function(require,module,exports){
 // 20.1.2.5 Number.isSafeInteger(number)
 var $export   = require('./_export')
   , isInteger = require('./_is-integer')
@@ -46638,27 +46776,27 @@ $export($export.S, 'Number', {
     return isInteger(number) && abs(number) <= 0x1fffffffffffff;
   }
 });
-},{"./_export":68,"./_is-integer":84}],209:[function(require,module,exports){
+},{"./_export":71,"./_is-integer":87}],212:[function(require,module,exports){
 // 20.1.2.6 Number.MAX_SAFE_INTEGER
 var $export = require('./_export');
 
 $export($export.S, 'Number', {MAX_SAFE_INTEGER: 0x1fffffffffffff});
-},{"./_export":68}],210:[function(require,module,exports){
+},{"./_export":71}],213:[function(require,module,exports){
 // 20.1.2.10 Number.MIN_SAFE_INTEGER
 var $export = require('./_export');
 
 $export($export.S, 'Number', {MIN_SAFE_INTEGER: -0x1fffffffffffff});
-},{"./_export":68}],211:[function(require,module,exports){
+},{"./_export":71}],214:[function(require,module,exports){
 var $export     = require('./_export')
   , $parseFloat = require('./_parse-float');
 // 20.1.2.12 Number.parseFloat(string)
 $export($export.S + $export.F * (Number.parseFloat != $parseFloat), 'Number', {parseFloat: $parseFloat});
-},{"./_export":68,"./_parse-float":117}],212:[function(require,module,exports){
+},{"./_export":71,"./_parse-float":120}],215:[function(require,module,exports){
 var $export   = require('./_export')
   , $parseInt = require('./_parse-int');
 // 20.1.2.13 Number.parseInt(string, radix)
 $export($export.S + $export.F * (Number.parseInt != $parseInt), 'Number', {parseInt: $parseInt});
-},{"./_export":68,"./_parse-int":118}],213:[function(require,module,exports){
+},{"./_export":71,"./_parse-int":121}],216:[function(require,module,exports){
 'use strict';
 var $export      = require('./_export')
   , toInteger    = require('./_to-integer')
@@ -46772,7 +46910,7 @@ $export($export.P + $export.F * (!!$toFixed && (
     } return m;
   }
 });
-},{"./_a-number-value":40,"./_export":68,"./_fails":70,"./_string-repeat":137,"./_to-integer":142}],214:[function(require,module,exports){
+},{"./_a-number-value":43,"./_export":71,"./_fails":73,"./_string-repeat":140,"./_to-integer":145}],217:[function(require,module,exports){
 'use strict';
 var $export      = require('./_export')
   , $fails       = require('./_fails')
@@ -46791,24 +46929,24 @@ $export($export.P + $export.F * ($fails(function(){
     return precision === undefined ? $toPrecision.call(that) : $toPrecision.call(that, precision); 
   }
 });
-},{"./_a-number-value":40,"./_export":68,"./_fails":70}],215:[function(require,module,exports){
+},{"./_a-number-value":43,"./_export":71,"./_fails":73}],218:[function(require,module,exports){
 // 19.1.3.1 Object.assign(target, source)
 var $export = require('./_export');
 
 $export($export.S + $export.F, 'Object', {assign: require('./_object-assign')});
-},{"./_export":68,"./_object-assign":101}],216:[function(require,module,exports){
+},{"./_export":71,"./_object-assign":104}],219:[function(require,module,exports){
 var $export = require('./_export')
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 $export($export.S, 'Object', {create: require('./_object-create')});
-},{"./_export":68,"./_object-create":102}],217:[function(require,module,exports){
+},{"./_export":71,"./_object-create":105}],220:[function(require,module,exports){
 var $export = require('./_export');
 // 19.1.2.3 / 15.2.3.7 Object.defineProperties(O, Properties)
 $export($export.S + $export.F * !require('./_descriptors'), 'Object', {defineProperties: require('./_object-dps')});
-},{"./_descriptors":64,"./_export":68,"./_object-dps":104}],218:[function(require,module,exports){
+},{"./_descriptors":67,"./_export":71,"./_object-dps":107}],221:[function(require,module,exports){
 var $export = require('./_export');
 // 19.1.2.4 / 15.2.3.6 Object.defineProperty(O, P, Attributes)
 $export($export.S + $export.F * !require('./_descriptors'), 'Object', {defineProperty: require('./_object-dp').f});
-},{"./_descriptors":64,"./_export":68,"./_object-dp":103}],219:[function(require,module,exports){
+},{"./_descriptors":67,"./_export":71,"./_object-dp":106}],222:[function(require,module,exports){
 // 19.1.2.5 Object.freeze(O)
 var isObject = require('./_is-object')
   , meta     = require('./_meta').onFreeze;
@@ -46818,7 +46956,7 @@ require('./_object-sap')('freeze', function($freeze){
     return $freeze && isObject(it) ? $freeze(meta(it)) : it;
   };
 });
-},{"./_is-object":85,"./_meta":98,"./_object-sap":114}],220:[function(require,module,exports){
+},{"./_is-object":88,"./_meta":101,"./_object-sap":117}],223:[function(require,module,exports){
 // 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
 var toIObject                 = require('./_to-iobject')
   , $getOwnPropertyDescriptor = require('./_object-gopd').f;
@@ -46828,12 +46966,12 @@ require('./_object-sap')('getOwnPropertyDescriptor', function(){
     return $getOwnPropertyDescriptor(toIObject(it), key);
   };
 });
-},{"./_object-gopd":106,"./_object-sap":114,"./_to-iobject":143}],221:[function(require,module,exports){
+},{"./_object-gopd":109,"./_object-sap":117,"./_to-iobject":146}],224:[function(require,module,exports){
 // 19.1.2.7 Object.getOwnPropertyNames(O)
 require('./_object-sap')('getOwnPropertyNames', function(){
   return require('./_object-gopn-ext').f;
 });
-},{"./_object-gopn-ext":107,"./_object-sap":114}],222:[function(require,module,exports){
+},{"./_object-gopn-ext":110,"./_object-sap":117}],225:[function(require,module,exports){
 // 19.1.2.9 Object.getPrototypeOf(O)
 var toObject        = require('./_to-object')
   , $getPrototypeOf = require('./_object-gpo');
@@ -46843,7 +46981,7 @@ require('./_object-sap')('getPrototypeOf', function(){
     return $getPrototypeOf(toObject(it));
   };
 });
-},{"./_object-gpo":110,"./_object-sap":114,"./_to-object":145}],223:[function(require,module,exports){
+},{"./_object-gpo":113,"./_object-sap":117,"./_to-object":148}],226:[function(require,module,exports){
 // 19.1.2.11 Object.isExtensible(O)
 var isObject = require('./_is-object');
 
@@ -46852,7 +46990,7 @@ require('./_object-sap')('isExtensible', function($isExtensible){
     return isObject(it) ? $isExtensible ? $isExtensible(it) : true : false;
   };
 });
-},{"./_is-object":85,"./_object-sap":114}],224:[function(require,module,exports){
+},{"./_is-object":88,"./_object-sap":117}],227:[function(require,module,exports){
 // 19.1.2.12 Object.isFrozen(O)
 var isObject = require('./_is-object');
 
@@ -46861,7 +46999,7 @@ require('./_object-sap')('isFrozen', function($isFrozen){
     return isObject(it) ? $isFrozen ? $isFrozen(it) : false : true;
   };
 });
-},{"./_is-object":85,"./_object-sap":114}],225:[function(require,module,exports){
+},{"./_is-object":88,"./_object-sap":117}],228:[function(require,module,exports){
 // 19.1.2.13 Object.isSealed(O)
 var isObject = require('./_is-object');
 
@@ -46870,11 +47008,11 @@ require('./_object-sap')('isSealed', function($isSealed){
     return isObject(it) ? $isSealed ? $isSealed(it) : false : true;
   };
 });
-},{"./_is-object":85,"./_object-sap":114}],226:[function(require,module,exports){
+},{"./_is-object":88,"./_object-sap":117}],229:[function(require,module,exports){
 // 19.1.3.10 Object.is(value1, value2)
 var $export = require('./_export');
 $export($export.S, 'Object', {is: require('./_same-value')});
-},{"./_export":68,"./_same-value":125}],227:[function(require,module,exports){
+},{"./_export":71,"./_same-value":128}],230:[function(require,module,exports){
 // 19.1.2.14 Object.keys(O)
 var toObject = require('./_to-object')
   , $keys    = require('./_object-keys');
@@ -46884,7 +47022,7 @@ require('./_object-sap')('keys', function(){
     return $keys(toObject(it));
   };
 });
-},{"./_object-keys":112,"./_object-sap":114,"./_to-object":145}],228:[function(require,module,exports){
+},{"./_object-keys":115,"./_object-sap":117,"./_to-object":148}],231:[function(require,module,exports){
 // 19.1.2.15 Object.preventExtensions(O)
 var isObject = require('./_is-object')
   , meta     = require('./_meta').onFreeze;
@@ -46894,7 +47032,7 @@ require('./_object-sap')('preventExtensions', function($preventExtensions){
     return $preventExtensions && isObject(it) ? $preventExtensions(meta(it)) : it;
   };
 });
-},{"./_is-object":85,"./_meta":98,"./_object-sap":114}],229:[function(require,module,exports){
+},{"./_is-object":88,"./_meta":101,"./_object-sap":117}],232:[function(require,module,exports){
 // 19.1.2.17 Object.seal(O)
 var isObject = require('./_is-object')
   , meta     = require('./_meta').onFreeze;
@@ -46904,11 +47042,11 @@ require('./_object-sap')('seal', function($seal){
     return $seal && isObject(it) ? $seal(meta(it)) : it;
   };
 });
-},{"./_is-object":85,"./_meta":98,"./_object-sap":114}],230:[function(require,module,exports){
+},{"./_is-object":88,"./_meta":101,"./_object-sap":117}],233:[function(require,module,exports){
 // 19.1.3.19 Object.setPrototypeOf(O, proto)
 var $export = require('./_export');
 $export($export.S, 'Object', {setPrototypeOf: require('./_set-proto').set});
-},{"./_export":68,"./_set-proto":126}],231:[function(require,module,exports){
+},{"./_export":71,"./_set-proto":129}],234:[function(require,module,exports){
 'use strict';
 // 19.1.3.6 Object.prototype.toString()
 var classof = require('./_classof')
@@ -46919,17 +47057,17 @@ if(test + '' != '[object z]'){
     return '[object ' + classof(this) + ']';
   }, true);
 }
-},{"./_classof":53,"./_redefine":123,"./_wks":153}],232:[function(require,module,exports){
+},{"./_classof":56,"./_redefine":126,"./_wks":156}],235:[function(require,module,exports){
 var $export     = require('./_export')
   , $parseFloat = require('./_parse-float');
 // 18.2.4 parseFloat(string)
 $export($export.G + $export.F * (parseFloat != $parseFloat), {parseFloat: $parseFloat});
-},{"./_export":68,"./_parse-float":117}],233:[function(require,module,exports){
+},{"./_export":71,"./_parse-float":120}],236:[function(require,module,exports){
 var $export   = require('./_export')
   , $parseInt = require('./_parse-int');
 // 18.2.5 parseInt(string, radix)
 $export($export.G + $export.F * (parseInt != $parseInt), {parseInt: $parseInt});
-},{"./_export":68,"./_parse-int":118}],234:[function(require,module,exports){
+},{"./_export":71,"./_parse-int":121}],237:[function(require,module,exports){
 'use strict';
 var LIBRARY            = require('./_library')
   , global             = require('./_global')
@@ -47229,7 +47367,7 @@ $export($export.S + $export.F * !(USE_NATIVE && require('./_iter-detect')(functi
     return capability.promise;
   }
 });
-},{"./_a-function":39,"./_an-instance":42,"./_classof":53,"./_core":59,"./_ctx":61,"./_export":68,"./_for-of":73,"./_global":74,"./_is-object":85,"./_iter-detect":90,"./_library":94,"./_microtask":100,"./_redefine-all":122,"./_set-species":127,"./_set-to-string-tag":128,"./_species-constructor":131,"./_task":140,"./_wks":153}],235:[function(require,module,exports){
+},{"./_a-function":42,"./_an-instance":45,"./_classof":56,"./_core":62,"./_ctx":64,"./_export":71,"./_for-of":76,"./_global":77,"./_is-object":88,"./_iter-detect":93,"./_library":97,"./_microtask":103,"./_redefine-all":125,"./_set-species":130,"./_set-to-string-tag":131,"./_species-constructor":134,"./_task":143,"./_wks":156}],238:[function(require,module,exports){
 // 26.1.1 Reflect.apply(target, thisArgument, argumentsList)
 var $export   = require('./_export')
   , aFunction = require('./_a-function')
@@ -47246,7 +47384,7 @@ $export($export.S + $export.F * !require('./_fails')(function(){
     return rApply ? rApply(T, thisArgument, L) : fApply.call(T, thisArgument, L);
   }
 });
-},{"./_a-function":39,"./_an-object":43,"./_export":68,"./_fails":70,"./_global":74}],236:[function(require,module,exports){
+},{"./_a-function":42,"./_an-object":46,"./_export":71,"./_fails":73,"./_global":77}],239:[function(require,module,exports){
 // 26.1.2 Reflect.construct(target, argumentsList [, newTarget])
 var $export    = require('./_export')
   , create     = require('./_object-create')
@@ -47294,7 +47432,7 @@ $export($export.S + $export.F * (NEW_TARGET_BUG || ARGS_BUG), 'Reflect', {
     return isObject(result) ? result : instance;
   }
 });
-},{"./_a-function":39,"./_an-object":43,"./_bind":52,"./_export":68,"./_fails":70,"./_global":74,"./_is-object":85,"./_object-create":102}],237:[function(require,module,exports){
+},{"./_a-function":42,"./_an-object":46,"./_bind":55,"./_export":71,"./_fails":73,"./_global":77,"./_is-object":88,"./_object-create":105}],240:[function(require,module,exports){
 // 26.1.3 Reflect.defineProperty(target, propertyKey, attributes)
 var dP          = require('./_object-dp')
   , $export     = require('./_export')
@@ -47317,7 +47455,7 @@ $export($export.S + $export.F * require('./_fails')(function(){
     }
   }
 });
-},{"./_an-object":43,"./_export":68,"./_fails":70,"./_object-dp":103,"./_to-primitive":146}],238:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_fails":73,"./_object-dp":106,"./_to-primitive":149}],241:[function(require,module,exports){
 // 26.1.4 Reflect.deleteProperty(target, propertyKey)
 var $export  = require('./_export')
   , gOPD     = require('./_object-gopd').f
@@ -47329,7 +47467,7 @@ $export($export.S, 'Reflect', {
     return desc && !desc.configurable ? false : delete target[propertyKey];
   }
 });
-},{"./_an-object":43,"./_export":68,"./_object-gopd":106}],239:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_object-gopd":109}],242:[function(require,module,exports){
 'use strict';
 // 26.1.5 Reflect.enumerate(target)
 var $export  = require('./_export')
@@ -47356,7 +47494,7 @@ $export($export.S, 'Reflect', {
     return new Enumerate(target);
   }
 });
-},{"./_an-object":43,"./_export":68,"./_iter-create":88}],240:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_iter-create":91}],243:[function(require,module,exports){
 // 26.1.7 Reflect.getOwnPropertyDescriptor(target, propertyKey)
 var gOPD     = require('./_object-gopd')
   , $export  = require('./_export')
@@ -47367,7 +47505,7 @@ $export($export.S, 'Reflect', {
     return gOPD.f(anObject(target), propertyKey);
   }
 });
-},{"./_an-object":43,"./_export":68,"./_object-gopd":106}],241:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_object-gopd":109}],244:[function(require,module,exports){
 // 26.1.8 Reflect.getPrototypeOf(target)
 var $export  = require('./_export')
   , getProto = require('./_object-gpo')
@@ -47378,7 +47516,7 @@ $export($export.S, 'Reflect', {
     return getProto(anObject(target));
   }
 });
-},{"./_an-object":43,"./_export":68,"./_object-gpo":110}],242:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_object-gpo":113}],245:[function(require,module,exports){
 // 26.1.6 Reflect.get(target, propertyKey [, receiver])
 var gOPD           = require('./_object-gopd')
   , getPrototypeOf = require('./_object-gpo')
@@ -47400,7 +47538,7 @@ function get(target, propertyKey/*, receiver*/){
 }
 
 $export($export.S, 'Reflect', {get: get});
-},{"./_an-object":43,"./_export":68,"./_has":75,"./_is-object":85,"./_object-gopd":106,"./_object-gpo":110}],243:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_has":78,"./_is-object":88,"./_object-gopd":109,"./_object-gpo":113}],246:[function(require,module,exports){
 // 26.1.9 Reflect.has(target, propertyKey)
 var $export = require('./_export');
 
@@ -47409,7 +47547,7 @@ $export($export.S, 'Reflect', {
     return propertyKey in target;
   }
 });
-},{"./_export":68}],244:[function(require,module,exports){
+},{"./_export":71}],247:[function(require,module,exports){
 // 26.1.10 Reflect.isExtensible(target)
 var $export       = require('./_export')
   , anObject      = require('./_an-object')
@@ -47421,12 +47559,12 @@ $export($export.S, 'Reflect', {
     return $isExtensible ? $isExtensible(target) : true;
   }
 });
-},{"./_an-object":43,"./_export":68}],245:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71}],248:[function(require,module,exports){
 // 26.1.11 Reflect.ownKeys(target)
 var $export = require('./_export');
 
 $export($export.S, 'Reflect', {ownKeys: require('./_own-keys')});
-},{"./_export":68,"./_own-keys":116}],246:[function(require,module,exports){
+},{"./_export":71,"./_own-keys":119}],249:[function(require,module,exports){
 // 26.1.12 Reflect.preventExtensions(target)
 var $export            = require('./_export')
   , anObject           = require('./_an-object')
@@ -47443,7 +47581,7 @@ $export($export.S, 'Reflect', {
     }
   }
 });
-},{"./_an-object":43,"./_export":68}],247:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71}],250:[function(require,module,exports){
 // 26.1.14 Reflect.setPrototypeOf(target, proto)
 var $export  = require('./_export')
   , setProto = require('./_set-proto');
@@ -47459,7 +47597,7 @@ if(setProto)$export($export.S, 'Reflect', {
     }
   }
 });
-},{"./_export":68,"./_set-proto":126}],248:[function(require,module,exports){
+},{"./_export":71,"./_set-proto":129}],251:[function(require,module,exports){
 // 26.1.13 Reflect.set(target, propertyKey, V [, receiver])
 var dP             = require('./_object-dp')
   , gOPD           = require('./_object-gopd')
@@ -47491,7 +47629,7 @@ function set(target, propertyKey, V/*, receiver*/){
 }
 
 $export($export.S, 'Reflect', {set: set});
-},{"./_an-object":43,"./_export":68,"./_has":75,"./_is-object":85,"./_object-dp":103,"./_object-gopd":106,"./_object-gpo":110,"./_property-desc":121}],249:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_has":78,"./_is-object":88,"./_object-dp":106,"./_object-gopd":109,"./_object-gpo":113,"./_property-desc":124}],252:[function(require,module,exports){
 var global            = require('./_global')
   , inheritIfRequired = require('./_inherit-if-required')
   , dP                = require('./_object-dp').f
@@ -47535,13 +47673,13 @@ if(require('./_descriptors') && (!CORRECT_NEW || require('./_fails')(function(){
 }
 
 require('./_set-species')('RegExp');
-},{"./_descriptors":64,"./_fails":70,"./_flags":72,"./_global":74,"./_inherit-if-required":79,"./_is-regexp":86,"./_object-dp":103,"./_object-gopn":108,"./_redefine":123,"./_set-species":127,"./_wks":153}],250:[function(require,module,exports){
+},{"./_descriptors":67,"./_fails":73,"./_flags":75,"./_global":77,"./_inherit-if-required":82,"./_is-regexp":89,"./_object-dp":106,"./_object-gopn":111,"./_redefine":126,"./_set-species":130,"./_wks":156}],253:[function(require,module,exports){
 // 21.2.5.3 get RegExp.prototype.flags()
 if(require('./_descriptors') && /./g.flags != 'g')require('./_object-dp').f(RegExp.prototype, 'flags', {
   configurable: true,
   get: require('./_flags')
 });
-},{"./_descriptors":64,"./_flags":72,"./_object-dp":103}],251:[function(require,module,exports){
+},{"./_descriptors":67,"./_flags":75,"./_object-dp":106}],254:[function(require,module,exports){
 // @@match logic
 require('./_fix-re-wks')('match', 1, function(defined, MATCH, $match){
   // 21.1.3.11 String.prototype.match(regexp)
@@ -47552,7 +47690,7 @@ require('./_fix-re-wks')('match', 1, function(defined, MATCH, $match){
     return fn !== undefined ? fn.call(regexp, O) : new RegExp(regexp)[MATCH](String(O));
   }, $match];
 });
-},{"./_fix-re-wks":71}],252:[function(require,module,exports){
+},{"./_fix-re-wks":74}],255:[function(require,module,exports){
 // @@replace logic
 require('./_fix-re-wks')('replace', 2, function(defined, REPLACE, $replace){
   // 21.1.3.14 String.prototype.replace(searchValue, replaceValue)
@@ -47565,7 +47703,7 @@ require('./_fix-re-wks')('replace', 2, function(defined, REPLACE, $replace){
       : $replace.call(String(O), searchValue, replaceValue);
   }, $replace];
 });
-},{"./_fix-re-wks":71}],253:[function(require,module,exports){
+},{"./_fix-re-wks":74}],256:[function(require,module,exports){
 // @@search logic
 require('./_fix-re-wks')('search', 1, function(defined, SEARCH, $search){
   // 21.1.3.15 String.prototype.search(regexp)
@@ -47576,7 +47714,7 @@ require('./_fix-re-wks')('search', 1, function(defined, SEARCH, $search){
     return fn !== undefined ? fn.call(regexp, O) : new RegExp(regexp)[SEARCH](String(O));
   }, $search];
 });
-},{"./_fix-re-wks":71}],254:[function(require,module,exports){
+},{"./_fix-re-wks":74}],257:[function(require,module,exports){
 // @@split logic
 require('./_fix-re-wks')('split', 2, function(defined, SPLIT, $split){
   'use strict';
@@ -47647,7 +47785,7 @@ require('./_fix-re-wks')('split', 2, function(defined, SPLIT, $split){
     return fn !== undefined ? fn.call(separator, O, limit) : $split.call(String(O), separator, limit);
   }, $split];
 });
-},{"./_fix-re-wks":71,"./_is-regexp":86}],255:[function(require,module,exports){
+},{"./_fix-re-wks":74,"./_is-regexp":89}],258:[function(require,module,exports){
 'use strict';
 require('./es6.regexp.flags');
 var anObject    = require('./_an-object')
@@ -47673,7 +47811,7 @@ if(require('./_fails')(function(){ return $toString.call({source: 'a', flags: 'b
     return $toString.call(this);
   });
 }
-},{"./_an-object":43,"./_descriptors":64,"./_fails":70,"./_flags":72,"./_redefine":123,"./es6.regexp.flags":250}],256:[function(require,module,exports){
+},{"./_an-object":46,"./_descriptors":67,"./_fails":73,"./_flags":75,"./_redefine":126,"./es6.regexp.flags":253}],259:[function(require,module,exports){
 'use strict';
 var strong = require('./_collection-strong');
 
@@ -47686,7 +47824,7 @@ module.exports = require('./_collection')('Set', function(get){
     return strong.def(this, value = value === 0 ? 0 : value, value);
   }
 }, strong);
-},{"./_collection":58,"./_collection-strong":55}],257:[function(require,module,exports){
+},{"./_collection":61,"./_collection-strong":58}],260:[function(require,module,exports){
 'use strict';
 // B.2.3.2 String.prototype.anchor(name)
 require('./_string-html')('anchor', function(createHTML){
@@ -47694,7 +47832,7 @@ require('./_string-html')('anchor', function(createHTML){
     return createHTML(this, 'a', 'name', name);
   }
 });
-},{"./_string-html":135}],258:[function(require,module,exports){
+},{"./_string-html":138}],261:[function(require,module,exports){
 'use strict';
 // B.2.3.3 String.prototype.big()
 require('./_string-html')('big', function(createHTML){
@@ -47702,7 +47840,7 @@ require('./_string-html')('big', function(createHTML){
     return createHTML(this, 'big', '', '');
   }
 });
-},{"./_string-html":135}],259:[function(require,module,exports){
+},{"./_string-html":138}],262:[function(require,module,exports){
 'use strict';
 // B.2.3.4 String.prototype.blink()
 require('./_string-html')('blink', function(createHTML){
@@ -47710,7 +47848,7 @@ require('./_string-html')('blink', function(createHTML){
     return createHTML(this, 'blink', '', '');
   }
 });
-},{"./_string-html":135}],260:[function(require,module,exports){
+},{"./_string-html":138}],263:[function(require,module,exports){
 'use strict';
 // B.2.3.5 String.prototype.bold()
 require('./_string-html')('bold', function(createHTML){
@@ -47718,7 +47856,7 @@ require('./_string-html')('bold', function(createHTML){
     return createHTML(this, 'b', '', '');
   }
 });
-},{"./_string-html":135}],261:[function(require,module,exports){
+},{"./_string-html":138}],264:[function(require,module,exports){
 'use strict';
 var $export = require('./_export')
   , $at     = require('./_string-at')(false);
@@ -47728,7 +47866,7 @@ $export($export.P, 'String', {
     return $at(this, pos);
   }
 });
-},{"./_export":68,"./_string-at":133}],262:[function(require,module,exports){
+},{"./_export":71,"./_string-at":136}],265:[function(require,module,exports){
 // 21.1.3.6 String.prototype.endsWith(searchString [, endPosition])
 'use strict';
 var $export   = require('./_export')
@@ -47749,7 +47887,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(ENDS_WITH), 'Strin
       : that.slice(end - search.length, end) === search;
   }
 });
-},{"./_export":68,"./_fails-is-regexp":69,"./_string-context":134,"./_to-length":144}],263:[function(require,module,exports){
+},{"./_export":71,"./_fails-is-regexp":72,"./_string-context":137,"./_to-length":147}],266:[function(require,module,exports){
 'use strict';
 // B.2.3.6 String.prototype.fixed()
 require('./_string-html')('fixed', function(createHTML){
@@ -47757,7 +47895,7 @@ require('./_string-html')('fixed', function(createHTML){
     return createHTML(this, 'tt', '', '');
   }
 });
-},{"./_string-html":135}],264:[function(require,module,exports){
+},{"./_string-html":138}],267:[function(require,module,exports){
 'use strict';
 // B.2.3.7 String.prototype.fontcolor(color)
 require('./_string-html')('fontcolor', function(createHTML){
@@ -47765,7 +47903,7 @@ require('./_string-html')('fontcolor', function(createHTML){
     return createHTML(this, 'font', 'color', color);
   }
 });
-},{"./_string-html":135}],265:[function(require,module,exports){
+},{"./_string-html":138}],268:[function(require,module,exports){
 'use strict';
 // B.2.3.8 String.prototype.fontsize(size)
 require('./_string-html')('fontsize', function(createHTML){
@@ -47773,7 +47911,7 @@ require('./_string-html')('fontsize', function(createHTML){
     return createHTML(this, 'font', 'size', size);
   }
 });
-},{"./_string-html":135}],266:[function(require,module,exports){
+},{"./_string-html":138}],269:[function(require,module,exports){
 var $export        = require('./_export')
   , toIndex        = require('./_to-index')
   , fromCharCode   = String.fromCharCode
@@ -47797,7 +47935,7 @@ $export($export.S + $export.F * (!!$fromCodePoint && $fromCodePoint.length != 1)
     } return res.join('');
   }
 });
-},{"./_export":68,"./_to-index":141}],267:[function(require,module,exports){
+},{"./_export":71,"./_to-index":144}],270:[function(require,module,exports){
 // 21.1.3.7 String.prototype.includes(searchString, position = 0)
 'use strict';
 var $export  = require('./_export')
@@ -47810,7 +47948,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(INCLUDES), 'String
       .indexOf(searchString, arguments.length > 1 ? arguments[1] : undefined);
   }
 });
-},{"./_export":68,"./_fails-is-regexp":69,"./_string-context":134}],268:[function(require,module,exports){
+},{"./_export":71,"./_fails-is-regexp":72,"./_string-context":137}],271:[function(require,module,exports){
 'use strict';
 // B.2.3.9 String.prototype.italics()
 require('./_string-html')('italics', function(createHTML){
@@ -47818,7 +47956,7 @@ require('./_string-html')('italics', function(createHTML){
     return createHTML(this, 'i', '', '');
   }
 });
-},{"./_string-html":135}],269:[function(require,module,exports){
+},{"./_string-html":138}],272:[function(require,module,exports){
 'use strict';
 var $at  = require('./_string-at')(true);
 
@@ -47836,7 +47974,7 @@ require('./_iter-define')(String, 'String', function(iterated){
   this._i += point.length;
   return {value: point, done: false};
 });
-},{"./_iter-define":89,"./_string-at":133}],270:[function(require,module,exports){
+},{"./_iter-define":92,"./_string-at":136}],273:[function(require,module,exports){
 'use strict';
 // B.2.3.10 String.prototype.link(url)
 require('./_string-html')('link', function(createHTML){
@@ -47844,7 +47982,7 @@ require('./_string-html')('link', function(createHTML){
     return createHTML(this, 'a', 'href', url);
   }
 });
-},{"./_string-html":135}],271:[function(require,module,exports){
+},{"./_string-html":138}],274:[function(require,module,exports){
 var $export   = require('./_export')
   , toIObject = require('./_to-iobject')
   , toLength  = require('./_to-length');
@@ -47863,14 +48001,14 @@ $export($export.S, 'String', {
     } return res.join('');
   }
 });
-},{"./_export":68,"./_to-iobject":143,"./_to-length":144}],272:[function(require,module,exports){
+},{"./_export":71,"./_to-iobject":146,"./_to-length":147}],275:[function(require,module,exports){
 var $export = require('./_export');
 
 $export($export.P, 'String', {
   // 21.1.3.13 String.prototype.repeat(count)
   repeat: require('./_string-repeat')
 });
-},{"./_export":68,"./_string-repeat":137}],273:[function(require,module,exports){
+},{"./_export":71,"./_string-repeat":140}],276:[function(require,module,exports){
 'use strict';
 // B.2.3.11 String.prototype.small()
 require('./_string-html')('small', function(createHTML){
@@ -47878,7 +48016,7 @@ require('./_string-html')('small', function(createHTML){
     return createHTML(this, 'small', '', '');
   }
 });
-},{"./_string-html":135}],274:[function(require,module,exports){
+},{"./_string-html":138}],277:[function(require,module,exports){
 // 21.1.3.18 String.prototype.startsWith(searchString [, position ])
 'use strict';
 var $export     = require('./_export')
@@ -47897,7 +48035,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(STARTS_WITH), 'Str
       : that.slice(index, index + search.length) === search;
   }
 });
-},{"./_export":68,"./_fails-is-regexp":69,"./_string-context":134,"./_to-length":144}],275:[function(require,module,exports){
+},{"./_export":71,"./_fails-is-regexp":72,"./_string-context":137,"./_to-length":147}],278:[function(require,module,exports){
 'use strict';
 // B.2.3.12 String.prototype.strike()
 require('./_string-html')('strike', function(createHTML){
@@ -47905,7 +48043,7 @@ require('./_string-html')('strike', function(createHTML){
     return createHTML(this, 'strike', '', '');
   }
 });
-},{"./_string-html":135}],276:[function(require,module,exports){
+},{"./_string-html":138}],279:[function(require,module,exports){
 'use strict';
 // B.2.3.13 String.prototype.sub()
 require('./_string-html')('sub', function(createHTML){
@@ -47913,7 +48051,7 @@ require('./_string-html')('sub', function(createHTML){
     return createHTML(this, 'sub', '', '');
   }
 });
-},{"./_string-html":135}],277:[function(require,module,exports){
+},{"./_string-html":138}],280:[function(require,module,exports){
 'use strict';
 // B.2.3.14 String.prototype.sup()
 require('./_string-html')('sup', function(createHTML){
@@ -47921,7 +48059,7 @@ require('./_string-html')('sup', function(createHTML){
     return createHTML(this, 'sup', '', '');
   }
 });
-},{"./_string-html":135}],278:[function(require,module,exports){
+},{"./_string-html":138}],281:[function(require,module,exports){
 'use strict';
 // 21.1.3.25 String.prototype.trim()
 require('./_string-trim')('trim', function($trim){
@@ -47929,7 +48067,7 @@ require('./_string-trim')('trim', function($trim){
     return $trim(this, 3);
   };
 });
-},{"./_string-trim":138}],279:[function(require,module,exports){
+},{"./_string-trim":141}],282:[function(require,module,exports){
 'use strict';
 // ECMAScript 6 symbols shim
 var global         = require('./_global')
@@ -48165,7 +48303,7 @@ setToStringTag($Symbol, 'Symbol');
 setToStringTag(Math, 'Math', true);
 // 24.3.3 JSON[@@toStringTag]
 setToStringTag(global.JSON, 'JSON', true);
-},{"./_an-object":43,"./_descriptors":64,"./_enum-keys":67,"./_export":68,"./_fails":70,"./_global":74,"./_has":75,"./_hide":76,"./_is-array":83,"./_keyof":93,"./_library":94,"./_meta":98,"./_object-create":102,"./_object-dp":103,"./_object-gopd":106,"./_object-gopn":108,"./_object-gopn-ext":107,"./_object-gops":109,"./_object-keys":112,"./_object-pie":113,"./_property-desc":121,"./_redefine":123,"./_set-to-string-tag":128,"./_shared":130,"./_to-iobject":143,"./_to-primitive":146,"./_uid":150,"./_wks":153,"./_wks-define":151,"./_wks-ext":152}],280:[function(require,module,exports){
+},{"./_an-object":46,"./_descriptors":67,"./_enum-keys":70,"./_export":71,"./_fails":73,"./_global":77,"./_has":78,"./_hide":79,"./_is-array":86,"./_keyof":96,"./_library":97,"./_meta":101,"./_object-create":105,"./_object-dp":106,"./_object-gopd":109,"./_object-gopn":111,"./_object-gopn-ext":110,"./_object-gops":112,"./_object-keys":115,"./_object-pie":116,"./_property-desc":124,"./_redefine":126,"./_set-to-string-tag":131,"./_shared":133,"./_to-iobject":146,"./_to-primitive":149,"./_uid":153,"./_wks":156,"./_wks-define":154,"./_wks-ext":155}],283:[function(require,module,exports){
 'use strict';
 var $export      = require('./_export')
   , $typed       = require('./_typed')
@@ -48212,66 +48350,66 @@ $export($export.P + $export.U + $export.F * require('./_fails')(function(){
 });
 
 require('./_set-species')(ARRAY_BUFFER);
-},{"./_an-object":43,"./_export":68,"./_fails":70,"./_global":74,"./_is-object":85,"./_set-species":127,"./_species-constructor":131,"./_to-index":141,"./_to-length":144,"./_typed":149,"./_typed-buffer":148}],281:[function(require,module,exports){
+},{"./_an-object":46,"./_export":71,"./_fails":73,"./_global":77,"./_is-object":88,"./_set-species":130,"./_species-constructor":134,"./_to-index":144,"./_to-length":147,"./_typed":152,"./_typed-buffer":151}],284:[function(require,module,exports){
 var $export = require('./_export');
 $export($export.G + $export.W + $export.F * !require('./_typed').ABV, {
   DataView: require('./_typed-buffer').DataView
 });
-},{"./_export":68,"./_typed":149,"./_typed-buffer":148}],282:[function(require,module,exports){
+},{"./_export":71,"./_typed":152,"./_typed-buffer":151}],285:[function(require,module,exports){
 require('./_typed-array')('Float32', 4, function(init){
   return function Float32Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],283:[function(require,module,exports){
+},{"./_typed-array":150}],286:[function(require,module,exports){
 require('./_typed-array')('Float64', 8, function(init){
   return function Float64Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],284:[function(require,module,exports){
+},{"./_typed-array":150}],287:[function(require,module,exports){
 require('./_typed-array')('Int16', 2, function(init){
   return function Int16Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],285:[function(require,module,exports){
+},{"./_typed-array":150}],288:[function(require,module,exports){
 require('./_typed-array')('Int32', 4, function(init){
   return function Int32Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],286:[function(require,module,exports){
+},{"./_typed-array":150}],289:[function(require,module,exports){
 require('./_typed-array')('Int8', 1, function(init){
   return function Int8Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],287:[function(require,module,exports){
+},{"./_typed-array":150}],290:[function(require,module,exports){
 require('./_typed-array')('Uint16', 2, function(init){
   return function Uint16Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],288:[function(require,module,exports){
+},{"./_typed-array":150}],291:[function(require,module,exports){
 require('./_typed-array')('Uint32', 4, function(init){
   return function Uint32Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],289:[function(require,module,exports){
+},{"./_typed-array":150}],292:[function(require,module,exports){
 require('./_typed-array')('Uint8', 1, function(init){
   return function Uint8Array(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 });
-},{"./_typed-array":147}],290:[function(require,module,exports){
+},{"./_typed-array":150}],293:[function(require,module,exports){
 require('./_typed-array')('Uint8', 1, function(init){
   return function Uint8ClampedArray(data, byteOffset, length){
     return init(this, data, byteOffset, length);
   };
 }, true);
-},{"./_typed-array":147}],291:[function(require,module,exports){
+},{"./_typed-array":150}],294:[function(require,module,exports){
 'use strict';
 var each         = require('./_array-methods')(0)
   , redefine     = require('./_redefine')
@@ -48328,7 +48466,7 @@ if(new $WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7){
     });
   });
 }
-},{"./_array-methods":48,"./_collection":58,"./_collection-weak":57,"./_is-object":85,"./_meta":98,"./_object-assign":101,"./_redefine":123}],292:[function(require,module,exports){
+},{"./_array-methods":51,"./_collection":61,"./_collection-weak":60,"./_is-object":88,"./_meta":101,"./_object-assign":104,"./_redefine":126}],295:[function(require,module,exports){
 'use strict';
 var weak = require('./_collection-weak');
 
@@ -48341,7 +48479,7 @@ require('./_collection')('WeakSet', function(get){
     return weak.def(this, value, true);
   }
 }, weak, false, true);
-},{"./_collection":58,"./_collection-weak":57}],293:[function(require,module,exports){
+},{"./_collection":61,"./_collection-weak":60}],296:[function(require,module,exports){
 'use strict';
 // https://github.com/tc39/Array.prototype.includes
 var $export   = require('./_export')
@@ -48354,7 +48492,7 @@ $export($export.P, 'Array', {
 });
 
 require('./_add-to-unscopables')('includes');
-},{"./_add-to-unscopables":41,"./_array-includes":47,"./_export":68}],294:[function(require,module,exports){
+},{"./_add-to-unscopables":44,"./_array-includes":50,"./_export":71}],297:[function(require,module,exports){
 // https://github.com/rwaldron/tc39-notes/blob/master/es6/2014-09/sept-25.md#510-globalasap-for-enqueuing-a-microtask
 var $export   = require('./_export')
   , microtask = require('./_microtask')()
@@ -48367,7 +48505,7 @@ $export($export.G, {
     microtask(domain ? domain.bind(fn) : fn);
   }
 });
-},{"./_cof":54,"./_export":68,"./_global":74,"./_microtask":100}],295:[function(require,module,exports){
+},{"./_cof":57,"./_export":71,"./_global":77,"./_microtask":103}],298:[function(require,module,exports){
 // https://github.com/ljharb/proposal-is-error
 var $export = require('./_export')
   , cof     = require('./_cof');
@@ -48377,12 +48515,12 @@ $export($export.S, 'Error', {
     return cof(it) === 'Error';
   }
 });
-},{"./_cof":54,"./_export":68}],296:[function(require,module,exports){
+},{"./_cof":57,"./_export":71}],299:[function(require,module,exports){
 // https://github.com/DavidBruant/Map-Set.prototype.toJSON
 var $export  = require('./_export');
 
 $export($export.P + $export.R, 'Map', {toJSON: require('./_collection-to-json')('Map')});
-},{"./_collection-to-json":56,"./_export":68}],297:[function(require,module,exports){
+},{"./_collection-to-json":59,"./_export":71}],300:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -48394,7 +48532,7 @@ $export($export.S, 'Math', {
     return $x1 + (y1 >>> 0) + (($x0 & $y0 | ($x0 | $y0) & ~($x0 + $y0 >>> 0)) >>> 31) | 0;
   }
 });
-},{"./_export":68}],298:[function(require,module,exports){
+},{"./_export":71}],301:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -48411,7 +48549,7 @@ $export($export.S, 'Math', {
     return u1 * v1 + (t >> 16) + ((u0 * v1 >>> 0) + (t & UINT16) >> 16);
   }
 });
-},{"./_export":68}],299:[function(require,module,exports){
+},{"./_export":71}],302:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -48423,7 +48561,7 @@ $export($export.S, 'Math', {
     return $x1 - (y1 >>> 0) - ((~$x0 & $y0 | ~($x0 ^ $y0) & $x0 - $y0 >>> 0) >>> 31) | 0;
   }
 });
-},{"./_export":68}],300:[function(require,module,exports){
+},{"./_export":71}],303:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -48440,7 +48578,7 @@ $export($export.S, 'Math', {
     return u1 * v1 + (t >>> 16) + ((u0 * v1 >>> 0) + (t & UINT16) >>> 16);
   }
 });
-},{"./_export":68}],301:[function(require,module,exports){
+},{"./_export":71}],304:[function(require,module,exports){
 'use strict';
 var $export         = require('./_export')
   , toObject        = require('./_to-object')
@@ -48453,7 +48591,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
     $defineProperty.f(toObject(this), P, {get: aFunction(getter), enumerable: true, configurable: true});
   }
 });
-},{"./_a-function":39,"./_descriptors":64,"./_export":68,"./_object-dp":103,"./_object-forced-pam":105,"./_to-object":145}],302:[function(require,module,exports){
+},{"./_a-function":42,"./_descriptors":67,"./_export":71,"./_object-dp":106,"./_object-forced-pam":108,"./_to-object":148}],305:[function(require,module,exports){
 'use strict';
 var $export         = require('./_export')
   , toObject        = require('./_to-object')
@@ -48466,7 +48604,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
     $defineProperty.f(toObject(this), P, {set: aFunction(setter), enumerable: true, configurable: true});
   }
 });
-},{"./_a-function":39,"./_descriptors":64,"./_export":68,"./_object-dp":103,"./_object-forced-pam":105,"./_to-object":145}],303:[function(require,module,exports){
+},{"./_a-function":42,"./_descriptors":67,"./_export":71,"./_object-dp":106,"./_object-forced-pam":108,"./_to-object":148}],306:[function(require,module,exports){
 // https://github.com/tc39/proposal-object-values-entries
 var $export  = require('./_export')
   , $entries = require('./_object-to-array')(true);
@@ -48476,7 +48614,7 @@ $export($export.S, 'Object', {
     return $entries(it);
   }
 });
-},{"./_export":68,"./_object-to-array":115}],304:[function(require,module,exports){
+},{"./_export":71,"./_object-to-array":118}],307:[function(require,module,exports){
 // https://github.com/tc39/proposal-object-getownpropertydescriptors
 var $export        = require('./_export')
   , ownKeys        = require('./_own-keys')
@@ -48496,7 +48634,7 @@ $export($export.S, 'Object', {
     return result;
   }
 });
-},{"./_create-property":60,"./_export":68,"./_object-gopd":106,"./_own-keys":116,"./_to-iobject":143}],305:[function(require,module,exports){
+},{"./_create-property":63,"./_export":71,"./_object-gopd":109,"./_own-keys":119,"./_to-iobject":146}],308:[function(require,module,exports){
 'use strict';
 var $export                  = require('./_export')
   , toObject                 = require('./_to-object')
@@ -48515,7 +48653,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
     } while(O = getPrototypeOf(O));
   }
 });
-},{"./_descriptors":64,"./_export":68,"./_object-forced-pam":105,"./_object-gopd":106,"./_object-gpo":110,"./_to-object":145,"./_to-primitive":146}],306:[function(require,module,exports){
+},{"./_descriptors":67,"./_export":71,"./_object-forced-pam":108,"./_object-gopd":109,"./_object-gpo":113,"./_to-object":148,"./_to-primitive":149}],309:[function(require,module,exports){
 'use strict';
 var $export                  = require('./_export')
   , toObject                 = require('./_to-object')
@@ -48534,7 +48672,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
     } while(O = getPrototypeOf(O));
   }
 });
-},{"./_descriptors":64,"./_export":68,"./_object-forced-pam":105,"./_object-gopd":106,"./_object-gpo":110,"./_to-object":145,"./_to-primitive":146}],307:[function(require,module,exports){
+},{"./_descriptors":67,"./_export":71,"./_object-forced-pam":108,"./_object-gopd":109,"./_object-gpo":113,"./_to-object":148,"./_to-primitive":149}],310:[function(require,module,exports){
 // https://github.com/tc39/proposal-object-values-entries
 var $export = require('./_export')
   , $values = require('./_object-to-array')(false);
@@ -48544,7 +48682,7 @@ $export($export.S, 'Object', {
     return $values(it);
   }
 });
-},{"./_export":68,"./_object-to-array":115}],308:[function(require,module,exports){
+},{"./_export":71,"./_object-to-array":118}],311:[function(require,module,exports){
 'use strict';
 // https://github.com/zenparsing/es-observable
 var $export     = require('./_export')
@@ -48744,7 +48882,7 @@ hide($Observable.prototype, OBSERVABLE, function(){ return this; });
 $export($export.G, {Observable: $Observable});
 
 require('./_set-species')('Observable');
-},{"./_a-function":39,"./_an-instance":42,"./_an-object":43,"./_core":59,"./_export":68,"./_for-of":73,"./_global":74,"./_hide":76,"./_microtask":100,"./_redefine-all":122,"./_set-species":127,"./_wks":153}],309:[function(require,module,exports){
+},{"./_a-function":42,"./_an-instance":45,"./_an-object":46,"./_core":62,"./_export":71,"./_for-of":76,"./_global":77,"./_hide":79,"./_microtask":103,"./_redefine-all":125,"./_set-species":130,"./_wks":156}],312:[function(require,module,exports){
 var metadata                  = require('./_metadata')
   , anObject                  = require('./_an-object')
   , toMetaKey                 = metadata.key
@@ -48753,7 +48891,7 @@ var metadata                  = require('./_metadata')
 metadata.exp({defineMetadata: function defineMetadata(metadataKey, metadataValue, target, targetKey){
   ordinaryDefineOwnMetadata(metadataKey, metadataValue, anObject(target), toMetaKey(targetKey));
 }});
-},{"./_an-object":43,"./_metadata":99}],310:[function(require,module,exports){
+},{"./_an-object":46,"./_metadata":102}],313:[function(require,module,exports){
 var metadata               = require('./_metadata')
   , anObject               = require('./_an-object')
   , toMetaKey              = metadata.key
@@ -48769,7 +48907,7 @@ metadata.exp({deleteMetadata: function deleteMetadata(metadataKey, target /*, ta
   targetMetadata['delete'](targetKey);
   return !!targetMetadata.size || store['delete'](target);
 }});
-},{"./_an-object":43,"./_metadata":99}],311:[function(require,module,exports){
+},{"./_an-object":46,"./_metadata":102}],314:[function(require,module,exports){
 var Set                     = require('./es6.set')
   , from                    = require('./_array-from-iterable')
   , metadata                = require('./_metadata')
@@ -48789,7 +48927,7 @@ var ordinaryMetadataKeys = function(O, P){
 metadata.exp({getMetadataKeys: function getMetadataKeys(target /*, targetKey */){
   return ordinaryMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
 }});
-},{"./_an-object":43,"./_array-from-iterable":46,"./_metadata":99,"./_object-gpo":110,"./es6.set":256}],312:[function(require,module,exports){
+},{"./_an-object":46,"./_array-from-iterable":49,"./_metadata":102,"./_object-gpo":113,"./es6.set":259}],315:[function(require,module,exports){
 var metadata               = require('./_metadata')
   , anObject               = require('./_an-object')
   , getPrototypeOf         = require('./_object-gpo')
@@ -48807,7 +48945,7 @@ var ordinaryGetMetadata = function(MetadataKey, O, P){
 metadata.exp({getMetadata: function getMetadata(metadataKey, target /*, targetKey */){
   return ordinaryGetMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
-},{"./_an-object":43,"./_metadata":99,"./_object-gpo":110}],313:[function(require,module,exports){
+},{"./_an-object":46,"./_metadata":102,"./_object-gpo":113}],316:[function(require,module,exports){
 var metadata                = require('./_metadata')
   , anObject                = require('./_an-object')
   , ordinaryOwnMetadataKeys = metadata.keys
@@ -48816,7 +48954,7 @@ var metadata                = require('./_metadata')
 metadata.exp({getOwnMetadataKeys: function getOwnMetadataKeys(target /*, targetKey */){
   return ordinaryOwnMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
 }});
-},{"./_an-object":43,"./_metadata":99}],314:[function(require,module,exports){
+},{"./_an-object":46,"./_metadata":102}],317:[function(require,module,exports){
 var metadata               = require('./_metadata')
   , anObject               = require('./_an-object')
   , ordinaryGetOwnMetadata = metadata.get
@@ -48826,7 +48964,7 @@ metadata.exp({getOwnMetadata: function getOwnMetadata(metadataKey, target /*, ta
   return ordinaryGetOwnMetadata(metadataKey, anObject(target)
     , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
-},{"./_an-object":43,"./_metadata":99}],315:[function(require,module,exports){
+},{"./_an-object":46,"./_metadata":102}],318:[function(require,module,exports){
 var metadata               = require('./_metadata')
   , anObject               = require('./_an-object')
   , getPrototypeOf         = require('./_object-gpo')
@@ -48843,7 +48981,7 @@ var ordinaryHasMetadata = function(MetadataKey, O, P){
 metadata.exp({hasMetadata: function hasMetadata(metadataKey, target /*, targetKey */){
   return ordinaryHasMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
-},{"./_an-object":43,"./_metadata":99,"./_object-gpo":110}],316:[function(require,module,exports){
+},{"./_an-object":46,"./_metadata":102,"./_object-gpo":113}],319:[function(require,module,exports){
 var metadata               = require('./_metadata')
   , anObject               = require('./_an-object')
   , ordinaryHasOwnMetadata = metadata.has
@@ -48853,7 +48991,7 @@ metadata.exp({hasOwnMetadata: function hasOwnMetadata(metadataKey, target /*, ta
   return ordinaryHasOwnMetadata(metadataKey, anObject(target)
     , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
-},{"./_an-object":43,"./_metadata":99}],317:[function(require,module,exports){
+},{"./_an-object":46,"./_metadata":102}],320:[function(require,module,exports){
 var metadata                  = require('./_metadata')
   , anObject                  = require('./_an-object')
   , aFunction                 = require('./_a-function')
@@ -48869,12 +49007,12 @@ metadata.exp({metadata: function metadata(metadataKey, metadataValue){
     );
   };
 }});
-},{"./_a-function":39,"./_an-object":43,"./_metadata":99}],318:[function(require,module,exports){
+},{"./_a-function":42,"./_an-object":46,"./_metadata":102}],321:[function(require,module,exports){
 // https://github.com/DavidBruant/Map-Set.prototype.toJSON
 var $export  = require('./_export');
 
 $export($export.P + $export.R, 'Set', {toJSON: require('./_collection-to-json')('Set')});
-},{"./_collection-to-json":56,"./_export":68}],319:[function(require,module,exports){
+},{"./_collection-to-json":59,"./_export":71}],322:[function(require,module,exports){
 'use strict';
 // https://github.com/mathiasbynens/String.prototype.at
 var $export = require('./_export')
@@ -48885,7 +49023,7 @@ $export($export.P, 'String', {
     return $at(this, pos);
   }
 });
-},{"./_export":68,"./_string-at":133}],320:[function(require,module,exports){
+},{"./_export":71,"./_string-at":136}],323:[function(require,module,exports){
 'use strict';
 // https://tc39.github.io/String.prototype.matchAll/
 var $export     = require('./_export')
@@ -48916,7 +49054,7 @@ $export($export.P, 'String', {
     return new $RegExpStringIterator(rx, S);
   }
 });
-},{"./_defined":63,"./_export":68,"./_flags":72,"./_is-regexp":86,"./_iter-create":88,"./_to-length":144}],321:[function(require,module,exports){
+},{"./_defined":66,"./_export":71,"./_flags":75,"./_is-regexp":89,"./_iter-create":91,"./_to-length":147}],324:[function(require,module,exports){
 'use strict';
 // https://github.com/tc39/proposal-string-pad-start-end
 var $export = require('./_export')
@@ -48927,7 +49065,7 @@ $export($export.P, 'String', {
     return $pad(this, maxLength, arguments.length > 1 ? arguments[1] : undefined, false);
   }
 });
-},{"./_export":68,"./_string-pad":136}],322:[function(require,module,exports){
+},{"./_export":71,"./_string-pad":139}],325:[function(require,module,exports){
 'use strict';
 // https://github.com/tc39/proposal-string-pad-start-end
 var $export = require('./_export')
@@ -48938,7 +49076,7 @@ $export($export.P, 'String', {
     return $pad(this, maxLength, arguments.length > 1 ? arguments[1] : undefined, true);
   }
 });
-},{"./_export":68,"./_string-pad":136}],323:[function(require,module,exports){
+},{"./_export":71,"./_string-pad":139}],326:[function(require,module,exports){
 'use strict';
 // https://github.com/sebmarkbage/ecmascript-string-left-right-trim
 require('./_string-trim')('trimLeft', function($trim){
@@ -48946,7 +49084,7 @@ require('./_string-trim')('trimLeft', function($trim){
     return $trim(this, 1);
   };
 }, 'trimStart');
-},{"./_string-trim":138}],324:[function(require,module,exports){
+},{"./_string-trim":141}],327:[function(require,module,exports){
 'use strict';
 // https://github.com/sebmarkbage/ecmascript-string-left-right-trim
 require('./_string-trim')('trimRight', function($trim){
@@ -48954,16 +49092,16 @@ require('./_string-trim')('trimRight', function($trim){
     return $trim(this, 2);
   };
 }, 'trimEnd');
-},{"./_string-trim":138}],325:[function(require,module,exports){
+},{"./_string-trim":141}],328:[function(require,module,exports){
 require('./_wks-define')('asyncIterator');
-},{"./_wks-define":151}],326:[function(require,module,exports){
+},{"./_wks-define":154}],329:[function(require,module,exports){
 require('./_wks-define')('observable');
-},{"./_wks-define":151}],327:[function(require,module,exports){
+},{"./_wks-define":154}],330:[function(require,module,exports){
 // https://github.com/ljharb/proposal-global
 var $export = require('./_export');
 
 $export($export.S, 'System', {global: require('./_global')});
-},{"./_export":68,"./_global":74}],328:[function(require,module,exports){
+},{"./_export":71,"./_global":77}],331:[function(require,module,exports){
 var $iterators    = require('./es6.array.iterator')
   , redefine      = require('./_redefine')
   , global        = require('./_global')
@@ -48986,14 +49124,14 @@ for(var collections = ['NodeList', 'DOMTokenList', 'MediaList', 'StyleSheetList'
     for(key in $iterators)if(!proto[key])redefine(proto, key, $iterators[key], true);
   }
 }
-},{"./_global":74,"./_hide":76,"./_iterators":92,"./_redefine":123,"./_wks":153,"./es6.array.iterator":166}],329:[function(require,module,exports){
+},{"./_global":77,"./_hide":79,"./_iterators":95,"./_redefine":126,"./_wks":156,"./es6.array.iterator":169}],332:[function(require,module,exports){
 var $export = require('./_export')
   , $task   = require('./_task');
 $export($export.G + $export.B, {
   setImmediate:   $task.set,
   clearImmediate: $task.clear
 });
-},{"./_export":68,"./_task":140}],330:[function(require,module,exports){
+},{"./_export":71,"./_task":143}],333:[function(require,module,exports){
 // ie9- setTimeout & setInterval additional parameters fix
 var global     = require('./_global')
   , $export    = require('./_export')
@@ -49014,7 +49152,7 @@ $export($export.G + $export.B + $export.F * MSIE, {
   setTimeout:  wrap(global.setTimeout),
   setInterval: wrap(global.setInterval)
 });
-},{"./_export":68,"./_global":74,"./_invoke":80,"./_partial":119}],331:[function(require,module,exports){
+},{"./_export":71,"./_global":77,"./_invoke":83,"./_partial":122}],334:[function(require,module,exports){
 require('./modules/es6.symbol');
 require('./modules/es6.object.create');
 require('./modules/es6.object.define-property');
@@ -49191,7 +49329,7 @@ require('./modules/web.timers');
 require('./modules/web.immediate');
 require('./modules/web.dom.iterable');
 module.exports = require('./modules/_core');
-},{"./modules/_core":59,"./modules/es6.array.copy-within":156,"./modules/es6.array.every":157,"./modules/es6.array.fill":158,"./modules/es6.array.filter":159,"./modules/es6.array.find":161,"./modules/es6.array.find-index":160,"./modules/es6.array.for-each":162,"./modules/es6.array.from":163,"./modules/es6.array.index-of":164,"./modules/es6.array.is-array":165,"./modules/es6.array.iterator":166,"./modules/es6.array.join":167,"./modules/es6.array.last-index-of":168,"./modules/es6.array.map":169,"./modules/es6.array.of":170,"./modules/es6.array.reduce":172,"./modules/es6.array.reduce-right":171,"./modules/es6.array.slice":173,"./modules/es6.array.some":174,"./modules/es6.array.sort":175,"./modules/es6.array.species":176,"./modules/es6.date.now":177,"./modules/es6.date.to-iso-string":178,"./modules/es6.date.to-json":179,"./modules/es6.date.to-primitive":180,"./modules/es6.date.to-string":181,"./modules/es6.function.bind":182,"./modules/es6.function.has-instance":183,"./modules/es6.function.name":184,"./modules/es6.map":185,"./modules/es6.math.acosh":186,"./modules/es6.math.asinh":187,"./modules/es6.math.atanh":188,"./modules/es6.math.cbrt":189,"./modules/es6.math.clz32":190,"./modules/es6.math.cosh":191,"./modules/es6.math.expm1":192,"./modules/es6.math.fround":193,"./modules/es6.math.hypot":194,"./modules/es6.math.imul":195,"./modules/es6.math.log10":196,"./modules/es6.math.log1p":197,"./modules/es6.math.log2":198,"./modules/es6.math.sign":199,"./modules/es6.math.sinh":200,"./modules/es6.math.tanh":201,"./modules/es6.math.trunc":202,"./modules/es6.number.constructor":203,"./modules/es6.number.epsilon":204,"./modules/es6.number.is-finite":205,"./modules/es6.number.is-integer":206,"./modules/es6.number.is-nan":207,"./modules/es6.number.is-safe-integer":208,"./modules/es6.number.max-safe-integer":209,"./modules/es6.number.min-safe-integer":210,"./modules/es6.number.parse-float":211,"./modules/es6.number.parse-int":212,"./modules/es6.number.to-fixed":213,"./modules/es6.number.to-precision":214,"./modules/es6.object.assign":215,"./modules/es6.object.create":216,"./modules/es6.object.define-properties":217,"./modules/es6.object.define-property":218,"./modules/es6.object.freeze":219,"./modules/es6.object.get-own-property-descriptor":220,"./modules/es6.object.get-own-property-names":221,"./modules/es6.object.get-prototype-of":222,"./modules/es6.object.is":226,"./modules/es6.object.is-extensible":223,"./modules/es6.object.is-frozen":224,"./modules/es6.object.is-sealed":225,"./modules/es6.object.keys":227,"./modules/es6.object.prevent-extensions":228,"./modules/es6.object.seal":229,"./modules/es6.object.set-prototype-of":230,"./modules/es6.object.to-string":231,"./modules/es6.parse-float":232,"./modules/es6.parse-int":233,"./modules/es6.promise":234,"./modules/es6.reflect.apply":235,"./modules/es6.reflect.construct":236,"./modules/es6.reflect.define-property":237,"./modules/es6.reflect.delete-property":238,"./modules/es6.reflect.enumerate":239,"./modules/es6.reflect.get":242,"./modules/es6.reflect.get-own-property-descriptor":240,"./modules/es6.reflect.get-prototype-of":241,"./modules/es6.reflect.has":243,"./modules/es6.reflect.is-extensible":244,"./modules/es6.reflect.own-keys":245,"./modules/es6.reflect.prevent-extensions":246,"./modules/es6.reflect.set":248,"./modules/es6.reflect.set-prototype-of":247,"./modules/es6.regexp.constructor":249,"./modules/es6.regexp.flags":250,"./modules/es6.regexp.match":251,"./modules/es6.regexp.replace":252,"./modules/es6.regexp.search":253,"./modules/es6.regexp.split":254,"./modules/es6.regexp.to-string":255,"./modules/es6.set":256,"./modules/es6.string.anchor":257,"./modules/es6.string.big":258,"./modules/es6.string.blink":259,"./modules/es6.string.bold":260,"./modules/es6.string.code-point-at":261,"./modules/es6.string.ends-with":262,"./modules/es6.string.fixed":263,"./modules/es6.string.fontcolor":264,"./modules/es6.string.fontsize":265,"./modules/es6.string.from-code-point":266,"./modules/es6.string.includes":267,"./modules/es6.string.italics":268,"./modules/es6.string.iterator":269,"./modules/es6.string.link":270,"./modules/es6.string.raw":271,"./modules/es6.string.repeat":272,"./modules/es6.string.small":273,"./modules/es6.string.starts-with":274,"./modules/es6.string.strike":275,"./modules/es6.string.sub":276,"./modules/es6.string.sup":277,"./modules/es6.string.trim":278,"./modules/es6.symbol":279,"./modules/es6.typed.array-buffer":280,"./modules/es6.typed.data-view":281,"./modules/es6.typed.float32-array":282,"./modules/es6.typed.float64-array":283,"./modules/es6.typed.int16-array":284,"./modules/es6.typed.int32-array":285,"./modules/es6.typed.int8-array":286,"./modules/es6.typed.uint16-array":287,"./modules/es6.typed.uint32-array":288,"./modules/es6.typed.uint8-array":289,"./modules/es6.typed.uint8-clamped-array":290,"./modules/es6.weak-map":291,"./modules/es6.weak-set":292,"./modules/es7.array.includes":293,"./modules/es7.asap":294,"./modules/es7.error.is-error":295,"./modules/es7.map.to-json":296,"./modules/es7.math.iaddh":297,"./modules/es7.math.imulh":298,"./modules/es7.math.isubh":299,"./modules/es7.math.umulh":300,"./modules/es7.object.define-getter":301,"./modules/es7.object.define-setter":302,"./modules/es7.object.entries":303,"./modules/es7.object.get-own-property-descriptors":304,"./modules/es7.object.lookup-getter":305,"./modules/es7.object.lookup-setter":306,"./modules/es7.object.values":307,"./modules/es7.observable":308,"./modules/es7.reflect.define-metadata":309,"./modules/es7.reflect.delete-metadata":310,"./modules/es7.reflect.get-metadata":312,"./modules/es7.reflect.get-metadata-keys":311,"./modules/es7.reflect.get-own-metadata":314,"./modules/es7.reflect.get-own-metadata-keys":313,"./modules/es7.reflect.has-metadata":315,"./modules/es7.reflect.has-own-metadata":316,"./modules/es7.reflect.metadata":317,"./modules/es7.set.to-json":318,"./modules/es7.string.at":319,"./modules/es7.string.match-all":320,"./modules/es7.string.pad-end":321,"./modules/es7.string.pad-start":322,"./modules/es7.string.trim-left":323,"./modules/es7.string.trim-right":324,"./modules/es7.symbol.async-iterator":325,"./modules/es7.symbol.observable":326,"./modules/es7.system.global":327,"./modules/web.dom.iterable":328,"./modules/web.immediate":329,"./modules/web.timers":330}],332:[function(require,module,exports){
+},{"./modules/_core":62,"./modules/es6.array.copy-within":159,"./modules/es6.array.every":160,"./modules/es6.array.fill":161,"./modules/es6.array.filter":162,"./modules/es6.array.find":164,"./modules/es6.array.find-index":163,"./modules/es6.array.for-each":165,"./modules/es6.array.from":166,"./modules/es6.array.index-of":167,"./modules/es6.array.is-array":168,"./modules/es6.array.iterator":169,"./modules/es6.array.join":170,"./modules/es6.array.last-index-of":171,"./modules/es6.array.map":172,"./modules/es6.array.of":173,"./modules/es6.array.reduce":175,"./modules/es6.array.reduce-right":174,"./modules/es6.array.slice":176,"./modules/es6.array.some":177,"./modules/es6.array.sort":178,"./modules/es6.array.species":179,"./modules/es6.date.now":180,"./modules/es6.date.to-iso-string":181,"./modules/es6.date.to-json":182,"./modules/es6.date.to-primitive":183,"./modules/es6.date.to-string":184,"./modules/es6.function.bind":185,"./modules/es6.function.has-instance":186,"./modules/es6.function.name":187,"./modules/es6.map":188,"./modules/es6.math.acosh":189,"./modules/es6.math.asinh":190,"./modules/es6.math.atanh":191,"./modules/es6.math.cbrt":192,"./modules/es6.math.clz32":193,"./modules/es6.math.cosh":194,"./modules/es6.math.expm1":195,"./modules/es6.math.fround":196,"./modules/es6.math.hypot":197,"./modules/es6.math.imul":198,"./modules/es6.math.log10":199,"./modules/es6.math.log1p":200,"./modules/es6.math.log2":201,"./modules/es6.math.sign":202,"./modules/es6.math.sinh":203,"./modules/es6.math.tanh":204,"./modules/es6.math.trunc":205,"./modules/es6.number.constructor":206,"./modules/es6.number.epsilon":207,"./modules/es6.number.is-finite":208,"./modules/es6.number.is-integer":209,"./modules/es6.number.is-nan":210,"./modules/es6.number.is-safe-integer":211,"./modules/es6.number.max-safe-integer":212,"./modules/es6.number.min-safe-integer":213,"./modules/es6.number.parse-float":214,"./modules/es6.number.parse-int":215,"./modules/es6.number.to-fixed":216,"./modules/es6.number.to-precision":217,"./modules/es6.object.assign":218,"./modules/es6.object.create":219,"./modules/es6.object.define-properties":220,"./modules/es6.object.define-property":221,"./modules/es6.object.freeze":222,"./modules/es6.object.get-own-property-descriptor":223,"./modules/es6.object.get-own-property-names":224,"./modules/es6.object.get-prototype-of":225,"./modules/es6.object.is":229,"./modules/es6.object.is-extensible":226,"./modules/es6.object.is-frozen":227,"./modules/es6.object.is-sealed":228,"./modules/es6.object.keys":230,"./modules/es6.object.prevent-extensions":231,"./modules/es6.object.seal":232,"./modules/es6.object.set-prototype-of":233,"./modules/es6.object.to-string":234,"./modules/es6.parse-float":235,"./modules/es6.parse-int":236,"./modules/es6.promise":237,"./modules/es6.reflect.apply":238,"./modules/es6.reflect.construct":239,"./modules/es6.reflect.define-property":240,"./modules/es6.reflect.delete-property":241,"./modules/es6.reflect.enumerate":242,"./modules/es6.reflect.get":245,"./modules/es6.reflect.get-own-property-descriptor":243,"./modules/es6.reflect.get-prototype-of":244,"./modules/es6.reflect.has":246,"./modules/es6.reflect.is-extensible":247,"./modules/es6.reflect.own-keys":248,"./modules/es6.reflect.prevent-extensions":249,"./modules/es6.reflect.set":251,"./modules/es6.reflect.set-prototype-of":250,"./modules/es6.regexp.constructor":252,"./modules/es6.regexp.flags":253,"./modules/es6.regexp.match":254,"./modules/es6.regexp.replace":255,"./modules/es6.regexp.search":256,"./modules/es6.regexp.split":257,"./modules/es6.regexp.to-string":258,"./modules/es6.set":259,"./modules/es6.string.anchor":260,"./modules/es6.string.big":261,"./modules/es6.string.blink":262,"./modules/es6.string.bold":263,"./modules/es6.string.code-point-at":264,"./modules/es6.string.ends-with":265,"./modules/es6.string.fixed":266,"./modules/es6.string.fontcolor":267,"./modules/es6.string.fontsize":268,"./modules/es6.string.from-code-point":269,"./modules/es6.string.includes":270,"./modules/es6.string.italics":271,"./modules/es6.string.iterator":272,"./modules/es6.string.link":273,"./modules/es6.string.raw":274,"./modules/es6.string.repeat":275,"./modules/es6.string.small":276,"./modules/es6.string.starts-with":277,"./modules/es6.string.strike":278,"./modules/es6.string.sub":279,"./modules/es6.string.sup":280,"./modules/es6.string.trim":281,"./modules/es6.symbol":282,"./modules/es6.typed.array-buffer":283,"./modules/es6.typed.data-view":284,"./modules/es6.typed.float32-array":285,"./modules/es6.typed.float64-array":286,"./modules/es6.typed.int16-array":287,"./modules/es6.typed.int32-array":288,"./modules/es6.typed.int8-array":289,"./modules/es6.typed.uint16-array":290,"./modules/es6.typed.uint32-array":291,"./modules/es6.typed.uint8-array":292,"./modules/es6.typed.uint8-clamped-array":293,"./modules/es6.weak-map":294,"./modules/es6.weak-set":295,"./modules/es7.array.includes":296,"./modules/es7.asap":297,"./modules/es7.error.is-error":298,"./modules/es7.map.to-json":299,"./modules/es7.math.iaddh":300,"./modules/es7.math.imulh":301,"./modules/es7.math.isubh":302,"./modules/es7.math.umulh":303,"./modules/es7.object.define-getter":304,"./modules/es7.object.define-setter":305,"./modules/es7.object.entries":306,"./modules/es7.object.get-own-property-descriptors":307,"./modules/es7.object.lookup-getter":308,"./modules/es7.object.lookup-setter":309,"./modules/es7.object.values":310,"./modules/es7.observable":311,"./modules/es7.reflect.define-metadata":312,"./modules/es7.reflect.delete-metadata":313,"./modules/es7.reflect.get-metadata":315,"./modules/es7.reflect.get-metadata-keys":314,"./modules/es7.reflect.get-own-metadata":317,"./modules/es7.reflect.get-own-metadata-keys":316,"./modules/es7.reflect.has-metadata":318,"./modules/es7.reflect.has-own-metadata":319,"./modules/es7.reflect.metadata":320,"./modules/es7.set.to-json":321,"./modules/es7.string.at":322,"./modules/es7.string.match-all":323,"./modules/es7.string.pad-end":324,"./modules/es7.string.pad-start":325,"./modules/es7.string.trim-left":326,"./modules/es7.string.trim-right":327,"./modules/es7.symbol.async-iterator":328,"./modules/es7.symbol.observable":329,"./modules/es7.system.global":330,"./modules/web.dom.iterable":331,"./modules/web.immediate":332,"./modules/web.timers":333}],335:[function(require,module,exports){
 (function (process,global){
 /**
  * Copyright (c) 2014, Facebook, Inc.
@@ -49863,7 +50001,2892 @@ module.exports = require('./modules/_core');
 );
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":333}],333:[function(require,module,exports){
+},{"_process":338}],336:[function(require,module,exports){
+/**!
+ * AngularJS file upload directives and services. Supports: file upload/drop/paste, resume, cancel/abort,
+ * progress, resize, thumbnail, preview, validation and CORS
+ * FileAPI Flash shim for old browsers not supporting FormData
+ * @author  Danial  <danial.farid@gmail.com>
+ * @version 12.2.5
+ */
+
+(function () {
+  /** @namespace FileAPI.noContentTimeout */
+
+  function patchXHR(fnName, newFn) {
+    window.XMLHttpRequest.prototype[fnName] = newFn(window.XMLHttpRequest.prototype[fnName]);
+  }
+
+  function redefineProp(xhr, prop, fn) {
+    try {
+      Object.defineProperty(xhr, prop, {get: fn});
+    } catch (e) {/*ignore*/
+    }
+  }
+
+  if (!window.FileAPI) {
+    window.FileAPI = {};
+  }
+
+  if (!window.XMLHttpRequest) {
+    throw 'AJAX is not supported. XMLHttpRequest is not defined.';
+  }
+
+  FileAPI.shouldLoad = !window.FormData || FileAPI.forceLoad;
+  if (FileAPI.shouldLoad) {
+    var initializeUploadListener = function (xhr) {
+      if (!xhr.__listeners) {
+        if (!xhr.upload) xhr.upload = {};
+        xhr.__listeners = [];
+        var origAddEventListener = xhr.upload.addEventListener;
+        xhr.upload.addEventListener = function (t, fn) {
+          xhr.__listeners[t] = fn;
+          if (origAddEventListener) origAddEventListener.apply(this, arguments);
+        };
+      }
+    };
+
+    patchXHR('open', function (orig) {
+      return function (m, url, b) {
+        initializeUploadListener(this);
+        this.__url = url;
+        try {
+          orig.apply(this, [m, url, b]);
+        } catch (e) {
+          if (e.message.indexOf('Access is denied') > -1) {
+            this.__origError = e;
+            orig.apply(this, [m, '_fix_for_ie_crossdomain__', b]);
+          }
+        }
+      };
+    });
+
+    patchXHR('getResponseHeader', function (orig) {
+      return function (h) {
+        return this.__fileApiXHR && this.__fileApiXHR.getResponseHeader ? this.__fileApiXHR.getResponseHeader(h) : (orig == null ? null : orig.apply(this, [h]));
+      };
+    });
+
+    patchXHR('getAllResponseHeaders', function (orig) {
+      return function () {
+        return this.__fileApiXHR && this.__fileApiXHR.getAllResponseHeaders ? this.__fileApiXHR.getAllResponseHeaders() : (orig == null ? null : orig.apply(this));
+      };
+    });
+
+    patchXHR('abort', function (orig) {
+      return function () {
+        return this.__fileApiXHR && this.__fileApiXHR.abort ? this.__fileApiXHR.abort() : (orig == null ? null : orig.apply(this));
+      };
+    });
+
+    patchXHR('setRequestHeader', function (orig) {
+      return function (header, value) {
+        if (header === '__setXHR_') {
+          initializeUploadListener(this);
+          var val = value(this);
+          // fix for angular < 1.2.0
+          if (val instanceof Function) {
+            val(this);
+          }
+        } else {
+          this.__requestHeaders = this.__requestHeaders || {};
+          this.__requestHeaders[header] = value;
+          orig.apply(this, arguments);
+        }
+      };
+    });
+
+    patchXHR('send', function (orig) {
+      return function () {
+        var xhr = this;
+        if (arguments[0] && arguments[0].__isFileAPIShim) {
+          var formData = arguments[0];
+          var config = {
+            url: xhr.__url,
+            jsonp: false, //removes the callback form param
+            cache: true, //removes the ?fileapiXXX in the url
+            complete: function (err, fileApiXHR) {
+              if (err && angular.isString(err) && err.indexOf('#2174') !== -1) {
+                // this error seems to be fine the file is being uploaded properly.
+                err = null;
+              }
+              xhr.__completed = true;
+              if (!err && xhr.__listeners.load)
+                xhr.__listeners.load({
+                  type: 'load',
+                  loaded: xhr.__loaded,
+                  total: xhr.__total,
+                  target: xhr,
+                  lengthComputable: true
+                });
+              if (!err && xhr.__listeners.loadend)
+                xhr.__listeners.loadend({
+                  type: 'loadend',
+                  loaded: xhr.__loaded,
+                  total: xhr.__total,
+                  target: xhr,
+                  lengthComputable: true
+                });
+              if (err === 'abort' && xhr.__listeners.abort)
+                xhr.__listeners.abort({
+                  type: 'abort',
+                  loaded: xhr.__loaded,
+                  total: xhr.__total,
+                  target: xhr,
+                  lengthComputable: true
+                });
+              if (fileApiXHR.status !== undefined) redefineProp(xhr, 'status', function () {
+                return (fileApiXHR.status === 0 && err && err !== 'abort') ? 500 : fileApiXHR.status;
+              });
+              if (fileApiXHR.statusText !== undefined) redefineProp(xhr, 'statusText', function () {
+                return fileApiXHR.statusText;
+              });
+              redefineProp(xhr, 'readyState', function () {
+                return 4;
+              });
+              if (fileApiXHR.response !== undefined) redefineProp(xhr, 'response', function () {
+                return fileApiXHR.response;
+              });
+              var resp = fileApiXHR.responseText || (err && fileApiXHR.status === 0 && err !== 'abort' ? err : undefined);
+              redefineProp(xhr, 'responseText', function () {
+                return resp;
+              });
+              redefineProp(xhr, 'response', function () {
+                return resp;
+              });
+              if (err) redefineProp(xhr, 'err', function () {
+                return err;
+              });
+              xhr.__fileApiXHR = fileApiXHR;
+              if (xhr.onreadystatechange) xhr.onreadystatechange();
+              if (xhr.onload) xhr.onload();
+            },
+            progress: function (e) {
+              e.target = xhr;
+              if (xhr.__listeners.progress) xhr.__listeners.progress(e);
+              xhr.__total = e.total;
+              xhr.__loaded = e.loaded;
+              if (e.total === e.loaded) {
+                // fix flash issue that doesn't call complete if there is no response text from the server
+                var _this = this;
+                setTimeout(function () {
+                  if (!xhr.__completed) {
+                    xhr.getAllResponseHeaders = function () {
+                    };
+                    _this.complete(null, {status: 204, statusText: 'No Content'});
+                  }
+                }, FileAPI.noContentTimeout || 10000);
+              }
+            },
+            headers: xhr.__requestHeaders
+          };
+          config.data = {};
+          config.files = {};
+          for (var i = 0; i < formData.data.length; i++) {
+            var item = formData.data[i];
+            if (item.val != null && item.val.name != null && item.val.size != null && item.val.type != null) {
+              config.files[item.key] = item.val;
+            } else {
+              config.data[item.key] = item.val;
+            }
+          }
+
+          setTimeout(function () {
+            if (!FileAPI.hasFlash) {
+              throw 'Adode Flash Player need to be installed. To check ahead use "FileAPI.hasFlash"';
+            }
+            xhr.__fileApiXHR = FileAPI.upload(config);
+          }, 1);
+        } else {
+          if (this.__origError) {
+            throw this.__origError;
+          }
+          orig.apply(xhr, arguments);
+        }
+      };
+    });
+    window.XMLHttpRequest.__isFileAPIShim = true;
+    window.FormData = FormData = function () {
+      return {
+        append: function (key, val, name) {
+          if (val.__isFileAPIBlobShim) {
+            val = val.data[0];
+          }
+          this.data.push({
+            key: key,
+            val: val,
+            name: name
+          });
+        },
+        data: [],
+        __isFileAPIShim: true
+      };
+    };
+
+    window.Blob = Blob = function (b) {
+      return {
+        data: b,
+        __isFileAPIBlobShim: true
+      };
+    };
+  }
+
+})();
+
+(function () {
+  /** @namespace FileAPI.forceLoad */
+  /** @namespace window.FileAPI.jsUrl */
+  /** @namespace window.FileAPI.jsPath */
+
+  function isInputTypeFile(elem) {
+    return elem[0].tagName.toLowerCase() === 'input' && elem.attr('type') && elem.attr('type').toLowerCase() === 'file';
+  }
+
+  function hasFlash() {
+    try {
+      var fo = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
+      if (fo) return true;
+    } catch (e) {
+      if (navigator.mimeTypes['application/x-shockwave-flash'] !== undefined) return true;
+    }
+    return false;
+  }
+
+  function getOffset(obj) {
+    var left = 0, top = 0;
+
+    if (window.jQuery) {
+      return jQuery(obj).offset();
+    }
+
+    if (obj.offsetParent) {
+      do {
+        left += (obj.offsetLeft - obj.scrollLeft);
+        top += (obj.offsetTop - obj.scrollTop);
+        obj = obj.offsetParent;
+      } while (obj);
+    }
+    return {
+      left: left,
+      top: top
+    };
+  }
+
+  if (FileAPI.shouldLoad) {
+    FileAPI.hasFlash = hasFlash();
+
+    //load FileAPI
+    if (FileAPI.forceLoad) {
+      FileAPI.html5 = false;
+    }
+
+    if (!FileAPI.upload) {
+      var jsUrl, basePath, script = document.createElement('script'), allScripts = document.getElementsByTagName('script'), i, index, src;
+      if (window.FileAPI.jsUrl) {
+        jsUrl = window.FileAPI.jsUrl;
+      } else if (window.FileAPI.jsPath) {
+        basePath = window.FileAPI.jsPath;
+      } else {
+        for (i = 0; i < allScripts.length; i++) {
+          src = allScripts[i].src;
+          index = src.search(/\/ng\-file\-upload[\-a-zA-z0-9\.]*\.js/);
+          if (index > -1) {
+            basePath = src.substring(0, index + 1);
+            break;
+          }
+        }
+      }
+
+      if (FileAPI.staticPath == null) FileAPI.staticPath = basePath;
+      script.setAttribute('src', jsUrl || basePath + 'FileAPI.min.js');
+      document.getElementsByTagName('head')[0].appendChild(script);
+    }
+
+    FileAPI.ngfFixIE = function (elem, fileElem, changeFn) {
+      if (!hasFlash()) {
+        throw 'Adode Flash Player need to be installed. To check ahead use "FileAPI.hasFlash"';
+      }
+      var fixInputStyle = function () {
+        var label = fileElem.parent();
+        if (elem.attr('disabled')) {
+          if (label) label.removeClass('js-fileapi-wrapper');
+        } else {
+          if (!fileElem.attr('__ngf_flash_')) {
+            fileElem.unbind('change');
+            fileElem.unbind('click');
+            fileElem.bind('change', function (evt) {
+              fileApiChangeFn.apply(this, [evt]);
+              changeFn.apply(this, [evt]);
+            });
+            fileElem.attr('__ngf_flash_', 'true');
+          }
+          label.addClass('js-fileapi-wrapper');
+          if (!isInputTypeFile(elem)) {
+            label.css('position', 'absolute')
+              .css('top', getOffset(elem[0]).top + 'px').css('left', getOffset(elem[0]).left + 'px')
+              .css('width', elem[0].offsetWidth + 'px').css('height', elem[0].offsetHeight + 'px')
+              .css('filter', 'alpha(opacity=0)').css('display', elem.css('display'))
+              .css('overflow', 'hidden').css('z-index', '900000')
+              .css('visibility', 'visible');
+            fileElem.css('width', elem[0].offsetWidth + 'px').css('height', elem[0].offsetHeight + 'px')
+              .css('position', 'absolute').css('top', '0px').css('left', '0px');
+          }
+        }
+      };
+
+      elem.bind('mouseenter', fixInputStyle);
+
+      var fileApiChangeFn = function (evt) {
+        var files = FileAPI.getFiles(evt);
+        //just a double check for #233
+        for (var i = 0; i < files.length; i++) {
+          if (files[i].size === undefined) files[i].size = 0;
+          if (files[i].name === undefined) files[i].name = 'file';
+          if (files[i].type === undefined) files[i].type = 'undefined';
+        }
+        if (!evt.target) {
+          evt.target = {};
+        }
+        evt.target.files = files;
+        // if evt.target.files is not writable use helper field
+        if (evt.target.files !== files) {
+          evt.__files_ = files;
+        }
+        (evt.__files_ || evt.target.files).item = function (i) {
+          return (evt.__files_ || evt.target.files)[i] || null;
+        };
+      };
+    };
+
+    FileAPI.disableFileInput = function (elem, disable) {
+      if (disable) {
+        elem.removeClass('js-fileapi-wrapper');
+      } else {
+        elem.addClass('js-fileapi-wrapper');
+      }
+    };
+  }
+})();
+
+if (!window.FileReader) {
+  window.FileReader = function () {
+    var _this = this, loadStarted = false;
+    this.listeners = {};
+    this.addEventListener = function (type, fn) {
+      _this.listeners[type] = _this.listeners[type] || [];
+      _this.listeners[type].push(fn);
+    };
+    this.removeEventListener = function (type, fn) {
+      if (_this.listeners[type]) _this.listeners[type].splice(_this.listeners[type].indexOf(fn), 1);
+    };
+    this.dispatchEvent = function (evt) {
+      var list = _this.listeners[evt.type];
+      if (list) {
+        for (var i = 0; i < list.length; i++) {
+          list[i].call(_this, evt);
+        }
+      }
+    };
+    this.onabort = this.onerror = this.onload = this.onloadstart = this.onloadend = this.onprogress = null;
+
+    var constructEvent = function (type, evt) {
+      var e = {type: type, target: _this, loaded: evt.loaded, total: evt.total, error: evt.error};
+      if (evt.result != null) e.target.result = evt.result;
+      return e;
+    };
+    var listener = function (evt) {
+      if (!loadStarted) {
+        loadStarted = true;
+        if (_this.onloadstart) _this.onloadstart(constructEvent('loadstart', evt));
+      }
+      var e;
+      if (evt.type === 'load') {
+        if (_this.onloadend) _this.onloadend(constructEvent('loadend', evt));
+        e = constructEvent('load', evt);
+        if (_this.onload) _this.onload(e);
+        _this.dispatchEvent(e);
+      } else if (evt.type === 'progress') {
+        e = constructEvent('progress', evt);
+        if (_this.onprogress) _this.onprogress(e);
+        _this.dispatchEvent(e);
+      } else {
+        e = constructEvent('error', evt);
+        if (_this.onerror) _this.onerror(e);
+        _this.dispatchEvent(e);
+      }
+    };
+    this.readAsDataURL = function (file) {
+      FileAPI.readAsDataURL(file, listener);
+    };
+    this.readAsText = function (file) {
+      FileAPI.readAsText(file, listener);
+    };
+  };
+}
+
+/**!
+ * AngularJS file upload directives and services. Supoorts: file upload/drop/paste, resume, cancel/abort,
+ * progress, resize, thumbnail, preview, validation and CORS
+ * @author  Danial  <danial.farid@gmail.com>
+ * @version 12.2.5
+ */
+
+if (window.XMLHttpRequest && !(window.FileAPI && FileAPI.shouldLoad)) {
+  window.XMLHttpRequest.prototype.setRequestHeader = (function (orig) {
+    return function (header, value) {
+      if (header === '__setXHR_') {
+        var val = value(this);
+        // fix for angular < 1.2.0
+        if (val instanceof Function) {
+          val(this);
+        }
+      } else {
+        orig.apply(this, arguments);
+      }
+    };
+  })(window.XMLHttpRequest.prototype.setRequestHeader);
+}
+
+var ngFileUpload = angular.module('ngFileUpload', []);
+
+ngFileUpload.version = '12.2.5';
+
+ngFileUpload.service('UploadBase', ['$http', '$q', '$timeout', function ($http, $q, $timeout) {
+  var upload = this;
+  upload.promisesCount = 0;
+
+  this.isResumeSupported = function () {
+    return window.Blob && window.Blob.prototype.slice;
+  };
+
+  var resumeSupported = this.isResumeSupported();
+
+  function sendHttp(config) {
+    config.method = config.method || 'POST';
+    config.headers = config.headers || {};
+
+    var deferred = config._deferred = config._deferred || $q.defer();
+    var promise = deferred.promise;
+
+    function notifyProgress(e) {
+      if (deferred.notify) {
+        deferred.notify(e);
+      }
+      if (promise.progressFunc) {
+        $timeout(function () {
+          promise.progressFunc(e);
+        });
+      }
+    }
+
+    function getNotifyEvent(n) {
+      if (config._start != null && resumeSupported) {
+        return {
+          loaded: n.loaded + config._start,
+          total: (config._file && config._file.size) || n.total,
+          type: n.type, config: config,
+          lengthComputable: true, target: n.target
+        };
+      } else {
+        return n;
+      }
+    }
+
+    if (!config.disableProgress) {
+      config.headers.__setXHR_ = function () {
+        return function (xhr) {
+          if (!xhr || !xhr.upload || !xhr.upload.addEventListener) return;
+          config.__XHR = xhr;
+          if (config.xhrFn) config.xhrFn(xhr);
+          xhr.upload.addEventListener('progress', function (e) {
+            e.config = config;
+            notifyProgress(getNotifyEvent(e));
+          }, false);
+          //fix for firefox not firing upload progress end, also IE8-9
+          xhr.upload.addEventListener('load', function (e) {
+            if (e.lengthComputable) {
+              e.config = config;
+              notifyProgress(getNotifyEvent(e));
+            }
+          }, false);
+        };
+      };
+    }
+
+    function uploadWithAngular() {
+      $http(config).then(function (r) {
+          if (resumeSupported && config._chunkSize && !config._finished && config._file) {
+            var fileSize = config._file && config._file.size || 0;
+            notifyProgress({
+                loaded: Math.min(config._end, fileSize),
+                total: fileSize,
+                config: config,
+                type: 'progress'
+              }
+            );
+            upload.upload(config, true);
+          } else {
+            if (config._finished) delete config._finished;
+            deferred.resolve(r);
+          }
+        }, function (e) {
+          deferred.reject(e);
+        }, function (n) {
+          deferred.notify(n);
+        }
+      );
+    }
+
+    if (!resumeSupported) {
+      uploadWithAngular();
+    } else if (config._chunkSize && config._end && !config._finished) {
+      config._start = config._end;
+      config._end += config._chunkSize;
+      uploadWithAngular();
+    } else if (config.resumeSizeUrl) {
+      $http.get(config.resumeSizeUrl).then(function (resp) {
+        if (config.resumeSizeResponseReader) {
+          config._start = config.resumeSizeResponseReader(resp.data);
+        } else {
+          config._start = parseInt((resp.data.size == null ? resp.data : resp.data.size).toString());
+        }
+        if (config._chunkSize) {
+          config._end = config._start + config._chunkSize;
+        }
+        uploadWithAngular();
+      }, function (e) {
+        throw e;
+      });
+    } else if (config.resumeSize) {
+      config.resumeSize().then(function (size) {
+        config._start = size;
+        if (config._chunkSize) {
+          config._end = config._start + config._chunkSize;
+        }
+        uploadWithAngular();
+      }, function (e) {
+        throw e;
+      });
+    } else {
+      if (config._chunkSize) {
+        config._start = 0;
+        config._end = config._start + config._chunkSize;
+      }
+      uploadWithAngular();
+    }
+
+
+    promise.success = function (fn) {
+      promise.then(function (response) {
+        fn(response.data, response.status, response.headers, config);
+      });
+      return promise;
+    };
+
+    promise.error = function (fn) {
+      promise.then(null, function (response) {
+        fn(response.data, response.status, response.headers, config);
+      });
+      return promise;
+    };
+
+    promise.progress = function (fn) {
+      promise.progressFunc = fn;
+      promise.then(null, null, function (n) {
+        fn(n);
+      });
+      return promise;
+    };
+    promise.abort = promise.pause = function () {
+      if (config.__XHR) {
+        $timeout(function () {
+          config.__XHR.abort();
+        });
+      }
+      return promise;
+    };
+    promise.xhr = function (fn) {
+      config.xhrFn = (function (origXhrFn) {
+        return function () {
+          if (origXhrFn) origXhrFn.apply(promise, arguments);
+          fn.apply(promise, arguments);
+        };
+      })(config.xhrFn);
+      return promise;
+    };
+
+    upload.promisesCount++;
+    if (promise['finally'] && promise['finally'] instanceof Function) {
+      promise['finally'](function () {
+        upload.promisesCount--;
+      });
+    }
+    return promise;
+  }
+
+  this.isUploadInProgress = function () {
+    return upload.promisesCount > 0;
+  };
+
+  this.rename = function (file, name) {
+    file.ngfName = name;
+    return file;
+  };
+
+  this.jsonBlob = function (val) {
+    if (val != null && !angular.isString(val)) {
+      val = JSON.stringify(val);
+    }
+    var blob = new window.Blob([val], {type: 'application/json'});
+    blob._ngfBlob = true;
+    return blob;
+  };
+
+  this.json = function (val) {
+    return angular.toJson(val);
+  };
+
+  function copy(obj) {
+    var clone = {};
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        clone[key] = obj[key];
+      }
+    }
+    return clone;
+  }
+
+  this.isFile = function (file) {
+    return file != null && (file instanceof window.Blob || (file.flashId && file.name && file.size));
+  };
+
+  this.upload = function (config, internal) {
+    function toResumeFile(file, formData) {
+      if (file._ngfBlob) return file;
+      config._file = config._file || file;
+      if (config._start != null && resumeSupported) {
+        if (config._end && config._end >= file.size) {
+          config._finished = true;
+          config._end = file.size;
+        }
+        var slice = file.slice(config._start, config._end || file.size);
+        slice.name = file.name;
+        slice.ngfName = file.ngfName;
+        if (config._chunkSize) {
+          formData.append('_chunkSize', config._chunkSize);
+          formData.append('_currentChunkSize', config._end - config._start);
+          formData.append('_chunkNumber', Math.floor(config._start / config._chunkSize));
+          formData.append('_totalSize', config._file.size);
+        }
+        return slice;
+      }
+      return file;
+    }
+
+    function addFieldToFormData(formData, val, key) {
+      if (val !== undefined) {
+        if (angular.isDate(val)) {
+          val = val.toISOString();
+        }
+        if (angular.isString(val)) {
+          formData.append(key, val);
+        } else if (upload.isFile(val)) {
+          var file = toResumeFile(val, formData);
+          var split = key.split(',');
+          if (split[1]) {
+            file.ngfName = split[1].replace(/^\s+|\s+$/g, '');
+            key = split[0];
+          }
+          config._fileKey = config._fileKey || key;
+          formData.append(key, file, file.ngfName || file.name);
+        } else {
+          if (angular.isObject(val)) {
+            if (val.$$ngfCircularDetection) throw 'ngFileUpload: Circular reference in config.data. Make sure specified data for Upload.upload() has no circular reference: ' + key;
+
+            val.$$ngfCircularDetection = true;
+            try {
+              for (var k in val) {
+                if (val.hasOwnProperty(k) && k !== '$$ngfCircularDetection') {
+                  var objectKey = config.objectKey == null ? '[i]' : config.objectKey;
+                  if (val.length && parseInt(k) > -1) {
+                    objectKey = config.arrayKey == null ? objectKey : config.arrayKey;
+                  }
+                  addFieldToFormData(formData, val[k], key + objectKey.replace(/[ik]/g, k));
+                }
+              }
+            } finally {
+              delete val.$$ngfCircularDetection;
+            }
+          } else {
+            formData.append(key, val);
+          }
+        }
+      }
+    }
+
+    function digestConfig() {
+      config._chunkSize = upload.translateScalars(config.resumeChunkSize);
+      config._chunkSize = config._chunkSize ? parseInt(config._chunkSize.toString()) : null;
+
+      config.headers = config.headers || {};
+      config.headers['Content-Type'] = undefined;
+      config.transformRequest = config.transformRequest ?
+        (angular.isArray(config.transformRequest) ?
+          config.transformRequest : [config.transformRequest]) : [];
+      config.transformRequest.push(function (data) {
+        var formData = new window.FormData(), key;
+        data = data || config.fields || {};
+        if (config.file) {
+          data.file = config.file;
+        }
+        for (key in data) {
+          if (data.hasOwnProperty(key)) {
+            var val = data[key];
+            if (config.formDataAppender) {
+              config.formDataAppender(formData, key, val);
+            } else {
+              addFieldToFormData(formData, val, key);
+            }
+          }
+        }
+
+        return formData;
+      });
+    }
+
+    if (!internal) config = copy(config);
+    if (!config._isDigested) {
+      config._isDigested = true;
+      digestConfig();
+    }
+
+    return sendHttp(config);
+  };
+
+  this.http = function (config) {
+    config = copy(config);
+    config.transformRequest = config.transformRequest || function (data) {
+        if ((window.ArrayBuffer && data instanceof window.ArrayBuffer) || data instanceof window.Blob) {
+          return data;
+        }
+        return $http.defaults.transformRequest[0].apply(this, arguments);
+      };
+    config._chunkSize = upload.translateScalars(config.resumeChunkSize);
+    config._chunkSize = config._chunkSize ? parseInt(config._chunkSize.toString()) : null;
+
+    return sendHttp(config);
+  };
+
+  this.translateScalars = function (str) {
+    if (angular.isString(str)) {
+      if (str.search(/kb/i) === str.length - 2) {
+        return parseFloat(str.substring(0, str.length - 2) * 1024);
+      } else if (str.search(/mb/i) === str.length - 2) {
+        return parseFloat(str.substring(0, str.length - 2) * 1048576);
+      } else if (str.search(/gb/i) === str.length - 2) {
+        return parseFloat(str.substring(0, str.length - 2) * 1073741824);
+      } else if (str.search(/b/i) === str.length - 1) {
+        return parseFloat(str.substring(0, str.length - 1));
+      } else if (str.search(/s/i) === str.length - 1) {
+        return parseFloat(str.substring(0, str.length - 1));
+      } else if (str.search(/m/i) === str.length - 1) {
+        return parseFloat(str.substring(0, str.length - 1) * 60);
+      } else if (str.search(/h/i) === str.length - 1) {
+        return parseFloat(str.substring(0, str.length - 1) * 3600);
+      }
+    }
+    return str;
+  };
+
+  this.urlToBlob = function(url) {
+    var defer = $q.defer();
+    $http({url: url, method: 'get', responseType: 'arraybuffer'}).then(function (resp) {
+      var arrayBufferView = new Uint8Array(resp.data);
+      var type = resp.headers('content-type') || 'image/WebP';
+      var blob = new window.Blob([arrayBufferView], {type: type});
+      var matches = url.match(/.*\/(.+?)(\?.*)?$/);
+      if (matches.length > 1) {
+        blob.name = matches[1];
+      }
+      defer.resolve(blob);
+    }, function (e) {
+      defer.reject(e);
+    });
+    return defer.promise;
+  };
+
+  this.setDefaults = function (defaults) {
+    this.defaults = defaults || {};
+  };
+
+  this.defaults = {};
+  this.version = ngFileUpload.version;
+}
+
+]);
+
+ngFileUpload.service('Upload', ['$parse', '$timeout', '$compile', '$q', 'UploadExif', function ($parse, $timeout, $compile, $q, UploadExif) {
+  var upload = UploadExif;
+  upload.getAttrWithDefaults = function (attr, name) {
+    if (attr[name] != null) return attr[name];
+    var def = upload.defaults[name];
+    return (def == null ? def : (angular.isString(def) ? def : JSON.stringify(def)));
+  };
+
+  upload.attrGetter = function (name, attr, scope, params) {
+    var attrVal = this.getAttrWithDefaults(attr, name);
+    if (scope) {
+      try {
+        if (params) {
+          return $parse(attrVal)(scope, params);
+        } else {
+          return $parse(attrVal)(scope);
+        }
+      } catch (e) {
+        // hangle string value without single qoute
+        if (name.search(/min|max|pattern/i)) {
+          return attrVal;
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      return attrVal;
+    }
+  };
+
+  upload.shouldUpdateOn = function (type, attr, scope) {
+    var modelOptions = upload.attrGetter('ngfModelOptions', attr, scope);
+    if (modelOptions && modelOptions.updateOn) {
+      return modelOptions.updateOn.split(' ').indexOf(type) > -1;
+    }
+    return true;
+  };
+
+  upload.emptyPromise = function () {
+    var d = $q.defer();
+    var args = arguments;
+    $timeout(function () {
+      d.resolve.apply(d, args);
+    });
+    return d.promise;
+  };
+
+  upload.rejectPromise = function () {
+    var d = $q.defer();
+    var args = arguments;
+    $timeout(function () {
+      d.reject.apply(d, args);
+    });
+    return d.promise;
+  };
+
+  upload.happyPromise = function (promise, data) {
+    var d = $q.defer();
+    promise.then(function (result) {
+      d.resolve(result);
+    }, function (error) {
+      $timeout(function () {
+        throw error;
+      });
+      d.resolve(data);
+    });
+    return d.promise;
+  };
+
+  function applyExifRotations(files, attr, scope) {
+    var promises = [upload.emptyPromise()];
+    angular.forEach(files, function (f, i) {
+      if (f.type.indexOf('image/jpeg') === 0 && upload.attrGetter('ngfFixOrientation', attr, scope, {$file: f})) {
+        promises.push(upload.happyPromise(upload.applyExifRotation(f), f).then(function (fixedFile) {
+          files.splice(i, 1, fixedFile);
+        }));
+      }
+    });
+    return $q.all(promises);
+  }
+
+  function resize(files, attr, scope) {
+    var resizeVal = upload.attrGetter('ngfResize', attr, scope);
+    if (!resizeVal || !upload.isResizeSupported() || !files.length) return upload.emptyPromise();
+    if (resizeVal instanceof Function) {
+      var defer = $q.defer();
+      resizeVal(files).then(function (p) {
+        resizeWithParams(p, files, attr, scope).then(function (r) {
+          defer.resolve(r);
+        }, function (e) {
+          defer.reject(e);
+        });
+      }, function (e) {
+        defer.reject(e);
+      });
+    } else {
+      return resizeWithParams(resizeVal, files, attr, scope);
+    }
+  }
+
+  function resizeWithParams(params, files, attr, scope) {
+    var promises = [upload.emptyPromise()];
+
+    function handleFile(f, i) {
+      if (f.type.indexOf('image') === 0) {
+        if (params.pattern && !upload.validatePattern(f, params.pattern)) return;
+        params.resizeIf = function (width, height) {
+          return upload.attrGetter('ngfResizeIf', attr, scope,
+            {$width: width, $height: height, $file: f});
+        };
+        var promise = upload.resize(f, params);
+        promises.push(promise);
+        promise.then(function (resizedFile) {
+          files.splice(i, 1, resizedFile);
+        }, function (e) {
+          f.$error = 'resize';
+          f.$errorParam = (e ? (e.message ? e.message : e) + ': ' : '') + (f && f.name);
+        });
+      }
+    }
+
+    for (var i = 0; i < files.length; i++) {
+      handleFile(files[i], i);
+    }
+    return $q.all(promises);
+  }
+
+  upload.updateModel = function (ngModel, attr, scope, fileChange, files, evt, noDelay) {
+    function update(files, invalidFiles, newFiles, dupFiles, isSingleModel) {
+      attr.$$ngfPrevValidFiles = files;
+      attr.$$ngfPrevInvalidFiles = invalidFiles;
+      var file = files && files.length ? files[0] : null;
+      var invalidFile = invalidFiles && invalidFiles.length ? invalidFiles[0] : null;
+
+      if (ngModel) {
+        upload.applyModelValidation(ngModel, files);
+        ngModel.$setViewValue(isSingleModel ? file : files);
+      }
+
+      if (fileChange) {
+        $parse(fileChange)(scope, {
+          $files: files,
+          $file: file,
+          $newFiles: newFiles,
+          $duplicateFiles: dupFiles,
+          $invalidFiles: invalidFiles,
+          $invalidFile: invalidFile,
+          $event: evt
+        });
+      }
+
+      var invalidModel = upload.attrGetter('ngfModelInvalid', attr);
+      if (invalidModel) {
+        $timeout(function () {
+          $parse(invalidModel).assign(scope, isSingleModel ? invalidFile : invalidFiles);
+        });
+      }
+      $timeout(function () {
+        // scope apply changes
+      });
+    }
+
+    var allNewFiles, dupFiles = [], prevValidFiles, prevInvalidFiles,
+      invalids = [], valids = [];
+
+    function removeDuplicates() {
+      function equals(f1, f2) {
+        return f1.name === f2.name && (f1.$ngfOrigSize || f1.size) === (f2.$ngfOrigSize || f2.size) &&
+          f1.type === f2.type;
+      }
+
+      function isInPrevFiles(f) {
+        var j;
+        for (j = 0; j < prevValidFiles.length; j++) {
+          if (equals(f, prevValidFiles[j])) {
+            return true;
+          }
+        }
+        for (j = 0; j < prevInvalidFiles.length; j++) {
+          if (equals(f, prevInvalidFiles[j])) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      if (files) {
+        allNewFiles = [];
+        dupFiles = [];
+        for (var i = 0; i < files.length; i++) {
+          if (isInPrevFiles(files[i])) {
+            dupFiles.push(files[i]);
+          } else {
+            allNewFiles.push(files[i]);
+          }
+        }
+      }
+    }
+
+    function toArray(v) {
+      return angular.isArray(v) ? v : [v];
+    }
+
+    function resizeAndUpdate() {
+      function updateModel() {
+        $timeout(function () {
+          update(keep ? prevValidFiles.concat(valids) : valids,
+            keep ? prevInvalidFiles.concat(invalids) : invalids,
+            files, dupFiles, isSingleModel);
+        }, options && options.debounce ? options.debounce.change || options.debounce : 0);
+      }
+
+      resize(validateAfterResize ? allNewFiles : valids, attr, scope).then(function () {
+        if (validateAfterResize) {
+          upload.validate(allNewFiles, keep ? prevValidFiles.length : 0, ngModel, attr, scope)
+            .then(function (validationResult) {
+              valids = validationResult.validsFiles;
+              invalids = validationResult.invalidsFiles;
+              updateModel();
+            });
+        } else {
+          updateModel();
+        }
+      }, function (e) {
+        throw 'Could not resize files ' + e;
+      });
+    }
+
+    prevValidFiles = attr.$$ngfPrevValidFiles || [];
+    prevInvalidFiles = attr.$$ngfPrevInvalidFiles || [];
+    if (ngModel && ngModel.$modelValue) {
+      prevValidFiles = toArray(ngModel.$modelValue);
+    }
+
+    var keep = upload.attrGetter('ngfKeep', attr, scope);
+    allNewFiles = (files || []).slice(0);
+    if (keep === 'distinct' || upload.attrGetter('ngfKeepDistinct', attr, scope) === true) {
+      removeDuplicates(attr, scope);
+    }
+
+    var isSingleModel = !keep && !upload.attrGetter('ngfMultiple', attr, scope) && !upload.attrGetter('multiple', attr);
+
+    if (keep && !allNewFiles.length) return;
+
+    upload.attrGetter('ngfBeforeModelChange', attr, scope, {
+      $files: files,
+      $file: files && files.length ? files[0] : null,
+      $newFiles: allNewFiles,
+      $duplicateFiles: dupFiles,
+      $event: evt
+    });
+
+    var validateAfterResize = upload.attrGetter('ngfValidateAfterResize', attr, scope);
+
+    var options = upload.attrGetter('ngfModelOptions', attr, scope);
+    upload.validate(allNewFiles, keep ? prevValidFiles.length : 0, ngModel, attr, scope)
+      .then(function (validationResult) {
+      if (noDelay) {
+        update(allNewFiles, [], files, dupFiles, isSingleModel);
+      } else {
+        if ((!options || !options.allowInvalid) && !validateAfterResize) {
+          valids = validationResult.validFiles;
+          invalids = validationResult.invalidFiles;
+        } else {
+          valids = allNewFiles;
+        }
+        if (upload.attrGetter('ngfFixOrientation', attr, scope) && upload.isExifSupported()) {
+          applyExifRotations(valids, attr, scope).then(function () {
+            resizeAndUpdate();
+          });
+        } else {
+          resizeAndUpdate();
+        }
+      }
+    });
+  };
+
+  return upload;
+}]);
+
+ngFileUpload.directive('ngfSelect', ['$parse', '$timeout', '$compile', 'Upload', function ($parse, $timeout, $compile, Upload) {
+  var generatedElems = [];
+
+  function isDelayedClickSupported(ua) {
+    // fix for android native browser < 4.4 and safari windows
+    var m = ua.match(/Android[^\d]*(\d+)\.(\d+)/);
+    if (m && m.length > 2) {
+      var v = Upload.defaults.androidFixMinorVersion || 4;
+      return parseInt(m[1]) < 4 || (parseInt(m[1]) === v && parseInt(m[2]) < v);
+    }
+
+    // safari on windows
+    return ua.indexOf('Chrome') === -1 && /.*Windows.*Safari.*/.test(ua);
+  }
+
+  function linkFileSelect(scope, elem, attr, ngModel, $parse, $timeout, $compile, upload) {
+    /** @namespace attr.ngfSelect */
+    /** @namespace attr.ngfChange */
+    /** @namespace attr.ngModel */
+    /** @namespace attr.ngfModelOptions */
+    /** @namespace attr.ngfMultiple */
+    /** @namespace attr.ngfCapture */
+    /** @namespace attr.ngfValidate */
+    /** @namespace attr.ngfKeep */
+    var attrGetter = function (name, scope) {
+      return upload.attrGetter(name, attr, scope);
+    };
+
+    function isInputTypeFile() {
+      return elem[0].tagName.toLowerCase() === 'input' && attr.type && attr.type.toLowerCase() === 'file';
+    }
+
+    function fileChangeAttr() {
+      return attrGetter('ngfChange') || attrGetter('ngfSelect');
+    }
+
+    function changeFn(evt) {
+      if (upload.shouldUpdateOn('change', attr, scope)) {
+        var fileList = evt.__files_ || (evt.target && evt.target.files), files = [];
+        /* Handle duplicate call in  IE11 */
+        if (!fileList) return;
+        for (var i = 0; i < fileList.length; i++) {
+          files.push(fileList[i]);
+        }
+        upload.updateModel(ngModel, attr, scope, fileChangeAttr(),
+          files.length ? files : null, evt);
+      }
+    }
+
+    upload.registerModelChangeValidator(ngModel, attr, scope);
+
+    var unwatches = [];
+    if (attrGetter('ngfMultiple')) {
+      unwatches.push(scope.$watch(attrGetter('ngfMultiple'), function () {
+        fileElem.attr('multiple', attrGetter('ngfMultiple', scope));
+      }));
+    }
+    if (attrGetter('ngfCapture')) {
+      unwatches.push(scope.$watch(attrGetter('ngfCapture'), function () {
+        fileElem.attr('capture', attrGetter('ngfCapture', scope));
+      }));
+    }
+    if (attrGetter('ngfAccept')) {
+      unwatches.push(scope.$watch(attrGetter('ngfAccept'), function () {
+        fileElem.attr('accept', attrGetter('ngfAccept', scope));
+      }));
+    }
+    attr.$observe('accept', function () {
+      fileElem.attr('accept', attrGetter('accept'));
+    });
+    unwatches.push(function () {
+      if (attr.$$observers) delete attr.$$observers.accept;
+    });
+    function bindAttrToFileInput(fileElem) {
+      for (var i = 0; i < elem[0].attributes.length; i++) {
+        var attribute = elem[0].attributes[i];
+        if (attribute.name !== 'type' && attribute.name !== 'class' && attribute.name !== 'style') {
+          if (attribute.value == null || attribute.value === '') {
+            if (attribute.name === 'required') attribute.value = 'required';
+            if (attribute.name === 'multiple') attribute.value = 'multiple';
+          }
+          fileElem.attr(attribute.name, attribute.name === 'id' ? 'ngf-' + attribute.value : attribute.value);
+        }
+      }
+    }
+
+    function createFileInput() {
+      if (isInputTypeFile()) {
+        return elem;
+      }
+
+      var fileElem = angular.element('<input type="file">');
+
+      bindAttrToFileInput(fileElem);
+
+      var label = angular.element('<label>upload</label>');
+      label.css('visibility', 'hidden').css('position', 'absolute').css('overflow', 'hidden')
+        .css('width', '0px').css('height', '0px').css('border', 'none')
+        .css('margin', '0px').css('padding', '0px').attr('tabindex', '-1');
+      if (elem.attr('id')) {
+        label.attr('id', 'ngf-label-' + elem.attr('id'));
+      }
+      generatedElems.push({el: elem, ref: label});
+
+      document.body.appendChild(label.append(fileElem)[0]);
+
+      return fileElem;
+    }
+
+    function clickHandler(evt) {
+      if (elem.attr('disabled')) return false;
+      if (attrGetter('ngfSelectDisabled', scope)) return;
+
+      var r = detectSwipe(evt);
+      // prevent the click if it is a swipe
+      if (r != null) return r;
+
+      resetModel(evt);
+
+      // fix for md when the element is removed from the DOM and added back #460
+      try {
+        if (!isInputTypeFile() && !document.body.contains(fileElem[0])) {
+          generatedElems.push({el: elem, ref: fileElem.parent()});
+          document.body.appendChild(fileElem.parent()[0]);
+          fileElem.bind('change', changeFn);
+        }
+      } catch(e){/*ignore*/}
+
+      if (isDelayedClickSupported(navigator.userAgent)) {
+        setTimeout(function () {
+          fileElem[0].click();
+        }, 0);
+      } else {
+        fileElem[0].click();
+      }
+
+      return false;
+    }
+
+
+    var initialTouchStartY = 0;
+    var initialTouchStartX = 0;
+
+    function detectSwipe(evt) {
+      var touches = evt.changedTouches || (evt.originalEvent && evt.originalEvent.changedTouches);
+      if (touches) {
+        if (evt.type === 'touchstart') {
+          initialTouchStartX = touches[0].clientX;
+          initialTouchStartY = touches[0].clientY;
+          return true; // don't block event default
+        } else {
+          // prevent scroll from triggering event
+          if (evt.type === 'touchend') {
+            var currentX = touches[0].clientX;
+            var currentY = touches[0].clientY;
+            if ((Math.abs(currentX - initialTouchStartX) > 20) ||
+            (Math.abs(currentY - initialTouchStartY) > 20)) {
+              evt.stopPropagation();
+              evt.preventDefault();
+              return false;
+            }
+          }
+          return true;
+        }
+      }
+    }
+
+    var fileElem = elem;
+
+    function resetModel(evt) {
+      if (upload.shouldUpdateOn('click', attr, scope) && fileElem.val()) {
+        fileElem.val(null);
+        upload.updateModel(ngModel, attr, scope, fileChangeAttr(), null, evt, true);
+      }
+    }
+
+    if (!isInputTypeFile()) {
+      fileElem = createFileInput();
+    }
+    fileElem.bind('change', changeFn);
+
+    if (!isInputTypeFile()) {
+      elem.bind('click touchstart touchend', clickHandler);
+    } else {
+      elem.bind('click', resetModel);
+    }
+
+    function ie10SameFileSelectFix(evt) {
+      if (fileElem && !fileElem.attr('__ngf_ie10_Fix_')) {
+        if (!fileElem[0].parentNode) {
+          fileElem = null;
+          return;
+        }
+        evt.preventDefault();
+        evt.stopPropagation();
+        fileElem.unbind('click');
+        var clone = fileElem.clone();
+        fileElem.replaceWith(clone);
+        fileElem = clone;
+        fileElem.attr('__ngf_ie10_Fix_', 'true');
+        fileElem.bind('change', changeFn);
+        fileElem.bind('click', ie10SameFileSelectFix);
+        fileElem[0].click();
+        return false;
+      } else {
+        fileElem.removeAttr('__ngf_ie10_Fix_');
+      }
+    }
+
+    if (navigator.appVersion.indexOf('MSIE 10') !== -1) {
+      fileElem.bind('click', ie10SameFileSelectFix);
+    }
+
+    if (ngModel) ngModel.$formatters.push(function (val) {
+      if (val == null || val.length === 0) {
+        if (fileElem.val()) {
+          fileElem.val(null);
+        }
+      }
+      return val;
+    });
+
+    scope.$on('$destroy', function () {
+      if (!isInputTypeFile()) fileElem.parent().remove();
+      angular.forEach(unwatches, function (unwatch) {
+        unwatch();
+      });
+    });
+
+    $timeout(function () {
+      for (var i = 0; i < generatedElems.length; i++) {
+        var g = generatedElems[i];
+        if (!document.body.contains(g.el[0])) {
+          generatedElems.splice(i, 1);
+          g.ref.remove();
+        }
+      }
+    });
+
+    if (window.FileAPI && window.FileAPI.ngfFixIE) {
+      window.FileAPI.ngfFixIE(elem, fileElem, changeFn);
+    }
+  }
+
+  return {
+    restrict: 'AEC',
+    require: '?ngModel',
+    link: function (scope, elem, attr, ngModel) {
+      linkFileSelect(scope, elem, attr, ngModel, $parse, $timeout, $compile, Upload);
+    }
+  };
+}]);
+
+(function () {
+
+  ngFileUpload.service('UploadDataUrl', ['UploadBase', '$timeout', '$q', function (UploadBase, $timeout, $q) {
+    var upload = UploadBase;
+    upload.base64DataUrl = function (file) {
+      if (angular.isArray(file)) {
+        var d = $q.defer(), count = 0;
+        angular.forEach(file, function (f) {
+          upload.dataUrl(f, true)['finally'](function () {
+            count++;
+            if (count === file.length) {
+              var urls = [];
+              angular.forEach(file, function (ff) {
+                urls.push(ff.$ngfDataUrl);
+              });
+              d.resolve(urls, file);
+            }
+          });
+        });
+        return d.promise;
+      } else {
+        return upload.dataUrl(file, true);
+      }
+    };
+    upload.dataUrl = function (file, disallowObjectUrl) {
+      if (!file) return upload.emptyPromise(file, file);
+      if ((disallowObjectUrl && file.$ngfDataUrl != null) || (!disallowObjectUrl && file.$ngfBlobUrl != null)) {
+        return upload.emptyPromise(disallowObjectUrl ? file.$ngfDataUrl : file.$ngfBlobUrl, file);
+      }
+      var p = disallowObjectUrl ? file.$$ngfDataUrlPromise : file.$$ngfBlobUrlPromise;
+      if (p) return p;
+
+      var deferred = $q.defer();
+      $timeout(function () {
+        if (window.FileReader && file &&
+          (!window.FileAPI || navigator.userAgent.indexOf('MSIE 8') === -1 || file.size < 20000) &&
+          (!window.FileAPI || navigator.userAgent.indexOf('MSIE 9') === -1 || file.size < 4000000)) {
+          //prefer URL.createObjectURL for handling refrences to files of all sizes
+          //since it doesn´t build a large string in memory
+          var URL = window.URL || window.webkitURL;
+          if (URL && URL.createObjectURL && !disallowObjectUrl) {
+            var url;
+            try {
+              url = URL.createObjectURL(file);
+            } catch (e) {
+              $timeout(function () {
+                file.$ngfBlobUrl = '';
+                deferred.reject();
+              });
+              return;
+            }
+            $timeout(function () {
+              file.$ngfBlobUrl = url;
+              if (url) {
+                deferred.resolve(url, file);
+                upload.blobUrls = upload.blobUrls || [];
+                upload.blobUrlsTotalSize = upload.blobUrlsTotalSize || 0;
+                upload.blobUrls.push({url: url, size: file.size});
+                upload.blobUrlsTotalSize += file.size || 0;
+                var maxMemory = upload.defaults.blobUrlsMaxMemory || 268435456;
+                var maxLength = upload.defaults.blobUrlsMaxQueueSize || 200;
+                while ((upload.blobUrlsTotalSize > maxMemory || upload.blobUrls.length > maxLength) && upload.blobUrls.length > 1) {
+                  var obj = upload.blobUrls.splice(0, 1)[0];
+                  URL.revokeObjectURL(obj.url);
+                  upload.blobUrlsTotalSize -= obj.size;
+                }
+              }
+            });
+          } else {
+            var fileReader = new FileReader();
+            fileReader.onload = function (e) {
+              $timeout(function () {
+                file.$ngfDataUrl = e.target.result;
+                deferred.resolve(e.target.result, file);
+                $timeout(function () {
+                  delete file.$ngfDataUrl;
+                }, 1000);
+              });
+            };
+            fileReader.onerror = function () {
+              $timeout(function () {
+                file.$ngfDataUrl = '';
+                deferred.reject();
+              });
+            };
+            fileReader.readAsDataURL(file);
+          }
+        } else {
+          $timeout(function () {
+            file[disallowObjectUrl ? '$ngfDataUrl' : '$ngfBlobUrl'] = '';
+            deferred.reject();
+          });
+        }
+      });
+
+      if (disallowObjectUrl) {
+        p = file.$$ngfDataUrlPromise = deferred.promise;
+      } else {
+        p = file.$$ngfBlobUrlPromise = deferred.promise;
+      }
+      p['finally'](function () {
+        delete file[disallowObjectUrl ? '$$ngfDataUrlPromise' : '$$ngfBlobUrlPromise'];
+      });
+      return p;
+    };
+    return upload;
+  }]);
+
+  function getTagType(el) {
+    if (el.tagName.toLowerCase() === 'img') return 'image';
+    if (el.tagName.toLowerCase() === 'audio') return 'audio';
+    if (el.tagName.toLowerCase() === 'video') return 'video';
+    return /./;
+  }
+
+  function linkFileDirective(Upload, $timeout, scope, elem, attr, directiveName, resizeParams, isBackground) {
+    function constructDataUrl(file) {
+      var disallowObjectUrl = Upload.attrGetter('ngfNoObjectUrl', attr, scope);
+      Upload.dataUrl(file, disallowObjectUrl)['finally'](function () {
+        $timeout(function () {
+          var src = (disallowObjectUrl ? file.$ngfDataUrl : file.$ngfBlobUrl) || file.$ngfDataUrl;
+          if (isBackground) {
+            elem.css('background-image', 'url(\'' + (src || '') + '\')');
+          } else {
+            elem.attr('src', src);
+          }
+          if (src) {
+            elem.removeClass('ng-hide');
+          } else {
+            elem.addClass('ng-hide');
+          }
+        });
+      });
+    }
+
+    $timeout(function () {
+      var unwatch = scope.$watch(attr[directiveName], function (file) {
+        var size = resizeParams;
+        if (directiveName === 'ngfThumbnail') {
+          if (!size) {
+            size = {width: elem[0].clientWidth, height: elem[0].clientHeight};
+          }
+          if (size.width === 0 && window.getComputedStyle) {
+            var style = getComputedStyle(elem[0]);
+            size = {
+              width: parseInt(style.width.slice(0, -2)),
+              height: parseInt(style.height.slice(0, -2))
+            };
+          }
+        }
+
+        if (angular.isString(file)) {
+          elem.removeClass('ng-hide');
+          if (isBackground) {
+            return elem.css('background-image', 'url(\'' + file + '\')');
+          } else {
+            return elem.attr('src', file);
+          }
+        }
+        if (file && file.type && file.type.search(getTagType(elem[0])) === 0 &&
+          (!isBackground || file.type.indexOf('image') === 0)) {
+          if (size && Upload.isResizeSupported()) {
+            size.resizeIf = function (width, height) {
+              return Upload.attrGetter('ngfResizeIf', attr, scope,
+                {$width: width, $height: height, $file: file});
+            };
+            Upload.resize(file, size).then(
+              function (f) {
+                constructDataUrl(f);
+              }, function (e) {
+                throw e;
+              }
+            );
+          } else {
+            constructDataUrl(file);
+          }
+        } else {
+          elem.addClass('ng-hide');
+        }
+      });
+
+      scope.$on('$destroy', function () {
+        unwatch();
+      });
+    });
+  }
+
+
+  /** @namespace attr.ngfSrc */
+  /** @namespace attr.ngfNoObjectUrl */
+  ngFileUpload.directive('ngfSrc', ['Upload', '$timeout', function (Upload, $timeout) {
+    return {
+      restrict: 'AE',
+      link: function (scope, elem, attr) {
+        linkFileDirective(Upload, $timeout, scope, elem, attr, 'ngfSrc',
+          Upload.attrGetter('ngfResize', attr, scope), false);
+      }
+    };
+  }]);
+
+  /** @namespace attr.ngfBackground */
+  /** @namespace attr.ngfNoObjectUrl */
+  ngFileUpload.directive('ngfBackground', ['Upload', '$timeout', function (Upload, $timeout) {
+    return {
+      restrict: 'AE',
+      link: function (scope, elem, attr) {
+        linkFileDirective(Upload, $timeout, scope, elem, attr, 'ngfBackground',
+          Upload.attrGetter('ngfResize', attr, scope), true);
+      }
+    };
+  }]);
+
+  /** @namespace attr.ngfThumbnail */
+  /** @namespace attr.ngfAsBackground */
+  /** @namespace attr.ngfSize */
+  /** @namespace attr.ngfNoObjectUrl */
+  ngFileUpload.directive('ngfThumbnail', ['Upload', '$timeout', function (Upload, $timeout) {
+    return {
+      restrict: 'AE',
+      link: function (scope, elem, attr) {
+        var size = Upload.attrGetter('ngfSize', attr, scope);
+        linkFileDirective(Upload, $timeout, scope, elem, attr, 'ngfThumbnail', size,
+          Upload.attrGetter('ngfAsBackground', attr, scope));
+      }
+    };
+  }]);
+
+  ngFileUpload.config(['$compileProvider', function ($compileProvider) {
+    if ($compileProvider.imgSrcSanitizationWhitelist) $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|webcal|local|file|data|blob):/);
+    if ($compileProvider.aHrefSanitizationWhitelist) $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|webcal|local|file|data|blob):/);
+  }]);
+
+  ngFileUpload.filter('ngfDataUrl', ['UploadDataUrl', '$sce', function (UploadDataUrl, $sce) {
+    return function (file, disallowObjectUrl, trustedUrl) {
+      if (angular.isString(file)) {
+        return $sce.trustAsResourceUrl(file);
+      }
+      var src = file && ((disallowObjectUrl ? file.$ngfDataUrl : file.$ngfBlobUrl) || file.$ngfDataUrl);
+      if (file && !src) {
+        if (!file.$ngfDataUrlFilterInProgress && angular.isObject(file)) {
+          file.$ngfDataUrlFilterInProgress = true;
+          UploadDataUrl.dataUrl(file, disallowObjectUrl);
+        }
+        return '';
+      }
+      if (file) delete file.$ngfDataUrlFilterInProgress;
+      return (file && src ? (trustedUrl ? $sce.trustAsResourceUrl(src) : src) : file) || '';
+    };
+  }]);
+
+})();
+
+ngFileUpload.service('UploadValidate', ['UploadDataUrl', '$q', '$timeout', function (UploadDataUrl, $q, $timeout) {
+  var upload = UploadDataUrl;
+
+  function globStringToRegex(str) {
+    var regexp = '', excludes = [];
+    if (str.length > 2 && str[0] === '/' && str[str.length - 1] === '/') {
+      regexp = str.substring(1, str.length - 1);
+    } else {
+      var split = str.split(',');
+      if (split.length > 1) {
+        for (var i = 0; i < split.length; i++) {
+          var r = globStringToRegex(split[i]);
+          if (r.regexp) {
+            regexp += '(' + r.regexp + ')';
+            if (i < split.length - 1) {
+              regexp += '|';
+            }
+          } else {
+            excludes = excludes.concat(r.excludes);
+          }
+        }
+      } else {
+        if (str.indexOf('!') === 0) {
+          excludes.push('^((?!' + globStringToRegex(str.substring(1)).regexp + ').)*$');
+        } else {
+          if (str.indexOf('.') === 0) {
+            str = '*' + str;
+          }
+          regexp = '^' + str.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\-]', 'g'), '\\$&') + '$';
+          regexp = regexp.replace(/\\\*/g, '.*').replace(/\\\?/g, '.');
+        }
+      }
+    }
+    return {regexp: regexp, excludes: excludes};
+  }
+
+  upload.validatePattern = function (file, val) {
+    if (!val) {
+      return true;
+    }
+    var pattern = globStringToRegex(val), valid = true;
+    if (pattern.regexp && pattern.regexp.length) {
+      var regexp = new RegExp(pattern.regexp, 'i');
+      valid = (file.type != null && regexp.test(file.type)) ||
+        (file.name != null && regexp.test(file.name));
+    }
+    var len = pattern.excludes.length;
+    while (len--) {
+      var exclude = new RegExp(pattern.excludes[len], 'i');
+      valid = valid && (file.type == null || exclude.test(file.type)) &&
+        (file.name == null || exclude.test(file.name));
+    }
+    return valid;
+  };
+
+  upload.ratioToFloat = function (val) {
+    var r = val.toString(), xIndex = r.search(/[x:]/i);
+    if (xIndex > -1) {
+      r = parseFloat(r.substring(0, xIndex)) / parseFloat(r.substring(xIndex + 1));
+    } else {
+      r = parseFloat(r);
+    }
+    return r;
+  };
+
+  upload.registerModelChangeValidator = function (ngModel, attr, scope) {
+    if (ngModel) {
+      ngModel.$formatters.push(function (files) {
+        if (ngModel.$dirty) {
+          if (files && !angular.isArray(files)) {
+            files = [files];
+          }
+          upload.validate(files, 0, ngModel, attr, scope).then(function () {
+            upload.applyModelValidation(ngModel, files);
+          });
+        }
+      });
+    }
+  };
+
+  function markModelAsDirty(ngModel, files) {
+    if (files != null && !ngModel.$dirty) {
+      if (ngModel.$setDirty) {
+        ngModel.$setDirty();
+      } else {
+        ngModel.$dirty = true;
+      }
+    }
+  }
+
+  upload.applyModelValidation = function (ngModel, files) {
+    markModelAsDirty(ngModel, files);
+    angular.forEach(ngModel.$ngfValidations, function (validation) {
+      ngModel.$setValidity(validation.name, validation.valid);
+    });
+  };
+
+  upload.getValidationAttr = function (attr, scope, name, validationName, file) {
+    var dName = 'ngf' + name[0].toUpperCase() + name.substr(1);
+    var val = upload.attrGetter(dName, attr, scope, {$file: file});
+    if (val == null) {
+      val = upload.attrGetter('ngfValidate', attr, scope, {$file: file});
+      if (val) {
+        var split = (validationName || name).split('.');
+        val = val[split[0]];
+        if (split.length > 1) {
+          val = val && val[split[1]];
+        }
+      }
+    }
+    return val;
+  };
+
+  upload.validate = function (files, prevLength, ngModel, attr, scope) {
+    ngModel = ngModel || {};
+    ngModel.$ngfValidations = ngModel.$ngfValidations || [];
+
+    angular.forEach(ngModel.$ngfValidations, function (v) {
+      v.valid = true;
+    });
+
+    var attrGetter = function (name, params) {
+      return upload.attrGetter(name, attr, scope, params);
+    };
+
+    var ignoredErrors = (upload.attrGetter('ngfIgnoreInvalid', attr, scope) || '').split(' ');
+    var runAllValidation = upload.attrGetter('ngfRunAllValidations', attr, scope);
+
+    if (files == null || files.length === 0) {
+      return upload.emptyPromise({'validFiles': files, 'invalidFiles': []});
+    }
+
+    files = files.length === undefined ? [files] : files.slice(0);
+    var invalidFiles = [];
+
+    function validateSync(name, validationName, fn) {
+      if (files) {
+        var i = files.length, valid = null;
+        while (i--) {
+          var file = files[i];
+          if (file) {
+            var val = upload.getValidationAttr(attr, scope, name, validationName, file);
+            if (val != null) {
+              if (!fn(file, val, i)) {
+                if (ignoredErrors.indexOf(name) === -1) {
+                  file.$error = name;
+                  (file.$errorMessages = (file.$errorMessages || {}))[name] = true;
+                  file.$errorParam = val;
+                  if (invalidFiles.indexOf(file) === -1) {
+                    invalidFiles.push(file);
+                  }
+                  if (!runAllValidation) {
+                    files.splice(i, 1);
+                  }
+                } else {
+                  files.splice(i, 1);
+                }
+                valid = false;
+              }
+            }
+          }
+        }
+        if (valid !== null) {
+          ngModel.$ngfValidations.push({name: name, valid: valid});
+        }
+      }
+    }
+
+    validateSync('pattern', null, upload.validatePattern);
+    validateSync('minSize', 'size.min', function (file, val) {
+      return file.size + 0.1 >= upload.translateScalars(val);
+    });
+    validateSync('maxSize', 'size.max', function (file, val) {
+      return file.size - 0.1 <= upload.translateScalars(val);
+    });
+    var totalSize = 0;
+    validateSync('maxTotalSize', null, function (file, val) {
+      totalSize += file.size;
+      if (totalSize > upload.translateScalars(val)) {
+        files.splice(0, files.length);
+        return false;
+      }
+      return true;
+    });
+
+    validateSync('validateFn', null, function (file, r) {
+      return r === true || r === null || r === '';
+    });
+
+    if (!files.length) {
+      return upload.emptyPromise({'validFiles': [], 'invalidFiles': invalidFiles});
+    }
+
+    function validateAsync(name, validationName, type, asyncFn, fn) {
+      function resolveResult(defer, file, val) {
+        function resolveInternal(fn) {
+          if (fn()) {
+            if (ignoredErrors.indexOf(name) === -1) {
+              file.$error = name;
+              (file.$errorMessages = (file.$errorMessages || {}))[name] = true;
+              file.$errorParam = val;
+              if (invalidFiles.indexOf(file) === -1) {
+                invalidFiles.push(file);
+              }
+              if (!runAllValidation) {
+                files.splice(files.indexOf(file), 1);
+              }
+            } else {
+              files.splice(files.indexOf(file), 1);
+            }
+            defer.resolve(false);
+          } else {
+            defer.resolve(true);
+          }
+        }
+
+        if (val != null) {
+          asyncFn(file, val).then(function (d) {
+            resolveInternal(function () {
+              return !fn(d, val);
+            });
+          }, function () {
+            resolveInternal(function () {
+              return attrGetter('ngfValidateForce', {$file: file});
+            });
+          });
+        } else {
+          defer.resolve(true);
+        }
+      }
+
+      var promises = [upload.emptyPromise()];
+      if (files) {
+        files = files.length === undefined ? [files] : files;
+        angular.forEach(files, function (file) {
+          var defer = $q.defer();
+          promises.push(defer.promise);
+          if (type && (file.type == null || file.type.search(type) !== 0)) {
+            defer.resolve(true);
+            return;
+          }
+          if (name === 'dimensions' && upload.attrGetter('ngfDimensions', attr) != null) {
+            upload.imageDimensions(file).then(function (d) {
+              resolveResult(defer, file,
+                attrGetter('ngfDimensions', {$file: file, $width: d.width, $height: d.height}));
+            }, function () {
+              defer.resolve(false);
+            });
+          } else if (name === 'duration' && upload.attrGetter('ngfDuration', attr) != null) {
+            upload.mediaDuration(file).then(function (d) {
+              resolveResult(defer, file,
+                attrGetter('ngfDuration', {$file: file, $duration: d}));
+            }, function () {
+              defer.resolve(false);
+            });
+          } else {
+            resolveResult(defer, file,
+              upload.getValidationAttr(attr, scope, name, validationName, file));
+          }
+        });
+      }
+      var deffer = $q.defer();
+      $q.all(promises).then(function (value) {
+        if (value) {
+          ngModel.$ngfValidations.push({name: name, valid: true});
+          deffer.resolve(true);
+        } else {
+          ngModel.$ngfValidations.push({name: name, valid: false});
+          deffer.resolve(false);
+        }
+      });
+      return deffer.promise;
+    }
+
+    var deffer = $q.defer();
+    var promises = [];
+
+    promises.push(validateAsync('maxHeight', 'height.max', /image/,
+      this.imageDimensions, function (d, val) {
+        return d.height <= val;
+      }));
+    promises.push(validateAsync('minHeight', 'height.min', /image/,
+      this.imageDimensions, function (d, val) {
+        return d.height >= val;
+      }));
+    promises.push(validateAsync('maxWidth', 'width.max', /image/,
+      this.imageDimensions, function (d, val) {
+        return d.width <= val;
+      }));
+    promises.push(validateAsync('minWidth', 'width.min', /image/,
+      this.imageDimensions, function (d, val) {
+        return d.width >= val;
+      }));
+    promises.push(validateAsync('dimensions', null, /image/,
+      function (file, val) {
+        return upload.emptyPromise(val);
+      }, function (r) {
+        return r;
+      }));
+    promises.push(validateAsync('ratio', null, /image/,
+      this.imageDimensions, function (d, val) {
+        var split = val.toString().split(','), valid = false;
+        for (var i = 0; i < split.length; i++) {
+          if (Math.abs((d.width / d.height) - upload.ratioToFloat(split[i])) < 0.01) {
+            valid = true;
+          }
+        }
+        return valid;
+      }));
+    promises.push(validateAsync('maxRatio', 'ratio.max', /image/,
+      this.imageDimensions, function (d, val) {
+        return (d.width / d.height) - upload.ratioToFloat(val) < 0.0001;
+      }));
+    promises.push(validateAsync('minRatio', 'ratio.min', /image/,
+      this.imageDimensions, function (d, val) {
+        return (d.width / d.height) - upload.ratioToFloat(val) > -0.0001;
+      }));
+    promises.push(validateAsync('maxDuration', 'duration.max', /audio|video/,
+      this.mediaDuration, function (d, val) {
+        return d <= upload.translateScalars(val);
+      }));
+    promises.push(validateAsync('minDuration', 'duration.min', /audio|video/,
+      this.mediaDuration, function (d, val) {
+        return d >= upload.translateScalars(val);
+      }));
+    promises.push(validateAsync('duration', null, /audio|video/,
+      function (file, val) {
+        return upload.emptyPromise(val);
+      }, function (r) {
+        return r;
+      }));
+
+    promises.push(validateAsync('validateAsyncFn', null, null,
+      function (file, val) {
+        return val;
+      }, function (r) {
+        return r === true || r === null || r === '';
+      }));
+
+    $q.all(promises).then(function () {
+
+      if (runAllValidation) {
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          if (file.$error) {
+            files.splice(i--, 1);
+          }
+        }
+      }
+
+      runAllValidation = false;
+      validateSync('maxFiles', null, function (file, val, i) {
+        return prevLength + i < val;
+      });
+
+      deffer.resolve({'validFiles': files, 'invalidFiles': invalidFiles});
+    });
+    return deffer.promise;
+  };
+
+  upload.imageDimensions = function (file) {
+    if (file.$ngfWidth && file.$ngfHeight) {
+      var d = $q.defer();
+      $timeout(function () {
+        d.resolve({width: file.$ngfWidth, height: file.$ngfHeight});
+      });
+      return d.promise;
+    }
+    if (file.$ngfDimensionPromise) return file.$ngfDimensionPromise;
+
+    var deferred = $q.defer();
+    $timeout(function () {
+      if (file.type.indexOf('image') !== 0) {
+        deferred.reject('not image');
+        return;
+      }
+      upload.dataUrl(file).then(function (dataUrl) {
+        var img = angular.element('<img>').attr('src', dataUrl)
+          .css('visibility', 'hidden').css('position', 'fixed')
+          .css('max-width', 'none !important').css('max-height', 'none !important');
+
+        function success() {
+          var width = img[0].clientWidth;
+          var height = img[0].clientHeight;
+          img.remove();
+          file.$ngfWidth = width;
+          file.$ngfHeight = height;
+          deferred.resolve({width: width, height: height});
+        }
+
+        function error() {
+          img.remove();
+          deferred.reject('load error');
+        }
+
+        img.on('load', success);
+        img.on('error', error);
+        var count = 0;
+
+        function checkLoadError() {
+          $timeout(function () {
+            if (img[0].parentNode) {
+              if (img[0].clientWidth) {
+                success();
+              } else if (count > 10) {
+                error();
+              } else {
+                checkLoadError();
+              }
+            }
+          }, 1000);
+        }
+
+        checkLoadError();
+
+        angular.element(document.getElementsByTagName('body')[0]).append(img);
+      }, function () {
+        deferred.reject('load error');
+      });
+    });
+
+    file.$ngfDimensionPromise = deferred.promise;
+    file.$ngfDimensionPromise['finally'](function () {
+      delete file.$ngfDimensionPromise;
+    });
+    return file.$ngfDimensionPromise;
+  };
+
+  upload.mediaDuration = function (file) {
+    if (file.$ngfDuration) {
+      var d = $q.defer();
+      $timeout(function () {
+        d.resolve(file.$ngfDuration);
+      });
+      return d.promise;
+    }
+    if (file.$ngfDurationPromise) return file.$ngfDurationPromise;
+
+    var deferred = $q.defer();
+    $timeout(function () {
+      if (file.type.indexOf('audio') !== 0 && file.type.indexOf('video') !== 0) {
+        deferred.reject('not media');
+        return;
+      }
+      upload.dataUrl(file).then(function (dataUrl) {
+        var el = angular.element(file.type.indexOf('audio') === 0 ? '<audio>' : '<video>')
+          .attr('src', dataUrl).css('visibility', 'none').css('position', 'fixed');
+
+        function success() {
+          var duration = el[0].duration;
+          file.$ngfDuration = duration;
+          el.remove();
+          deferred.resolve(duration);
+        }
+
+        function error() {
+          el.remove();
+          deferred.reject('load error');
+        }
+
+        el.on('loadedmetadata', success);
+        el.on('error', error);
+        var count = 0;
+
+        function checkLoadError() {
+          $timeout(function () {
+            if (el[0].parentNode) {
+              if (el[0].duration) {
+                success();
+              } else if (count > 10) {
+                error();
+              } else {
+                checkLoadError();
+              }
+            }
+          }, 1000);
+        }
+
+        checkLoadError();
+
+        angular.element(document.body).append(el);
+      }, function () {
+        deferred.reject('load error');
+      });
+    });
+
+    file.$ngfDurationPromise = deferred.promise;
+    file.$ngfDurationPromise['finally'](function () {
+      delete file.$ngfDurationPromise;
+    });
+    return file.$ngfDurationPromise;
+  };
+  return upload;
+}
+]);
+
+ngFileUpload.service('UploadResize', ['UploadValidate', '$q', function (UploadValidate, $q) {
+  var upload = UploadValidate;
+
+  /**
+   * Conserve aspect ratio of the original region. Useful when shrinking/enlarging
+   * images to fit into a certain area.
+   * Source:  http://stackoverflow.com/a/14731922
+   *
+   * @param {Number} srcWidth Source area width
+   * @param {Number} srcHeight Source area height
+   * @param {Number} maxWidth Nestable area maximum available width
+   * @param {Number} maxHeight Nestable area maximum available height
+   * @return {Object} { width, height }
+   */
+  var calculateAspectRatioFit = function (srcWidth, srcHeight, maxWidth, maxHeight, centerCrop) {
+    var ratio = centerCrop ? Math.max(maxWidth / srcWidth, maxHeight / srcHeight) :
+      Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+    return {
+      width: srcWidth * ratio, height: srcHeight * ratio,
+      marginX: srcWidth * ratio - maxWidth, marginY: srcHeight * ratio - maxHeight
+    };
+  };
+
+  // Extracted from https://github.com/romelgomez/angular-firebase-image-upload/blob/master/app/scripts/fileUpload.js#L89
+  var resize = function (imagen, width, height, quality, type, ratio, centerCrop, resizeIf) {
+    var deferred = $q.defer();
+    var canvasElement = document.createElement('canvas');
+    var imageElement = document.createElement('img');
+    imageElement.setAttribute('style', 'visibility:hidden;position:fixed;z-index:-100000');
+    document.body.appendChild(imageElement);
+
+    imageElement.onload = function () {
+      var imgWidth = imageElement.width, imgHeight = imageElement.height;
+      imageElement.parentNode.removeChild(imageElement);
+      if (resizeIf != null && resizeIf(imgWidth, imgHeight) === false) {
+        deferred.reject('resizeIf');
+        return;
+      }
+      try {
+        if (ratio) {
+          var ratioFloat = upload.ratioToFloat(ratio);
+          var imgRatio = imgWidth / imgHeight;
+          if (imgRatio < ratioFloat) {
+            width = imgWidth;
+            height = width / ratioFloat;
+          } else {
+            height = imgHeight;
+            width = height * ratioFloat;
+          }
+        }
+        if (!width) {
+          width = imgWidth;
+        }
+        if (!height) {
+          height = imgHeight;
+        }
+        var dimensions = calculateAspectRatioFit(imgWidth, imgHeight, width, height, centerCrop);
+        canvasElement.width = Math.min(dimensions.width, width);
+        canvasElement.height = Math.min(dimensions.height, height);
+        var context = canvasElement.getContext('2d');
+        context.drawImage(imageElement,
+          Math.min(0, -dimensions.marginX / 2), Math.min(0, -dimensions.marginY / 2),
+          dimensions.width, dimensions.height);
+        deferred.resolve(canvasElement.toDataURL(type || 'image/WebP', quality || 0.934));
+      } catch (e) {
+        deferred.reject(e);
+      }
+    };
+    imageElement.onerror = function () {
+      imageElement.parentNode.removeChild(imageElement);
+      deferred.reject();
+    };
+    imageElement.src = imagen;
+    return deferred.promise;
+  };
+
+  upload.dataUrltoBlob = function (dataurl, name, origSize) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    var blob = new window.Blob([u8arr], {type: mime});
+    blob.name = name;
+    blob.$ngfOrigSize = origSize;
+    return blob;
+  };
+
+  upload.isResizeSupported = function () {
+    var elem = document.createElement('canvas');
+    return window.atob && elem.getContext && elem.getContext('2d') && window.Blob;
+  };
+
+  if (upload.isResizeSupported()) {
+    // add name getter to the blob constructor prototype
+    Object.defineProperty(window.Blob.prototype, 'name', {
+      get: function () {
+        return this.$ngfName;
+      },
+      set: function (v) {
+        this.$ngfName = v;
+      },
+      configurable: true
+    });
+  }
+
+  upload.resize = function (file, options) {
+    if (file.type.indexOf('image') !== 0) return upload.emptyPromise(file);
+
+    var deferred = $q.defer();
+    upload.dataUrl(file, true).then(function (url) {
+      resize(url, options.width, options.height, options.quality, options.type || file.type,
+        options.ratio, options.centerCrop, options.resizeIf)
+        .then(function (dataUrl) {
+          if (file.type === 'image/jpeg' && options.restoreExif !== false) {
+            try {
+              dataUrl = upload.restoreExif(url, dataUrl);
+            } catch (e) {
+              setTimeout(function () {throw e;}, 1);
+            }
+          }
+          try {
+            var blob = upload.dataUrltoBlob(dataUrl, file.name, file.size);
+            deferred.resolve(blob);
+          } catch (e) {
+            deferred.reject(e);
+          }
+        }, function (r) {
+          if (r === 'resizeIf') {
+            deferred.resolve(file);
+          }
+          deferred.reject(r);
+        });
+    }, function (e) {
+      deferred.reject(e);
+    });
+    return deferred.promise;
+  };
+
+  return upload;
+}]);
+
+(function () {
+  ngFileUpload.directive('ngfDrop', ['$parse', '$timeout', '$window', 'Upload', '$http', '$q',
+    function ($parse, $timeout, $window, Upload, $http, $q) {
+      return {
+        restrict: 'AEC',
+        require: '?ngModel',
+        link: function (scope, elem, attr, ngModel) {
+          linkDrop(scope, elem, attr, ngModel, $parse, $timeout, $window, Upload, $http, $q);
+        }
+      };
+    }]);
+
+  ngFileUpload.directive('ngfNoFileDrop', function () {
+    return function (scope, elem) {
+      if (dropAvailable()) elem.css('display', 'none');
+    };
+  });
+
+  ngFileUpload.directive('ngfDropAvailable', ['$parse', '$timeout', 'Upload', function ($parse, $timeout, Upload) {
+    return function (scope, elem, attr) {
+      if (dropAvailable()) {
+        var model = $parse(Upload.attrGetter('ngfDropAvailable', attr));
+        $timeout(function () {
+          model(scope);
+          if (model.assign) {
+            model.assign(scope, true);
+          }
+        });
+      }
+    };
+  }]);
+
+  function linkDrop(scope, elem, attr, ngModel, $parse, $timeout, $window, upload, $http, $q) {
+    var available = dropAvailable();
+
+    var attrGetter = function (name, scope, params) {
+      return upload.attrGetter(name, attr, scope, params);
+    };
+
+    if (attrGetter('dropAvailable')) {
+      $timeout(function () {
+        if (scope[attrGetter('dropAvailable')]) {
+          scope[attrGetter('dropAvailable')].value = available;
+        } else {
+          scope[attrGetter('dropAvailable')] = available;
+        }
+      });
+    }
+    if (!available) {
+      if (attrGetter('ngfHideOnDropNotAvailable', scope) === true) {
+        elem.css('display', 'none');
+      }
+      return;
+    }
+
+    function isDisabled() {
+      return elem.attr('disabled') || attrGetter('ngfDropDisabled', scope);
+    }
+
+    if (attrGetter('ngfSelect') == null) {
+      upload.registerModelChangeValidator(ngModel, attr, scope);
+    }
+
+    var leaveTimeout = null;
+    var stopPropagation = $parse(attrGetter('ngfStopPropagation'));
+    var dragOverDelay = 1;
+    var actualDragOverClass;
+
+    elem[0].addEventListener('dragover', function (evt) {
+      if (isDisabled() || !upload.shouldUpdateOn('drop', attr, scope)) return;
+      evt.preventDefault();
+      if (stopPropagation(scope)) evt.stopPropagation();
+      // handling dragover events from the Chrome download bar
+      if (navigator.userAgent.indexOf('Chrome') > -1) {
+        var b = evt.dataTransfer.effectAllowed;
+        evt.dataTransfer.dropEffect = ('move' === b || 'linkMove' === b) ? 'move' : 'copy';
+      }
+      $timeout.cancel(leaveTimeout);
+      if (!actualDragOverClass) {
+        actualDragOverClass = 'C';
+        calculateDragOverClass(scope, attr, evt, function (clazz) {
+          actualDragOverClass = clazz;
+          elem.addClass(actualDragOverClass);
+          attrGetter('ngfDrag', scope, {$isDragging: true, $class: actualDragOverClass, $event: evt});
+        });
+      }
+    }, false);
+    elem[0].addEventListener('dragenter', function (evt) {
+      if (isDisabled() || !upload.shouldUpdateOn('drop', attr, scope)) return;
+      evt.preventDefault();
+      if (stopPropagation(scope)) evt.stopPropagation();
+    }, false);
+    elem[0].addEventListener('dragleave', function (evt) {
+      if (isDisabled() || !upload.shouldUpdateOn('drop', attr, scope)) return;
+      evt.preventDefault();
+      if (stopPropagation(scope)) evt.stopPropagation();
+      leaveTimeout = $timeout(function () {
+        if (actualDragOverClass) elem.removeClass(actualDragOverClass);
+        actualDragOverClass = null;
+        attrGetter('ngfDrag', scope, {$isDragging: false, $event: evt});
+      }, dragOverDelay || 100);
+    }, false);
+    elem[0].addEventListener('drop', function (evt) {
+      if (isDisabled() || !upload.shouldUpdateOn('drop', attr, scope)) return;
+      evt.preventDefault();
+      if (stopPropagation(scope)) evt.stopPropagation();
+      if (actualDragOverClass) elem.removeClass(actualDragOverClass);
+      actualDragOverClass = null;
+      var items = evt.dataTransfer.items;
+      var html;
+      try {
+        html = evt.dataTransfer && evt.dataTransfer.getData && evt.dataTransfer.getData('text/html');
+      } catch (e) {/* Fix IE11 that throw error calling getData */
+      }
+
+      extractFiles(items, evt.dataTransfer.files, attrGetter('ngfAllowDir', scope) !== false,
+        attrGetter('multiple') || attrGetter('ngfMultiple', scope)).then(function (files) {
+        if (files.length) {
+          updateModel(files, evt);
+        } else {
+          extractFilesFromHtml('dropUrl', html).then(function (files) {
+            updateModel(files, evt);
+          });
+        }
+      });
+    }, false);
+    elem[0].addEventListener('paste', function (evt) {
+      if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 &&
+        attrGetter('ngfEnableFirefoxPaste', scope)) {
+        evt.preventDefault();
+      }
+      if (isDisabled() || !upload.shouldUpdateOn('paste', attr, scope)) return;
+      var files = [];
+      var clipboard = evt.clipboardData || evt.originalEvent.clipboardData;
+      if (clipboard && clipboard.items) {
+        for (var k = 0; k < clipboard.items.length; k++) {
+          if (clipboard.items[k].type.indexOf('image') !== -1) {
+            files.push(clipboard.items[k].getAsFile());
+          }
+        }
+      }
+      if (files.length) {
+        updateModel(files, evt);
+      } else {
+        extractFilesFromHtml('pasteUrl', clipboard).then(function (files) {
+          updateModel(files, evt);
+        });
+      }
+    }, false);
+
+    if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 &&
+      attrGetter('ngfEnableFirefoxPaste', scope)) {
+      elem.attr('contenteditable', true);
+      elem.on('keypress', function (e) {
+        if (!e.metaKey && !e.ctrlKey) {
+          e.preventDefault();
+        }
+      });
+    }
+
+    function updateModel(files, evt) {
+      upload.updateModel(ngModel, attr, scope, attrGetter('ngfChange') || attrGetter('ngfDrop'), files, evt);
+    }
+
+    function extractFilesFromHtml(updateOn, html) {
+      if (!upload.shouldUpdateOn(updateOn, attr, scope) || typeof html !== 'string') return upload.rejectPromise([]);
+      var urls = [];
+      html.replace(/<(img src|img [^>]* src) *=\"([^\"]*)\"/gi, function (m, n, src) {
+        urls.push(src);
+      });
+      var promises = [], files = [];
+      if (urls.length) {
+        angular.forEach(urls, function (url) {
+          promises.push(upload.urlToBlob(url).then(function (blob) {
+            files.push(blob);
+          }));
+        });
+        var defer = $q.defer();
+        $q.all(promises).then(function () {
+          defer.resolve(files);
+        }, function (e) {
+          defer.reject(e);
+        });
+        return defer.promise;
+      }
+      return upload.emptyPromise();
+    }
+
+    function calculateDragOverClass(scope, attr, evt, callback) {
+      var obj = attrGetter('ngfDragOverClass', scope, {$event: evt}), dClass = 'dragover';
+      if (angular.isString(obj)) {
+        dClass = obj;
+      } else if (obj) {
+        if (obj.delay) dragOverDelay = obj.delay;
+        if (obj.accept || obj.reject) {
+          var items = evt.dataTransfer.items;
+          if (items == null || !items.length) {
+            dClass = obj.accept;
+          } else {
+            var pattern = obj.pattern || attrGetter('ngfPattern', scope, {$event: evt});
+            var len = items.length;
+            while (len--) {
+              if (!upload.validatePattern(items[len], pattern)) {
+                dClass = obj.reject;
+                break;
+              } else {
+                dClass = obj.accept;
+              }
+            }
+          }
+        }
+      }
+      callback(dClass);
+    }
+
+    function extractFiles(items, fileList, allowDir, multiple) {
+      var maxFiles = upload.getValidationAttr(attr, scope, 'maxFiles');
+      if (maxFiles == null) {
+        maxFiles = Number.MAX_VALUE;
+      }
+      var maxTotalSize = upload.getValidationAttr(attr, scope, 'maxTotalSize');
+      if (maxTotalSize == null) {
+        maxTotalSize = Number.MAX_VALUE;
+      }
+      var includeDir = attrGetter('ngfIncludeDir', scope);
+      var files = [], totalSize = 0;
+
+      function traverseFileTree(entry, path) {
+        var defer = $q.defer();
+        if (entry != null) {
+          if (entry.isDirectory) {
+            var promises = [upload.emptyPromise()];
+            if (includeDir) {
+              var file = {type: 'directory'};
+              file.name = file.path = (path || '') + entry.name;
+              files.push(file);
+            }
+            var dirReader = entry.createReader();
+            var entries = [];
+            var readEntries = function () {
+              dirReader.readEntries(function (results) {
+                try {
+                  if (!results.length) {
+                    angular.forEach(entries.slice(0), function (e) {
+                      if (files.length <= maxFiles && totalSize <= maxTotalSize) {
+                        promises.push(traverseFileTree(e, (path ? path : '') + entry.name + '/'));
+                      }
+                    });
+                    $q.all(promises).then(function () {
+                      defer.resolve();
+                    }, function (e) {
+                      defer.reject(e);
+                    });
+                  } else {
+                    entries = entries.concat(Array.prototype.slice.call(results || [], 0));
+                    readEntries();
+                  }
+                } catch (e) {
+                  defer.reject(e);
+                }
+              }, function (e) {
+                defer.reject(e);
+              });
+            };
+            readEntries();
+          } else {
+            entry.file(function (file) {
+              try {
+                file.path = (path ? path : '') + file.name;
+                if (includeDir) {
+                  file = upload.rename(file, file.path);
+                }
+                files.push(file);
+                totalSize += file.size;
+                defer.resolve();
+              } catch (e) {
+                defer.reject(e);
+              }
+            }, function (e) {
+              defer.reject(e);
+            });
+          }
+        }
+        return defer.promise;
+      }
+
+      var promises = [upload.emptyPromise()];
+
+      if (items && items.length > 0 && $window.location.protocol !== 'file:') {
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].webkitGetAsEntry && items[i].webkitGetAsEntry() && items[i].webkitGetAsEntry().isDirectory) {
+            var entry = items[i].webkitGetAsEntry();
+            if (entry.isDirectory && !allowDir) {
+              continue;
+            }
+            if (entry != null) {
+              promises.push(traverseFileTree(entry));
+            }
+          } else {
+            var f = items[i].getAsFile();
+            if (f != null) {
+              files.push(f);
+              totalSize += f.size;
+            }
+          }
+          if (files.length > maxFiles || totalSize > maxTotalSize ||
+            (!multiple && files.length > 0)) break;
+        }
+      } else {
+        if (fileList != null) {
+          for (var j = 0; j < fileList.length; j++) {
+            var file = fileList.item(j);
+            if (file.type || file.size > 0) {
+              files.push(file);
+              totalSize += file.size;
+            }
+            if (files.length > maxFiles || totalSize > maxTotalSize ||
+              (!multiple && files.length > 0)) break;
+          }
+        }
+      }
+
+      var defer = $q.defer();
+      $q.all(promises).then(function () {
+        if (!multiple && !includeDir && files.length) {
+          var i = 0;
+          while (files[i] && files[i].type === 'directory') i++;
+          defer.resolve([files[i]]);
+        } else {
+          defer.resolve(files);
+        }
+      }, function (e) {
+        defer.reject(e);
+      });
+
+      return defer.promise;
+    }
+  }
+
+  function dropAvailable() {
+    var div = document.createElement('div');
+    return ('draggable' in div) && ('ondrop' in div) && !/Edge\/12./i.test(navigator.userAgent);
+  }
+
+})();
+
+// customized version of https://github.com/exif-js/exif-js
+ngFileUpload.service('UploadExif', ['UploadResize', '$q', function (UploadResize, $q) {
+  var upload = UploadResize;
+
+  upload.isExifSupported = function () {
+    return window.FileReader && new FileReader().readAsArrayBuffer && upload.isResizeSupported();
+  };
+
+  function applyTransform(ctx, orientation, width, height) {
+    switch (orientation) {
+      case 2:
+        return ctx.transform(-1, 0, 0, 1, width, 0);
+      case 3:
+        return ctx.transform(-1, 0, 0, -1, width, height);
+      case 4:
+        return ctx.transform(1, 0, 0, -1, 0, height);
+      case 5:
+        return ctx.transform(0, 1, 1, 0, 0, 0);
+      case 6:
+        return ctx.transform(0, 1, -1, 0, height, 0);
+      case 7:
+        return ctx.transform(0, -1, -1, 0, height, width);
+      case 8:
+        return ctx.transform(0, -1, 1, 0, 0, width);
+    }
+  }
+
+  upload.readOrientation = function (file) {
+    var defer = $q.defer();
+    var reader = new FileReader();
+    var slicedFile = file.slice ? file.slice(0, 64 * 1024) : file;
+    reader.readAsArrayBuffer(slicedFile);
+    reader.onerror = function (e) {
+      return defer.reject(e);
+    };
+    reader.onload = function (e) {
+      var result = {orientation: 1};
+      var view = new DataView(this.result);
+      if (view.getUint16(0, false) !== 0xFFD8) return defer.resolve(result);
+
+      var length = view.byteLength,
+        offset = 2;
+      while (offset < length) {
+        var marker = view.getUint16(offset, false);
+        offset += 2;
+        if (marker === 0xFFE1) {
+          if (view.getUint32(offset += 2, false) !== 0x45786966) return defer.resolve(result);
+
+          var little = view.getUint16(offset += 6, false) === 0x4949;
+          offset += view.getUint32(offset + 4, little);
+          var tags = view.getUint16(offset, little);
+          offset += 2;
+          for (var i = 0; i < tags; i++)
+            if (view.getUint16(offset + (i * 12), little) === 0x0112) {
+              var orientation = view.getUint16(offset + (i * 12) + 8, little);
+              if (orientation >= 2 && orientation <= 8) {
+                view.setUint16(offset + (i * 12) + 8, 1, little);
+                result.fixedArrayBuffer = e.target.result;
+              }
+              result.orientation = orientation;
+              return defer.resolve(result);
+            }
+        } else if ((marker & 0xFF00) !== 0xFF00) break;
+        else offset += view.getUint16(offset, false);
+      }
+      return defer.resolve(result);
+    };
+    return defer.promise;
+  };
+
+  function arrayBufferToBase64(buffer) {
+    var binary = '';
+    var bytes = new Uint8Array(buffer);
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  }
+
+  upload.applyExifRotation = function (file) {
+    if (file.type.indexOf('image/jpeg') !== 0) {
+      return upload.emptyPromise(file);
+    }
+
+    var deferred = $q.defer();
+    upload.readOrientation(file).then(function (result) {
+      if (result.orientation < 2 || result.orientation > 8) {
+        return deferred.resolve(file);
+      }
+      upload.dataUrl(file, true).then(function (url) {
+        var canvas = document.createElement('canvas');
+        var img = document.createElement('img');
+
+        img.onload = function () {
+          try {
+            canvas.width = result.orientation > 4 ? img.height : img.width;
+            canvas.height = result.orientation > 4 ? img.width : img.height;
+            var ctx = canvas.getContext('2d');
+            applyTransform(ctx, result.orientation, img.width, img.height);
+            ctx.drawImage(img, 0, 0);
+            var dataUrl = canvas.toDataURL(file.type || 'image/WebP', 0.934);
+            dataUrl = upload.restoreExif(arrayBufferToBase64(result.fixedArrayBuffer), dataUrl);
+            var blob = upload.dataUrltoBlob(dataUrl, file.name);
+            deferred.resolve(blob);
+          } catch (e) {
+            return deferred.reject(e);
+          }
+        };
+        img.onerror = function () {
+          deferred.reject();
+        };
+        img.src = url;
+      }, function (e) {
+        deferred.reject(e);
+      });
+    }, function (e) {
+      deferred.reject(e);
+    });
+    return deferred.promise;
+  };
+
+  upload.restoreExif = function (orig, resized) {
+    var ExifRestorer = {};
+
+    ExifRestorer.KEY_STR = 'ABCDEFGHIJKLMNOP' +
+      'QRSTUVWXYZabcdef' +
+      'ghijklmnopqrstuv' +
+      'wxyz0123456789+/' +
+      '=';
+
+    ExifRestorer.encode64 = function (input) {
+      var output = '',
+        chr1, chr2, chr3 = '',
+        enc1, enc2, enc3, enc4 = '',
+        i = 0;
+
+      do {
+        chr1 = input[i++];
+        chr2 = input[i++];
+        chr3 = input[i++];
+
+        enc1 = chr1 >> 2;
+        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+        enc4 = chr3 & 63;
+
+        if (isNaN(chr2)) {
+          enc3 = enc4 = 64;
+        } else if (isNaN(chr3)) {
+          enc4 = 64;
+        }
+
+        output = output +
+          this.KEY_STR.charAt(enc1) +
+          this.KEY_STR.charAt(enc2) +
+          this.KEY_STR.charAt(enc3) +
+          this.KEY_STR.charAt(enc4);
+        chr1 = chr2 = chr3 = '';
+        enc1 = enc2 = enc3 = enc4 = '';
+      } while (i < input.length);
+
+      return output;
+    };
+
+    ExifRestorer.restore = function (origFileBase64, resizedFileBase64) {
+      if (origFileBase64.match('data:image/jpeg;base64,')) {
+        origFileBase64 = origFileBase64.replace('data:image/jpeg;base64,', '');
+      }
+
+      var rawImage = this.decode64(origFileBase64);
+      var segments = this.slice2Segments(rawImage);
+
+      var image = this.exifManipulation(resizedFileBase64, segments);
+
+      return 'data:image/jpeg;base64,' + this.encode64(image);
+    };
+
+
+    ExifRestorer.exifManipulation = function (resizedFileBase64, segments) {
+      var exifArray = this.getExifArray(segments),
+        newImageArray = this.insertExif(resizedFileBase64, exifArray);
+      return new Uint8Array(newImageArray);
+    };
+
+
+    ExifRestorer.getExifArray = function (segments) {
+      var seg;
+      for (var x = 0; x < segments.length; x++) {
+        seg = segments[x];
+        if (seg[0] === 255 & seg[1] === 225) //(ff e1)
+        {
+          return seg;
+        }
+      }
+      return [];
+    };
+
+
+    ExifRestorer.insertExif = function (resizedFileBase64, exifArray) {
+      var imageData = resizedFileBase64.replace('data:image/jpeg;base64,', ''),
+        buf = this.decode64(imageData),
+        separatePoint = buf.indexOf(255, 3),
+        mae = buf.slice(0, separatePoint),
+        ato = buf.slice(separatePoint),
+        array = mae;
+
+      array = array.concat(exifArray);
+      array = array.concat(ato);
+      return array;
+    };
+
+
+    ExifRestorer.slice2Segments = function (rawImageArray) {
+      var head = 0,
+        segments = [];
+
+      while (1) {
+        if (rawImageArray[head] === 255 & rawImageArray[head + 1] === 218) {
+          break;
+        }
+        if (rawImageArray[head] === 255 & rawImageArray[head + 1] === 216) {
+          head += 2;
+        }
+        else {
+          var length = rawImageArray[head + 2] * 256 + rawImageArray[head + 3],
+            endPoint = head + length + 2,
+            seg = rawImageArray.slice(head, endPoint);
+          segments.push(seg);
+          head = endPoint;
+        }
+        if (head > rawImageArray.length) {
+          break;
+        }
+      }
+
+      return segments;
+    };
+
+
+    ExifRestorer.decode64 = function (input) {
+      var chr1, chr2, chr3 = '',
+        enc1, enc2, enc3, enc4 = '',
+        i = 0,
+        buf = [];
+
+      // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
+      var base64test = /[^A-Za-z0-9\+\/\=]/g;
+      if (base64test.exec(input)) {
+        console.log('There were invalid base64 characters in the input text.\n' +
+          'Valid base64 characters are A-Z, a-z, 0-9, ' + ', ' / ',and "="\n' +
+          'Expect errors in decoding.');
+      }
+      input = input.replace(/[^A-Za-z0-9\+\/\=]/g, '');
+
+      do {
+        enc1 = this.KEY_STR.indexOf(input.charAt(i++));
+        enc2 = this.KEY_STR.indexOf(input.charAt(i++));
+        enc3 = this.KEY_STR.indexOf(input.charAt(i++));
+        enc4 = this.KEY_STR.indexOf(input.charAt(i++));
+
+        chr1 = (enc1 << 2) | (enc2 >> 4);
+        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        chr3 = ((enc3 & 3) << 6) | enc4;
+
+        buf.push(chr1);
+
+        if (enc3 !== 64) {
+          buf.push(chr2);
+        }
+        if (enc4 !== 64) {
+          buf.push(chr3);
+        }
+
+        chr1 = chr2 = chr3 = '';
+        enc1 = enc2 = enc3 = enc4 = '';
+
+      } while (i < input.length);
+
+      return buf;
+    };
+
+    return ExifRestorer.restore(orig, resized);  //<= EXIF
+  };
+
+  return upload;
+}]);
+
+
+},{}],337:[function(require,module,exports){
+require('./dist/ng-file-upload-all');
+module.exports = 'ngFileUpload';
+},{"./dist/ng-file-upload-all":336}],338:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 

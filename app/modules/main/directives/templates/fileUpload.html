@@ -1,0 +1,13 @@
+<div clas="file-upload">
+    <button class="button"
+        type="file"
+        ngf-select
+        ngf-change="addFile($file)"
+        ng-model="file"
+        name="file"
+        ngf-accept="'image/*'"
+        ngf-validate="config"
+        ngf-resize="{width: 530, height: 800}">Add file...
+    </button>
+    <p class="required" ng-if="restrictions">{{validationMessage}}</p>
+</div>

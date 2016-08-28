@@ -90,7 +90,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
                 movieData.DirectorId = controller.currentDirector.id;
                 MovieService.create(movieData)
                 .then(function(response) {
-                    $rootScope.$broadcast('show:notification');
+					showAlert({
+						type: 'success',
+						message: response.name + ' was successfully updated.'
+					});
                     $timeout(function() {
                         $state.go('allMovies');
                     }, 2000);
@@ -100,7 +103,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         else {
             MovieService.create(movieData)
             .then(function(response) {
-                $rootScope.$broadcast('show:notification');
+				showAlert({
+					type: 'success',
+					message: response.name + ' was successfully created.'
+				});
                 $timeout(function() {
                     $state.go('allMovies');
                 }, 2000);
@@ -121,7 +127,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
                 MovieService.update(id, movie)
                 .then(function(response) {
                     controller.currentMovie = response.data;
-                    $rootScope.$broadcast('show:notification');
+					showAlert({
+						type: 'success',
+						message: controller.currentMovie.title + ' was successfully updated.'
+					});
                     $timeout(function() {
                         $state.go('allMovies');
                     }, 2000);
@@ -132,7 +141,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
             MovieService.update(id, movie)
             .then(function(response) {
                 controller.currentMovie = response.data;
-                $rootScope.$broadcast('show:notification');
+				showAlert({
+					type: 'success',
+					message: controller.currentMovie.title + ' was successfully updated.'
+				});
                 $timeout(function() {
                     $state.go('allMovies');
                 }, 2000);
@@ -184,6 +196,10 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
     controller.updateMovieList = function (searchParams, orderParams) {
       controller.allMoviesFiltered = $filter('orderBy')($filter('filter')(controller.allMovies, searchParams), orderParams);
     };
+
+	function showAlert(config) {
+		$rootScope.$broadcast('show:notification', {type: config.type, message: config.message});
+	}
 
 }
 

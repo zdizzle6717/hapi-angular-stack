@@ -65,6 +65,18 @@
             </div>
         </div>
         <div class="row">
+            <div class="medium-6 columns">
+                <label class="required">Movie Cover Upload
+                    <div file-upload ratio="334:500" model="Movie.currentMovie.coverImg" param="'movies'"></div>
+                </label>
+            </div>
+            <div class="medium-6 columns">
+                <label class="required">Cover Image Name
+                    <input type="text" ng-model="Movie.currentMovie.coverImg" placeholder="" disabled required>
+                </label>
+            </div>
+        </div>
+        <div class="row">
             <div class="medium-12 columns">
                 <label class="required">Synopsis
                     <textarea ng-model="Movie.currentMovie.synopsis" placeholder="Enter a condensed plot summary..." rows="2" required></textarea>
@@ -86,5 +98,3 @@
         </div>
     </form>
 </div>
-<div update-notification ng-if="Movie.newMovie === true"><h4>Successfully created a new movie entry!</h4></div>
-<div update-notification ng-if="Movie.movieUpdate === true"><h4>Movie data was updated successfully!</h4></div>

@@ -49,6 +49,14 @@ input, textarea, select {
         justify-content: center;
         -webkit-justify-content: center;
 
+		&.success {
+            background: #3c8c3c;
+        }
+
+        &.error {
+            background: #a02323;
+        }
+
         h4 {
             margin: 0;
         }

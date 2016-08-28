@@ -15,7 +15,11 @@ let routes = {
         'create': 'http://www.demo.zackanselm.com:8080/api/directors',
         'update': 'http://www.demo.zackanselm.com:8080/api/directors/',
         'delete': 'http://www.demo.zackanselm.com:8080/api/directors/'
-    }
+    },
+
+	'files': {
+		'create': 'http://www.demo.zackanselm.com:8080/api/files/',
+	}
 };
 
 module.exports = routes;

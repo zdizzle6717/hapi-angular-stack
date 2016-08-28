@@ -18,6 +18,27 @@ module.exports = [
         }
     },
 
+	// File Upload
+    {
+        config: {
+            payload: {
+                output: 'stream',
+                maxBytes: 209715200,
+                parse: true,
+                allow: 'multipart/form-data'
+            },
+            tags: ['api'],
+            description: 'Upload a new file',
+            notes: 'Upload a new file',
+			cors: {
+                origin: ['*']
+            }
+        },
+		method: 'POST',
+        path: '/api/files/{path}',
+        handler: api.files.create
+    },
+
     // Directors
     {
         config: {
@@ -156,6 +177,7 @@ module.exports = [
                     year: Joi.number().required(),
                     genre: Joi.string(),
                     rating: Joi.number(),
+                    coverImg: Joi.string(),
                     synopsis: Joi.string(),
                     description: Joi.string(),
                     DirectorId: Joi.number().required()
@@ -183,6 +205,7 @@ module.exports = [
                     year: Joi.number().required(),
                     genre: Joi.string(),
                     rating: Joi.number(),
+					coverImg: Joi.string(),
                     synopsis: Joi.string(),
                     description: Joi.string(),
                     DirectorId: Joi.number().required()

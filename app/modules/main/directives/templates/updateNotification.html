@@ -1,5 +1,5 @@
 <div class="notification-backdrop animate" ng-if="show">
-    <div class="update-notification animate">
-        <div ng-transclude></div>
+    <div class="update-notification animate" ng-class="{'error': type === 'error', 'success': type === 'success'}">
+        {{message}}
     </div>
 </div>

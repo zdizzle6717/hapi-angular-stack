@@ -54,7 +54,10 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
     function addDirector(formData) {
         DirectorService.create(formData)
         .then(function(response) {
-            $rootScope.$broadcast('show:notification');
+			showAlert({
+				type: 'success',
+				message: 'Director ' + controller.currentDirector.firstName + ' ' + controller.currentDirector.lastName + ' was successfully created.'
+			});
             $timeout(function() {
                 $state.go('allDirectors');
             }, 1500);
@@ -66,7 +69,10 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
         DirectorService.update(id, data)
         .then(function(response) {
             controller.currentDirector = response.data;
-            $rootScope.$broadcast('show:notification');
+			showAlert({
+				type: 'success',
+				message: 'Director ' + controller.currentDirector.firstName + ' ' + controller.currentDirector.lastName + ' was successfully updated.'
+			});
             $timeout(function() {
                 $state.go('allDirectors');
             }, 1500);
@@ -104,6 +110,10 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
     function updateDirectorList(searchParams) {
         controller.allDirectorsFiltered = $filter('filter')(controller.allDirectors, searchParams);
     }
+
+	function showAlert(config) {
+		$rootScope.$broadcast('show:notification', {type: config.type, message: config.message});
+	}
 
 }
 
