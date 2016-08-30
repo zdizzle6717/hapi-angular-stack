@@ -11,6 +11,9 @@ TO INSTALL: (sudo) npm install
 TO COMPILE: (sudo) npm run build
 (App JS and CSS is compiled into dist folder)
 
+SERVER:
+cd server
+forever start index.js or forever restart index.js
 
 This app demonstrates building a functional from end UI/UX with Angular 1.x in a modular design pattern.  Using CommonJs allows for organizing the code with an easy to navigate structure.  The included build tool is similar to using webpack.  It simply compiles several .js files into one cross-browser compatible .js file.  It then compiles .scss files into one compatible .css file.
 
