@@ -40,10 +40,12 @@
     </div>
     <div class="small-12 medium-6 large-3 medium-offset-6 large-offset-9 text-right">
         <label>Sort by:
-            <select ng-model="Movie.orderParams" ng-change="Movies.updateMovieList(Movie.searchParams, Movie.orderParams)">
+            <select ng-model="Movie.orderParams" ng-change="Movies.updateMovieList(Movie.searchParams, Movie.orderParams)" selected="Movie.orderParams">
                 <option value="title">Title</option>
                 <option value="year">Year</option>
                 <option value="director">Director</option>
+                <option value="-createAt">Date of Entry</option>
+                <option value="-updatedAt">Last Updated</option>
             </select>
         </label>
     </div>

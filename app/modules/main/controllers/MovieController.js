@@ -7,7 +7,7 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
     controller.allMovies = [];
     controller.toggled = false;
     controller.searchParams = '';
-    controller.orderParams = '';
+    controller.orderParams = '-updatedAt';
 
     controller.addMovie = addMovie;
     controller.updateMovie = updateMovie;
