@@ -7,11 +7,12 @@ const Inert = require('inert');
 const Vision = require('vision');
 const HapiSwagger = require('hapi-swagger');
 let models = require('./models');
+let env = require('./config/envVariables')
 
 // Create Server
 const server = new Hapi.Server();
 server.connection({
-    port: 3000
+    port: env.port
 });
 
 const options = {
