@@ -5,7 +5,7 @@
         <i class="fa fa-star" ng-repeat="i in Movie.getStars(Movie.currentMovie.rating) track by $index"></i><i class="fa fa-star-o" ng-repeat="i in Movie.getStars(5 - Movie.currentMovie.rating) track by $index"></i>
     </h5>
 	<div class="medium-3 columns" ng-if="Movie.currentMovie.coverImg">
-		<img ng-src="/uploads/movies/{{Movie.currentMovie.coverImg}}">
+		<a ng-href="/uploads/movies/{{Movie.currentMovie.coverImg}}" target="_blank"><img ng-src="/uploads/movies/{{Movie.currentMovie.coverImg}}"></a>
 	</div>
 	<div class="columns" ng-class="{'medium-9': Movie.currentMovie.coverImg, 'medium-12': !Movie.currentMovie.coverImg}">
 		<label><u>Storyline</u></label>

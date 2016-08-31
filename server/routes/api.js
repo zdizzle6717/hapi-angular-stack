@@ -2,16 +2,15 @@
 
 let models = require('../models');
 let fs = require('fs-extra');
+let env = require('../config/envVariables.js');
 
 // File Upload Route Configs
 let files = {
     create: function(request, reply) {
         let data = request.payload;
-		console.log(data);
         if (data.file) {
             let name = Date.now() + '-' + data.file.hapi.filename;
-            let path = '/usr/share/nginx/html/demo/dist/uploads/' + request.params.path + '/' + name;
-			console.log(path);
+            let path = env.uploadPath + request.params.path + '/' + name;
             let file = fs.createWriteStream(path);
 
             file.on('error', function(err) {
