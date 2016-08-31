@@ -46,6 +46,7 @@ function DirectorService($http, API_ROUTES) {
         delete newData.id;
         delete newData.createdAt;
         delete newData.updatedAt;
+		delete newData.Movies;
         return newData;
     }
 

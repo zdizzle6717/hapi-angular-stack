@@ -61,7 +61,13 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
             $timeout(function() {
                 $state.go('allDirectors');
             }, 1500);
-        });
+        })
+		.catch(function(response) {
+			showAlert({
+				type: 'error',
+				message: 'Oops, something went wrong. Please contact the site administrator.'
+			});
+		});
     }
 
     function updateDirector(id, data) {
@@ -75,7 +81,13 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
             $timeout(function() {
                 $state.go('allDirectors');
             }, 1500);
-        });
+        })
+		.catch(function(response) {
+			showAlert({
+				type: 'error',
+				message: 'Oops, something went wrong. Please contact the site administrator.'
+			});
+		});
     }
 
     function showDeleteModal(id, index, identifier) {

@@ -46,6 +46,7 @@ function MovieService($http, API_ROUTES) {
         delete newData.id;
         delete newData.createdAt;
         delete newData.updatedAt;
+		delete newData.Director;
         return newData;
     }
 

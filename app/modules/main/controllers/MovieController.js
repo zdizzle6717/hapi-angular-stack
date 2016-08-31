@@ -77,7 +77,13 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
                     $timeout(function() {
                         $state.go('allMovies');
                     }, 2000);
-                });
+                })
+				.catch(function(response) {
+					showAlert({
+						type: 'error',
+						message: 'Oops, something went wrong. Please contact the site administrator.'
+					});
+				});
             });
         }
         else {
@@ -90,7 +96,13 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
                 $timeout(function() {
                     $state.go('allMovies');
                 }, 2000);
-            });
+            })
+			.catch(function(response) {
+				showAlert({
+					type: 'error',
+					message: 'Oops, something went wrong. Please contact the site administrator.'
+				});
+			});
         }
     }
 
@@ -112,7 +124,13 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
                     $timeout(function() {
                         $state.go('allMovies');
                     }, 2000);
-                });
+                })
+				.catch(function(response) {
+					showAlert({
+						type: 'error',
+						message: 'Oops, something went wrong. Please contact the site administrator.'
+					});
+				});
             });
         }
         else {
@@ -126,7 +144,13 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
                 $timeout(function() {
                     $state.go('allMovies');
                 }, 2000);
-            });
+            })
+			.catch(function(response) {
+				showAlert({
+					type: 'error',
+					message: 'Oops, something went wrong. Please contact the site administrator.'
+				});
+			});
         }
     }
 
