@@ -60,15 +60,15 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         }
     }
 
-    function addMovie(movieData, directorData) {
-        if (directorData) {
-            DirectorService.create(directorData)
+    function addMovie(movie, director) {
+        if (director) {
+            DirectorService.create(director)
             .then(function(response) {
                 controller.currentDirector = response.data;
             })
             .then(function() {
-                movieData.DirectorId = controller.currentDirector.id;
-                MovieService.create(movieData)
+                movie.DirectorId = controller.currentDirector.id;
+                MovieService.create(movie)
                 .then(function(response) {
 					showAlert({
 						type: 'success',
@@ -81,7 +81,7 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
             });
         }
         else {
-            MovieService.create(movieData)
+            MovieService.create(movie)
             .then(function(response) {
 				showAlert({
 					type: 'success',
@@ -155,6 +155,7 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         if (controller.currentMovie && controller.currentMovie.DirectorId) {
             controller.currentMovie.DirectorId = controller.toggled ? undefined : controller.currentMovie.DirectorId;
         }
+        controller.currentDirector = !controller.toggled ? undefined : controller.currentMovie.DirectorId;
     }
 
     function getStars(num) {
