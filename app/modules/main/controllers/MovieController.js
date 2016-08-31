@@ -4,7 +4,6 @@ MovieController.$inject = ['MovieService', 'DirectorService', '$stateParams', '$
 function MovieController (MovieService, DirectorService, $stateParams, $state, $rootScope, $timeout, $filter) {
     let controller = this;
 
-    controller.allMovies = [];
     controller.toggled = false;
     controller.searchParams = '';
     controller.orderParams = '-updatedAt';
@@ -29,13 +28,6 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
             MovieService.get($stateParams.id)
             .then(function(response) {
                 controller.currentMovie = response.data;
-            })
-            .then(function() {
-                DirectorService.get(controller.currentMovie.DirectorId)
-                .then(function(response) {
-                    controller.currentDirector = response.data;
-                    controller.currentDirector.fullName = controller.currentDirector.firstName + ' ' + controller.currentDirector.lastName;
-                });
             });
         }
         else if (currentState === 'editMovie') {
@@ -62,20 +54,8 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         else {
             MovieService.getAll()
             .then(function(response) {
-                controller.movies = response.data;
-                DirectorService.getAll()
-                .then(function(response) {
-                    controller.directors = response.data;
-                    controller.movies.forEach(function(movie) {
-                        for (let i = 0, len = controller.directors.length; i < len; i++) {
-                            if (movie.DirectorId === controller.directors[i].id) {
-                                movie.director = controller.directors[i].firstName + ' ' + controller.directors[i].lastName;
-                                controller.allMovies.push(movie);
-                                controller.allMoviesFiltered = controller.allMovies;
-                            }
-                        }
-                    });
-                });
+                controller.allMovies = response.data;
+				controller.allMoviesFiltered = controller.allMovies;
             });
         }
     }
@@ -114,9 +94,7 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         }
     }
 
-    function updateMovie(id, movieData, directorData) {
-        let movie = cleanData(movieData);
-        let director = directorData ? cleanData(directorData) : undefined;
+    function updateMovie(id, movie, director) {
         if (director) {
             DirectorService.create(director)
             .then(function(response) {
@@ -183,14 +161,6 @@ function MovieController (MovieService, DirectorService, $stateParams, $state, $
         if (num) {
             return new Array(num);
         }
-    }
-
-    function cleanData(obj) {
-        let newData = angular.copy(obj);
-        delete newData.id;
-        delete newData.createdAt;
-        delete newData.updatedAt;
-        return newData;
     }
 
     controller.updateMovieList = function (searchParams, orderParams) {

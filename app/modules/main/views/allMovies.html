@@ -26,7 +26,7 @@
                     <td>{{movie.title}}</td>
                     <td>{{movie.year}}</td>
                     <td>{{movie.synopsis | limitTo: 50}}...</td>
-                    <td>{{movie.director}}</td>
+                    <td>{{movie.Director.firstName}} {{movie.Director.lastName}}</td>
                     <td class="text-center">
                         <div class="action-buttons">
                             <a class="action" ui-sref="viewMovie({ id: movie.id })"><i class="fa fa-search"></i></a>
@@ -43,8 +43,8 @@
             <select ng-model="Movie.orderParams" ng-change="Movies.updateMovieList(Movie.searchParams, Movie.orderParams)" selected="Movie.orderParams">
                 <option value="title">Title</option>
                 <option value="year">Year</option>
-                <option value="director">Director</option>
-                <option value="-createAt">Date of Entry</option>
+                <option value="Director.lastName">Director</option>
+                <option value="-createdAt">Date of Entry</option>
                 <option value="-updatedAt">Last Updated</option>
             </select>
         </label>

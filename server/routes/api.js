@@ -138,6 +138,7 @@ let movies = {
     },
     getAll: function(req, res) {
         models.Movie.findAll({
+			include: [models.Director],
 			limit: 50,
 			order: '"updatedAt" DESC'
 		})

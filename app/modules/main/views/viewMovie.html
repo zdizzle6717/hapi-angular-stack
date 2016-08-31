@@ -1,7 +1,7 @@
 <div class="row">
     <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>
     <h3 class="push-bottom-2x">Dynamic Movie App: <strong>{{Movie.currentMovie.title}}</strong></h3>
-    <h5>ID: {{Movie.currentMovie.id}} | Director: {{Movie.currentDirector.fullName}} | {{Movie.currentMovie.year}} | {{Movie.currentMovie.genre}} |
+    <h5>ID: {{Movie.currentMovie.id}} | Director: {{Movie.currentMovie.Director.firstName}} {{Movie.currentMovie.Director.lastName}} | {{Movie.currentMovie.year}} | {{Movie.currentMovie.genre}} |
         <i class="fa fa-star" ng-repeat="i in Movie.getStars(Movie.currentMovie.rating) track by $index"></i><i class="fa fa-star-o" ng-repeat="i in Movie.getStars(5 - Movie.currentMovie.rating) track by $index"></i>
     </h5>
 	<div class="medium-3 columns" ng-if="Movie.currentMovie.coverImg">

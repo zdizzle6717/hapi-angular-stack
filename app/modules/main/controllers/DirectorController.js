@@ -64,8 +64,7 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
         });
     }
 
-    function updateDirector(id, formData) {
-        let data = cleanData(formData);
+    function updateDirector(id, data) {
         DirectorService.update(id, data)
         .then(function(response) {
             controller.currentDirector = response.data;
@@ -97,14 +96,6 @@ function DirectorController (DirectorService, $stateParams, $state, $rootScope, 
         .then(function(response) {
             controller.allDirectors.splice(index, 1);
         });
-    }
-
-    function cleanData(obj) {
-        let newData = angular.copy(obj);
-        delete newData.id;
-        delete newData.createdAt;
-        delete newData.updatedAt;
-        return newData;
     }
 
     function updateDirectorList(searchParams) {

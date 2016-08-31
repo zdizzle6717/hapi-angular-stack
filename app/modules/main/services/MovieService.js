@@ -22,7 +22,7 @@ function MovieService($http, API_ROUTES) {
         return $http({
             method: 'POST',
             url: API_ROUTES.movies.create,
-            data: data
+            data: cleanData(data)
         });
     };
 
@@ -30,7 +30,7 @@ function MovieService($http, API_ROUTES) {
         return $http({
             method: 'PUT',
             url: API_ROUTES.movies.update + id,
-            data: data
+            data: cleanData(data)
         });
     };
 
@@ -40,6 +40,14 @@ function MovieService($http, API_ROUTES) {
             url: API_ROUTES.movies.delete + id
         });
     };
+
+	function cleanData(obj) {
+        let newData = angular.copy(obj);
+        delete newData.id;
+        delete newData.createdAt;
+        delete newData.updatedAt;
+        return newData;
+    }
 
 }
 
