@@ -45,4 +45,4 @@ dist/js/app.js
 
 # Server Constants
 *envVariables.js
-*constants/ApiRoutes.js
+ApiRoutes.js
