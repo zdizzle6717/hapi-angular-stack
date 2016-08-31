@@ -11,7 +11,7 @@ let models = require('./models');
 // Create Server
 const server = new Hapi.Server();
 server.connection({
-    port: 8080
+    port: 3000
 });
 
 const options = {

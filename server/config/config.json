@@ -4,20 +4,29 @@
     "password": "restfulapi",
     "database": "hapi_stack_development",
     "host": "127.0.0.1",
-    "dialect": "postgres"
+    "dialect": "postgres",
+	"options": {
+		"quoteIdentifiers": true
+	}
   },
   "test": {
     "username": "postgres",
     "password": "restfulapi",
     "database": "hapi_stack_test",
     "host": "127.0.0.1",
-    "dialect": "postgres"
+    "dialect": "postgres",
+	"options": {
+		"quoteIdentifiers": true
+	}
   },
   "production": {
     "username": "postgres",
     "password": "restfulapi",
     "database": "hapi_stack_production",
     "host": "127.0.0.1",
-    "dialect": "postgres"
+    "dialect": "postgres",
+	"options": {
+		"quoteIdentifiers": true
+	}
   }
 }

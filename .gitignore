@@ -43,3 +43,6 @@ jspm_packages
 dist/uploads*
 dist/js/app.js
 
+# Server Constants
+*constants/ApiRoutes.js
+

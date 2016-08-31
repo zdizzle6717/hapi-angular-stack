@@ -48,20 +48,23 @@ let directors = {
         models.Director.find({
                 where: {
                     id: req.params.id
-                }
+                },
+				include: [models.Movie]
             })
             .then(function(director) {
-                if (director) {
-                    res(director).code(200);
-                }
-                else {
-                    res().code(404);
-                }
-
+				if (director) {
+					res(director).code(200);
+				}
+				else {
+					res().code(404);
+				}
             });
     },
     getAll: function(req, res) {
-        models.Director.findAll()
+        models.Director.findAll({
+			limit: 50,
+			order: '"updatedAt" DESC'
+		})
             .then(function(directors) {
                 res(directors).code(200);
             });
@@ -121,7 +124,8 @@ let movies = {
         models.Movie.find({
                 where: {
                     id: req.params.id
-                }
+                },
+				include: [models.Director]
             })
             .then(function(movie) {
                 if (movie) {
@@ -133,7 +137,10 @@ let movies = {
             });
     },
     getAll: function(req, res) {
-        models.Movie.findAll()
+        models.Movie.findAll({
+			limit: 50,
+			order: '"updatedAt" DESC'
+		})
             .then(function(movies) {
                 res(movies).code(200);
             });
