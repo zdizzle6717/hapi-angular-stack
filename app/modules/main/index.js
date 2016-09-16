@@ -10,7 +10,10 @@ let mod = angular.module(moduleName, [
     require('angular-sanitize'),
     require('angular-utils-pagination'),
     require('angular-scroll'),
-	require('ng-file-upload')
+	require('ng-file-upload'),
+
+	// Libraries
+	require('../libraries/auth')
 ]);
 
 // Run
@@ -24,6 +27,7 @@ mod.constant('API_ROUTES', require('./constants/ApiRoutes'))
 
 // Controllers
 mod.controller('HomeController', require('./controllers/HomeController.js'));
+mod.controller('DashboardController', require('./controllers/DashboardController.js'));
 mod.controller('MovieController', require('./controllers/MovieController.js'));
 mod.controller('DirectorController', require('./controllers/DirectorController.js'));
 

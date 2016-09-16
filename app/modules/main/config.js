@@ -14,6 +14,23 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: 'HomeController as Home',
             template: require('./views/home.html')
         })
+		.state({
+            name: 'login',
+            url: '/login',
+            controller: 'LoginController as Login',
+            template: require('./views/login.html')
+        })
+
+		// Admin
+        .state({
+            name: 'dashboard',
+            url: '/dashboard',
+            controller: 'DashboardController as Dashboard',
+            template: require('./views/dashboard.html'),
+			data: {
+				accessLevel: 'admin'
+			}
+        })
 
         // Movies
         .state({
