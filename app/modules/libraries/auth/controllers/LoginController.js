@@ -37,6 +37,7 @@ function LoginController($rootScope, $state, AuthService) {
             .catch(function(response) {
                 controller.invalidCredentials = true;
                 console.log(response.statusCode + ': Unauthorized, invalid credentials');
+				return response;
             });
     }
 }

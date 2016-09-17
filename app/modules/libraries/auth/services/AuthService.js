@@ -3,14 +3,17 @@
 AuthService.$inject = ['$q', '$http'];
 function AuthService($q, $http) {
 	let _user = {};
+	let _isAuthenticated = false;
 
 	Object.defineProperties(this, {
 		'currentUser': {
 			'get': () => {
 				return _user;
-			},
-			'set': (user) => {
-				Object.assign(_user, user);
+			}
+		},
+		'isAuthenticated': {
+			'get': () => {
+				return _isAuthenticated;
 			}
 		}
 	});
@@ -35,6 +38,7 @@ function AuthService($q, $http) {
 					}
 					if (granted) {
 						_user = response.data[0];
+						_isAuthenticated = true;
 						deferred.resolve({statusCode: '400'});
 					} else {
 						deferred.reject({statusCode: '401'});
@@ -55,6 +59,11 @@ function AuthService($q, $http) {
 
 		return deferred.promise;
 	};
+
+	this.logout = function() {
+		_user = {};
+		_isAuthenticated = false;
+	}
 
 }
 

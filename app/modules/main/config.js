@@ -43,7 +43,10 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             name: 'editMovie',
             url: '/movie/edit/{id}',
             controller: 'MovieController as Movie',
-            template: require('./views/editMovie.html')
+            template: require('./views/editMovie.html'),
+			data: {
+				accessLevel: 'admin'
+			}
         })
         .state({
             name: 'allMovies',
@@ -63,7 +66,10 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             name: 'editDirector',
             url: '/director/edit/{id}',
             controller: 'DirectorController as Director',
-            template: require('./views/editDirector.html')
+            template: require('./views/editDirector.html'),
+			data: {
+				accessLevel: 'admin'
+			}
         })
         .state({
             name: 'allDirectors',

@@ -36,11 +36,11 @@
                     <td>{{movie.title}}</td>
                     <td>{{movie.year}}</td>
                     <td>{{movie.synopsis | limitTo: 50}}...</td>
-                    <td>{{movie.director}}</td>
+                    <td>{{movie.Director.firstName}} {{movie.Director.lastName}}</td>
                     <td class="text-center">
                         <div class="action-buttons">
                             <a class="action" ui-sref="viewMovie({ id: movie.id })"><i class="fa fa-search"></i></a>
-                            <a class="action" ui-sref="editMovie({ id: movie.id })"><i class="fa fa-pencil-square-o"></i></a>
+                            <a class="action" ui-sref="editMovie({ id: movie.id })" access-level="admin"><i class="fa fa-pencil-square-o"></i></a>
                             <!-- <a class="action" ng-click="Home.deleteMovie(movie, $index)"><i class="fa fa-times"></i></a> -->
                         </div>
                     </td>

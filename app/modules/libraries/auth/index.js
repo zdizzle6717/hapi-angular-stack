@@ -18,4 +18,7 @@ mod.controller('LoginController', require('./controllers/LoginController'));
 // Services
 mod.service('AuthService', require('./services/AuthService'));
 
+// Directives
+mod.directive('accessLevel', require('./directives/accessLevel'));
+
 module.exports = moduleName;
