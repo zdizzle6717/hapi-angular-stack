@@ -22,7 +22,7 @@ function header($rootScope, $state, AuthService) {
 
 			function logout() {
 				AuthService.logout();
-				$state.go('home');
+				$state.go('home', {}, {reload: true});
 			}
         }
     };
