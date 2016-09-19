@@ -2,8 +2,8 @@
 
 AuthService.$inject = ['$q', '$http'];
 function AuthService($q, $http) {
-	let _user = {};
-	let _isAuthenticated = false;
+	let _user = JSON.parse(sessionStorage.getItem('currentUser')) || {};
+	let _isAuthenticated = JSON.parse(sessionStorage.getItem('isAuthenticated')) || false;
 
 	Object.defineProperties(this, {
 		'currentUser': {
@@ -39,6 +39,8 @@ function AuthService($q, $http) {
 					if (granted) {
 						_user = response.data[0];
 						_isAuthenticated = true;
+						sessionStorage.setItem('currentUser', JSON.stringify(_user));
+						sessionStorage.setItem('isAuthenticated', JSON.stringify(_isAuthenticated))
 						deferred.resolve({statusCode: '400'});
 					} else {
 						deferred.reject({statusCode: '401'});
@@ -63,6 +65,8 @@ function AuthService($q, $http) {
 	this.logout = function() {
 		_user = {};
 		_isAuthenticated = false;
+		sessionStorage.removeItem('currentUser');
+		sessionStorage.removeItem('isAuthenticated');
 	}
 
 }
