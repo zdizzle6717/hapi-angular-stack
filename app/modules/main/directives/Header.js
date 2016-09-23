@@ -1,7 +1,7 @@
 'use strict';
 
-header.$inject = ['$rootScope', '$state', 'AuthService'];
-function header($rootScope, $state, AuthService) {
+header.$inject = ['$rootScope', '$state', 'AuthService', 'API_ROUTES'];
+function header($rootScope, $state, AuthService, API_ROUTES) {
     return {
         name: 'header',
         template: require('./templates/header.html'),
@@ -10,6 +10,7 @@ function header($rootScope, $state, AuthService) {
             scope.toggled = false;
             scope.toggleNav = toggleNav;
 			scope.logout = logout;
+			scope.apiLink = API_ROUTES.documentation;
 
             $rootScope.$on('$stateChangeSuccess', function() {
                 scope.toggled = false;
