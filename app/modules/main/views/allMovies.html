@@ -30,8 +30,8 @@
                     <td class="text-center">
                         <div class="action-buttons">
                             <a class="action" ui-sref="viewMovie({ id: movie.id })"><i class="fa fa-search"></i></a>
-                            <a class="action" ui-sref="editMovie({ id: movie.id })" access-level="admin"><i class="fa fa-pencil-square-o"></i></a>
-                            <a class="action" ng-click="Movies.showDeleteModal(movie.id, $index, movie.title)" access-level="admin"><i class="fa fa-times"></i></a>
+							<span access-level="admin"><a class="action" ui-sref="editMovie({ id: movie.id })"><i class="fa fa-pencil-square-o"></i></a></span>
+							<span access-level="admin"><a class="action" ng-click="Movies.showDeleteModal(movie.id, $index, movie.title)"><i class="fa fa-times"></i></a></span>
                         </div>
                     </td>
                 </tr>
