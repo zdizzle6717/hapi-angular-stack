@@ -20,6 +20,12 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: 'LoginController as Login',
             template: require('./views/login.html')
         })
+		.state({
+            name: 'register',
+            url: '/register',
+            controller: 'RegisterController as Register',
+            template: require('./views/register.html')
+        })
 
 		// Admin
         .state({

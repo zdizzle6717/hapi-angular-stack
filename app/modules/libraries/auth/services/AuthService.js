@@ -24,6 +24,32 @@ function AuthService($q, $http, API_ROUTES) {
 		},
 	});
 
+	this.register = function(credentials) {
+		// Post Login Credentials
+		let args = {
+			method: 'POST',
+			url: API_ROUTES.users.register,
+			data: {
+				email: credentials.email,
+				username: credentials.username,
+				password: credentials.password
+			}
+		};
+
+		return $http(args)
+			.then(function(response) {
+				$http.defaults.headers.common.Authorization = 'Bearer ' + response.data.id_token;
+				_user = credentials;
+				_user.admin = true;
+				_isAuthenticated = true;
+				_token = response.data.id_token;
+				sessionStorage.setItem('id_token', response.data.id_token);
+				sessionStorage.setItem('currentUser', JSON.stringify(_user));
+				sessionStorage.setItem('isAuthenticated', JSON.stringify(_isAuthenticated))
+				return response;
+			});
+	};
+
 	this.authenticate = function(credentials) {
 		// Post Login Credentials
 		let args = {

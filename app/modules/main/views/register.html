@@ -1,0 +1,30 @@
+<div class="row">
+    <h1>PostgreSQL, Hapi.js, AngularJs, & Node.js</h1>
+    <h3 class="push-bottom-2x text-center">Create an Account to Login or Use the Demo Account on the Login Page</h3>
+    <div class="row">
+        <div class="small-12 medium-4 medium-offset-4 columns">
+			<form name="registrationForm" ng-submit="Register.register(Register.credentials)" novalidate>
+				<div class="small-12 columns">
+					<label>Email:</label>
+					<input type="email" ng-model="Register.credentials.email" required/>
+				</div>
+				<div class="small-12 columns">
+					<label>Username:</label>
+					<input type="text" ng-model="Register.credentials.username" required/>
+				</div>
+				<div class="small-12 columns">
+					<label>Password:</label>
+					<input type="password" ng-model="Register.credentials.password" required/>
+				</div>
+				<div class="small-12 columns text-right">
+					<button class="button" type="submit" ng-disabled="registrationForm.$invalid">Register</button>
+				</div>
+				<div class="small-12 columns text-right">
+					<p class="required" ng-if="Register.invalidEmail">There is already an account with this email!</p>
+					<p class="required" ng-if="Register.invalidUsername">This username is already taken!</p>
+					<p><a ui-sref="login">Login?</a></p>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
