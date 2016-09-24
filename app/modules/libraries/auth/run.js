@@ -4,20 +4,30 @@ run.$inject = ['$rootScope', '$state', 'AuthService'];
 function run($rootScope, $state, AuthService) {
 	$rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams, options) {
 		let authIsRequired = (toState.data && toState.data.accessLevel) ? true : false;
+		let accessLevel = (toState.data && toState.data.accessLevel) ? toState.data.accessLevel : 'public';
 		let accessGranted = false;
+		const checkAuth = checkAuth;
+
 
 		if (authIsRequired) {
-			console.log('Auth Example 1: Run Phase');
-			let accessLevel = toState.data.accessLevel;
-			AuthService.isAuthorized(accessLevel)
-				.then(function(response) {
-					console.log(response.statusCode + ': Access granted.');
-				})
-				.catch(function(response) {
-					console.log(response.statusCode + ': Not authorized.');
-					e.preventDefault();
-					$state.go('login', {reload: true});
-				});
+			if (AuthService.isAuthorized(accessLevel)) {
+				console.log('Authorized.')
+				return;
+			} else if (!AuthService.isAuthenticated) {
+				e.preventDefault();
+				AuthService.authenticate(AuthService.currentUser)
+					.then(function(response) {
+						if (AuthService.isAuthorized(accessLevel)) {
+							$state.go(toState.name);
+						} else {
+							$state.go('home');
+						}
+					})
+					.catch(function(response) {
+						console.log(response.status + ": Unauthenticated, please log in");
+						$state.go('login', {reload: true});
+					});
+			}
 		}
 
 	});

@@ -23,7 +23,7 @@ mod.run(require('./run'));
 mod.config(require('./config'));
 
 // Constants
-mod.constant('API_ROUTES', require('./constants/ApiRoutes'))
+mod.constant('API_ROUTES', require('./constants/ApiRoutes'));
 
 // Controllers
 mod.controller('HomeController', require('./controllers/HomeController.js'));

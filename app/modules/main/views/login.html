@@ -3,17 +3,21 @@
     <h3 class="push-bottom-2x text-center">Login (U: demo@email.com, P: password)</h3>
     <div class="row">
         <div class="small-12 medium-4 medium-offset-4 columns">
-			<form name="loginForm" novalidate>
+			<form name="loginForm" ng-submit="Login.login(Login.credentials)" novalidate>
 				<div class="small-12 columns">
 					<label>Username:</label>
-					<input type="email" ng-model="Login.credentials.username" required/>
+					<input type="text" ng-model="Login.credentials.username" required/>
 				</div>
 				<div class="small-12 columns">
 					<label>Password:</label>
 					<input type="password" ng-model="Login.credentials.password" required/>
 				</div>
 				<div class="small-12 columns text-right">
-					<button class="button" ng-click="Login.login(Login.credentials)" ng-disabled="loginForm.$invalid">Login</button>
+					<button class="button" type="submit" ng-disabled="loginForm.$invalid">Login</button>
+				</div>
+				<div class="small-12 columns text-right">
+					<p class="required" ng-if="Login.incorrectUsername">Incorrect username or email!</p>
+					<p class="required" ng-if="Login.incorrectPassword">Incorrect password!</p>
 				</div>
 			</form>
 		</div>

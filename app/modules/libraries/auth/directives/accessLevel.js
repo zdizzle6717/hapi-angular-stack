@@ -15,16 +15,13 @@ function accessLevel($compile, AuthService) {
 			//////////////////////////////////
 
 			function checkAuthorization(accessLevel) {
-				AuthService.isAuthorized(accessLevel)
-					.then(function(response) {
-						elem.html(template);
-					})
-					.catch(function() {
-						elem.html('');
-					})
-					.finally(function() {
-						$compile(elem.contents())(scope);
-					});
+				if (AuthService.isAuthorized(accessLevel)) {
+					elem.html(template);
+				} else {
+					elem.html('');
+				}
+				
+				$compile(elem.contents())(scope);
 			}
 		}
 	}

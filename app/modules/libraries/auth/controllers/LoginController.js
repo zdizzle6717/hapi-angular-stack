@@ -5,7 +5,8 @@ LoginController.$inject = ['$rootScope', '$state', 'AuthService'];
 function LoginController($rootScope, $state, AuthService) {
     let controller = this;
 
-    controller.invalidCredentials = false;
+    controller.incorrectUsername = false;
+    controller.incorrectPassword = false;
 
     controller.login = login;
 
@@ -14,29 +15,25 @@ function LoginController($rootScope, $state, AuthService) {
     ////////////////////////////
 
 	function init() {
-		login(AuthService.currentUser)
-			.then(function(response) {
-				console.log(response.statusCode + ': Already logged in.')
-				$state.go('dashboard');
-			})
-			.catch(function() {
-				angular.noop();
-			});
+		if (AuthService.isAuthenticated) {
+			$state.go('dashboard');
+		}
 	}
 
     function login(credentials) {
         return AuthService.authenticate(credentials)
             .then(function(response) {
-                if (response) {
-					console.log(response.statusCode + ': Authorized, login success.')
-                    $state.go('dashboard');
-                } else {
-                    controller.invalidCredentials = true;
-                }
+				console.log(response.status + ': Authenticated, login success.')
+                $state.go('dashboard');
             })
             .catch(function(response) {
-                controller.invalidCredentials = true;
-                console.log(response.statusCode + ': Unauthorized, invalid credentials');
+				if (response.data.message === "Incorrect username or email!") {
+					controller.incorrectUsername = true;
+				    controller.incorrectPassword = false;
+				} else if (response.data.message === 'Incorrect password!') {
+					controller.incorrectUsername = false;
+				    controller.incorrectPassword = true;
+				}
 				return response;
             });
     }

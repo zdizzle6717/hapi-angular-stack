@@ -18,77 +18,78 @@ module.exports = [
         }
     },
 
-	// Users
-	{
-		method: 'POST',
-		path: '/api/users',
-		config: {
-			pre: [
-				{
-					method: userFunctions.verifyUniqueUser
-				}
-			],
-			handler: api.users.create,
-			tags: ['api'],
+    // Users
+    {
+        method: 'POST',
+        path: '/api/users',
+        config: {
+            pre: [{
+                method: userFunctions.verifyUniqueUser
+            }],
+            handler: api.users.create,
+            tags: ['api'],
             description: 'Register a new user',
             notes: 'Register a new user',
-			validate: {
-				payload: {
-					username: Joi.string().alphanum().min(2).max(300).required(),
-					email: Joi.string().email().required(),
-					password: Joi.string().required()
-				}
-			},
-			cors: {
+            validate: {
+                payload: {
+                    username: Joi.string().alphanum().min(2).max(300).required(),
+                    email: Joi.string().email().required(),
+                    password: Joi.string().required()
+                }
+            },
+            cors: {
                 origin: ['*']
             }
-		}
-	},
-	{
-		method: 'POST',
-		path: '/api/users/authenticate',
-		config: {
-			pre: [
-				{
-					method: userFunctions.verifyCredentials, assign: 'user'
-				}
-			],
-			handler: api.users.authenticate,
-			tags: ['api'],
+        }
+    }, {
+        method: 'POST',
+        path: '/api/users/authenticate',
+        config: {
+            pre: [{
+                method: userFunctions.verifyCredentials,
+                assign: 'user'
+            }],
+            handler: api.users.authenticate,
+            tags: ['api'],
             description: 'Authenticate an existing user',
             notes: 'Authenticate an existing user',
-			validate: {
-				payload: Joi.alternatives().try(
-				  Joi.object({
-				    username: Joi.string().alphanum().min(2).max(30).required(),
-				    password: Joi.string().required()
-				  }),
-				  Joi.object({
-				    username: Joi.string().email().required(),
-				    password: Joi.string().required()
-				  })
-				)
-			}
-		}
-	},
-	{
-		method: 'GET',
-		path: '/api/users',
-		handler: api.users.getAll,
-		config: {
-			tags: ['api'],
+            validate: {
+                payload: Joi.alternatives().try(
+                    Joi.object({
+                        username: Joi.string().alphanum().min(2).max(30).required(),
+                        password: Joi.string().required()
+                    }),
+                    Joi.object({
+                        username: Joi.string().email().required(),
+                        password: Joi.string().required()
+                    })
+                )
+            },
+            cors: {
+                origin: ['*']
+            }
+        }
+    }, {
+        method: 'GET',
+        path: '/api/users',
+        handler: api.users.getAll,
+        config: {
+            tags: ['api'],
             description: 'Get all users',
             notes: 'Get all users',
-			auth: {
-		      strategy: 'jsonWebToken',
-		      scope: ['admin']
-		    }
-		}
-	},
+            auth: {
+                strategy: 'jsonWebToken',
+                scope: ['admin']
+            },
+            cors: {
+                origin: ['*']
+            }
+        }
+    },
 
-	// File Upload
+    // File Upload
     {
-		method: 'POST',
+        method: 'POST',
         path: '/api/files/{path}',
         handler: api.files.create,
         config: {
@@ -101,7 +102,7 @@ module.exports = [
             tags: ['api'],
             description: 'Upload a new file',
             notes: 'Upload a new file',
-			cors: {
+            cors: {
                 origin: ['*']
             }
         }
@@ -112,25 +113,24 @@ module.exports = [
         method: 'GET',
         path: '/api/directors/{id}',
         handler: api.directors.get,
-		config: {
-			tags: ['api'],
-			description: 'Get one director by id',
-			notes: 'Get one director by id',
-			validate: {
-				params: {
-					id: Joi.number().required()
-				}
-			},
-			cors: {
-				origin: ['*']
-			}
-		}
-    },
-    {
+        config: {
+            tags: ['api'],
+            description: 'Get one director by id',
+            notes: 'Get one director by id',
+            validate: {
+                params: {
+                    id: Joi.number().required()
+                }
+            },
+            cors: {
+                origin: ['*']
+            }
+        }
+    }, {
         method: 'GET',
         path: '/api/directors',
         handler: api.directors.getAll,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Get all directors',
             notes: 'Get all directors',
@@ -138,12 +138,11 @@ module.exports = [
                 origin: ['*']
             }
         },
-    },
-    {
+    }, {
         method: 'POST',
         path: '/api/directors',
         handler: api.directors.create,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Add a new director',
             notes: 'Add a new director',
@@ -158,12 +157,11 @@ module.exports = [
                 origin: ['*']
             }
         }
-    },
-    {
+    }, {
         method: 'PUT',
         path: '/api/directors/{id}',
         handler: api.directors.update,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Update a director by id',
             notes: 'Update a director by id',
@@ -181,12 +179,11 @@ module.exports = [
                 origin: ['*']
             }
         },
-    },
-    {
+    }, {
         method: 'DELETE',
         path: '/api/directors/{id}',
         handler: api.directors.delete,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Delete a director by id',
             notes: 'Delete a director by id',
@@ -207,7 +204,7 @@ module.exports = [
         method: 'GET',
         path: '/api/movies/{id}',
         handler: api.movies.get,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Get one movie by id',
             notes: 'Get one movie by id',
@@ -220,12 +217,11 @@ module.exports = [
                 origin: ['*']
             }
         }
-    },
-    {
+    }, {
         method: 'GET',
         path: '/api/movies',
         handler: api.movies.getAll,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Get all movies',
             notes: 'Get all movies',
@@ -233,12 +229,11 @@ module.exports = [
                 origin: ['*']
             }
         }
-    },
-    {
+    }, {
         method: 'POST',
         path: '/api/movies',
         handler: api.movies.create,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Add a new movie ',
             notes: 'Add a new movie',
@@ -258,12 +253,11 @@ module.exports = [
                 origin: ['*']
             }
         }
-    },
-    {
+    }, {
         method: 'PUT',
         path: '/api/movies/{id}',
         handler: api.movies.update,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Update a movie by id',
             notes: 'Update a movie by id',
@@ -276,7 +270,7 @@ module.exports = [
                     year: Joi.number().required(),
                     genre: Joi.string(),
                     rating: Joi.number(),
-					coverImg: Joi.string(),
+                    coverImg: Joi.string(),
                     synopsis: Joi.string(),
                     description: Joi.string(),
                     DirectorId: Joi.number().required()
@@ -286,12 +280,11 @@ module.exports = [
                 origin: ['*']
             }
         }
-    },
-    {
+    }, {
         method: 'DELETE',
         path: '/api/movies/{id}',
         handler: api.movies.delete,
-		config: {
+        config: {
             tags: ['api'],
             description: 'Delete a movie by id',
             notes: 'Delete a movie by id',

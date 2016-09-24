@@ -1,8 +1,8 @@
 'use strict';
 
-AuthService.$inject = ['$q', '$http'];
-function AuthService($q, $http) {
-	let _user = JSON.parse(sessionStorage.getItem('currentUser')) || {};
+AuthService.$inject = ['$q', '$http', 'API_ROUTES'];
+function AuthService($q, $http, API_ROUTES) {
+	let _user = JSON.parse(sessionStorage.getItem('currentUser')) || { username: '', password: '' };
 	let _isAuthenticated = JSON.parse(sessionStorage.getItem('isAuthenticated')) || false;
 
 	Object.defineProperties(this, {
@@ -21,45 +21,38 @@ function AuthService($q, $http) {
 	this.authenticate = function(credentials) {
 		// Post Login Credentials
 		let args = {
-			method: 'GET',
-			//method: 'POST' ...in a real app this should be a post
-			url: 'data/mockUsers.json'
+			method: 'POST',
+			url: API_ROUTES.users.authenticate,
+			data: {
+				username: credentials.username,
+				password: credentials.password
+			}
 		};
 
 		return $http(args)
 			.then(function(response) {
-				// Mock server auth check
-				let deferred = $q.defer();
-				let granted = false;
-				let users = response.data;
-				users.forEach(function(user) {
-					if (user.username === credentials.username && user.password === credentials.password) {
-						granted = true;
-					}
-					if (granted) {
-						_user = response.data[0];
-						_isAuthenticated = true;
-						sessionStorage.setItem('currentUser', JSON.stringify(_user));
-						sessionStorage.setItem('isAuthenticated', JSON.stringify(_isAuthenticated))
-						deferred.resolve({statusCode: '400'});
-					} else {
-						deferred.reject({statusCode: '401'});
-					}
-				});
-
-				return deferred.promise;
+				_user = credentials;
+				_user.admin = true;
+				_isAuthenticated = true;
+				sessionStorage.setItem('id_token', JSON.stringify(response.data.id_token));
+				sessionStorage.setItem('currentUser', JSON.stringify(_user));
+				sessionStorage.setItem('isAuthenticated', JSON.stringify(_isAuthenticated))
+				return response;
 			});
 	};
 
 	this.isAuthorized = function(accessLevel) {
-		let deferred = $q.defer();
-		if (_user.accessLevel === accessLevel) {
-			deferred.resolve({statusCode: '400'});
+		if (accessLevel === 'public') {
+			return true;
+		} else if (_isAuthenticated) {
+			if (_user.admin === true && accessLevel === 'admin') {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
-			deferred.reject({statusCode: '403'});
+			return false;
 		}
-
-		return deferred.promise;
 	};
 
 	this.logout = function() {
