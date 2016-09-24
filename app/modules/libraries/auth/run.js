@@ -1,8 +1,9 @@
 'use strict';
 
-run.$inject = ['$rootScope', '$state', 'AuthService'];
-function run($rootScope, $state, AuthService) {
+run.$inject = ['$rootScope', '$state', 'AuthService', '$http'];
+function run($rootScope, $state, AuthService, $http) {
 	$rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams, options) {
+		$http.defaults.headers.common.Authorization = AuthService.token ? 'Bearer ' + AuthService.token : '';
 		let authIsRequired = (toState.data && toState.data.accessLevel) ? true : false;
 		let accessLevel = (toState.data && toState.data.accessLevel) ? toState.data.accessLevel : 'public';
 		let accessGranted = false;

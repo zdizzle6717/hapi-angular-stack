@@ -42,5 +42,6 @@ mod.directive('fileUpload', require('./directives/FileUpload.js'));
 mod.service('FileService', require('./services/FileService'));
 mod.service('MovieService', require('./services/MovieService'));
 mod.service('DirectorService', require('./services/DirectorService'))
+mod.service('AdminService', require('./services/AdminService'))
 
 module.exports = moduleName;

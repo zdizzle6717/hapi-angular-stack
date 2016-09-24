@@ -3,6 +3,7 @@
 AuthService.$inject = ['$q', '$http', 'API_ROUTES'];
 function AuthService($q, $http, API_ROUTES) {
 	let _user = JSON.parse(sessionStorage.getItem('currentUser')) || { username: '', password: '' };
+	let _token = sessionStorage.getItem('id_token') || '';
 	let _isAuthenticated = JSON.parse(sessionStorage.getItem('isAuthenticated')) || false;
 
 	Object.defineProperties(this, {
@@ -15,7 +16,12 @@ function AuthService($q, $http, API_ROUTES) {
 			'get': () => {
 				return _isAuthenticated;
 			}
-		}
+		},
+		'token': {
+			'get': () => {
+				return _token;
+			}
+		},
 	});
 
 	this.authenticate = function(credentials) {
@@ -31,10 +37,12 @@ function AuthService($q, $http, API_ROUTES) {
 
 		return $http(args)
 			.then(function(response) {
+				$http.defaults.headers.common.Authorization = 'Bearer ' + response.data.id_token;
 				_user = credentials;
 				_user.admin = true;
 				_isAuthenticated = true;
-				sessionStorage.setItem('id_token', JSON.stringify(response.data.id_token));
+				_token = response.data.id_token;
+				sessionStorage.setItem('id_token', response.data.id_token);
 				sessionStorage.setItem('currentUser', JSON.stringify(_user));
 				sessionStorage.setItem('isAuthenticated', JSON.stringify(_isAuthenticated))
 				return response;
@@ -58,7 +66,9 @@ function AuthService($q, $http, API_ROUTES) {
 	this.logout = function() {
 		_user = {};
 		_isAuthenticated = false;
+		_token = '';
 		sessionStorage.removeItem('currentUser');
+		sessionStorage.removeItem('id_token');
 		sessionStorage.removeItem('isAuthenticated');
 	}
 

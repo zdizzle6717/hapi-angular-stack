@@ -15,4 +15,18 @@
             <button type="button" class="button small-12 medium-8" ui-sref="allDirectors"><i class="fa fa-plus"></i> Edit Directors</button>
         </div>
 	</div>
+	<br/>
+	<h5>User List</h5>
+	<div class="row">
+		<table style="width:100%">
+		  <tr>
+		    <th>Username</th>
+		    <th>Email</th>
+		  </tr>
+		  <tr ng-repeat="user in Dashboard.users">
+			  <td>{{user.username}}</td>
+  		      <td>{{user.email}}</td>
+		  </tr>
+		</table>
+	</div>
 </div>
