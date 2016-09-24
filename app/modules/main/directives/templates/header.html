@@ -5,6 +5,5 @@
   <li ng-class="{'untoggled': toggled === false}" ui-sref-active="active" class="animate"><a ui-sref="allDirectors">Directors</a></li>
   <li ng-class="{'untoggled': toggled === false}" ui-sref-active="active" class="animate"><a ng-href="{{apiLink}}" target="_blank">API Guide</a></li>
   <li ng-class="{'untoggled': toggled === false}" ui-sref-active="active" class="animate"><a href="https://github.com/zdizzle6717/hapi-angular-stack" target="_blank">Git</a></li>
-  <li ng-class="{'untoggled': toggled === false}" ui-sref-active="active" class="animate" ng-if="!isAuthenticated"><a ui-sref="login">Login</a></li>
-  <li ng-class="{'untoggled': toggled === false}" ui-sref-active="active" class="animate" ng-if="isAuthenticated"><a ng-click="logout()">Logout</a></li>
+  <li ng-class="{'untoggled': toggled === false}" ui-sref-active="active" class="animate"><a ui-sref="login" ng-if="!isAuthenticated">Login</a><a ng-click="logout()" ng-if="isAuthenticated">Logout</a></li>
 </ul>
