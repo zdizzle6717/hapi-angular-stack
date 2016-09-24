@@ -34,7 +34,7 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: 'DashboardController as Dashboard',
             template: require('./views/dashboard.html'),
 			data: {
-				accessLevel: 'admin'
+				accessLevel: ['admin']
 			}
         })
 
@@ -51,7 +51,7 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: 'MovieController as Movie',
             template: require('./views/editMovie.html'),
 			data: {
-				accessLevel: 'admin'
+				accessLevel: ['admin']
 			}
         })
         .state({
@@ -74,7 +74,7 @@ function config($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: 'DirectorController as Director',
             template: require('./views/editDirector.html'),
 			data: {
-				accessLevel: 'admin'
+				accessLevel: ['admin']
 			}
         })
         .state({

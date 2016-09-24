@@ -3,9 +3,9 @@
 run.$inject = ['$rootScope', '$state', 'AuthService', '$http'];
 function run($rootScope, $state, AuthService, $http) {
 	$rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams, options) {
-		$http.defaults.headers.common.Authorization = AuthService.token ? 'Bearer ' + AuthService.token : '';
+		$http.defaults.headers.common.Authorization = AuthService.token ? 'Bearer ' + AuthService.token : undefined;
 		let authIsRequired = (toState.data && toState.data.accessLevel) ? true : false;
-		let accessLevel = (toState.data && toState.data.accessLevel) ? toState.data.accessLevel : 'public';
+		let accessLevel = (toState.data && toState.data.accessLevel) ? toState.data.accessLevel : ['public'];
 		let accessGranted = false;
 		const checkAuth = checkAuth;
 
@@ -14,7 +14,7 @@ function run($rootScope, $state, AuthService, $http) {
 			if (AuthService.isAuthorized(accessLevel)) {
 				console.log('Authorized.')
 				return;
-			} else if (!AuthService.isAuthenticated) {
+			} else if (!AuthService.isAuthenticated || !AuthService.isAuthorized(accessLevel)) {
 				e.preventDefault();
 				AuthService.authenticate(AuthService.currentUser)
 					.then(function(response) {

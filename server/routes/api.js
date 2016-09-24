@@ -18,7 +18,8 @@ let users = {
 	            })
 				.then(function(user) {
 					res({
-						id_token: createToken(user)
+						id_token: createToken(user),
+						admin: user.admin
 					}).code(201);
 				})
 				.catch(function(response) {
@@ -28,12 +29,13 @@ let users = {
 	},
 	authenticate: function(req, res) {
 		res({
-			id_token: createToken(req.pre.user)
+			id_token: createToken(req.pre.user),
+			admin: req.pre.user.admin
 		}).code(201);
 	},
 	getAll: function(req, res) {
 		models.User.findAll({
-			attributes: ['username', 'email', 'createdAt'],
+			attributes: ['username', 'email', 'admin', 'createdAt'],
 			limit: 50,
 			order: '"updatedAt" DESC'
 		})

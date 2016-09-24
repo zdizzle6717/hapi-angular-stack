@@ -40,7 +40,7 @@ function AuthService($q, $http, API_ROUTES) {
 			.then(function(response) {
 				$http.defaults.headers.common.Authorization = 'Bearer ' + response.data.id_token;
 				_user = credentials;
-				_user.admin = true;
+				_user.admin = response.data.admin;
 				_isAuthenticated = true;
 				_token = response.data.id_token;
 				sessionStorage.setItem('id_token', response.data.id_token);
@@ -65,7 +65,7 @@ function AuthService($q, $http, API_ROUTES) {
 			.then(function(response) {
 				$http.defaults.headers.common.Authorization = 'Bearer ' + response.data.id_token;
 				_user = credentials;
-				_user.admin = true;
+				_user.admin = response.data.admin;
 				_isAuthenticated = true;
 				_token = response.data.id_token;
 				sessionStorage.setItem('id_token', response.data.id_token);
@@ -76,14 +76,16 @@ function AuthService($q, $http, API_ROUTES) {
 	};
 
 	this.isAuthorized = function(accessLevel) {
-		if (accessLevel === 'public') {
+		if (accessLevel[0] === 'public') {
 			return true;
 		} else if (_isAuthenticated) {
-			if (_user.admin === true && accessLevel === 'admin') {
-				return true;
-			} else {
-				return false;
-			}
+			let check = true;
+			accessLevel.forEach(role => {
+				if (_user[role] !== true) {
+					check = false;
+				}
+			})
+			return check;
 		} else {
 			return false;
 		}
